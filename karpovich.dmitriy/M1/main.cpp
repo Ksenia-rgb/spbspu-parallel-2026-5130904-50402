@@ -14,11 +14,17 @@ namespace karpovich
     double x, y;
   };
 
+  struct Box
+  {
+    Point max, min;
+  };
+
   class Shape
   {
   public:
     virtual bool isInside(Point p) const noexcept;
-    virtual std::pair< double, double > getMaxCoordinates() const noexcept;
+    virtual Point getMaxCoordinates() const noexcept;
+    virtual Point getMinCoordinates() const noexcept;
   };
 
   struct Circle: Shape
@@ -33,9 +39,13 @@ namespace karpovich
       radius(radius),
       position(position)
     {}
-    std::pair< double, double > getMaxCoordinates() const noexcept override
+    Point getMaxCoordinates() const noexcept override
     {
-      return {radius, radius};
+      return {radius + position.x, radius + position.y};
+    }
+    Point getMinCoordinates() const noexcept override
+    {
+      return {-radius + position.x, -radius + position.y};
     }
   };
 
@@ -54,9 +64,13 @@ namespace karpovich
       second_radius(s_r),
       position(pos)
     {}
-    std::pair< double, double > getMaxCoordinates() const noexcept override
+    Point getMaxCoordinates() const noexcept override
     {
-      return {radius, second_radius};
+      return {radius + position.x, second_radius + position.y};
+    }
+    Point getMinCoordinates() const noexcept override
+    {
+      return {-radius + position.x, -second_radius + position.y};
     }
   };
 
@@ -88,13 +102,17 @@ namespace karpovich
     return {hitsIntersection, hitsCombination};
   }
 
-  double areaIntersection(const std::vector< Shape > &shapes, size_t threads, size_t tests)
+  std::pair< double, double > area(const std::vector< Shape > &shapes, size_t threads, size_t tests)
   {
 
   }
-  double areaCombination(const std::vector< Shape > &shapes, size_t threads, size_t tests)
-  {
 
+  Box findBox(const std::vector< Shape > &shapes)
+  {
+    Point max{0, 0}, min{0, 0};
+
+
+    return {max, min};
   }
 }
 
@@ -134,5 +152,4 @@ int main(int argc, char **argv)
     }
     shapes.push_back(Circle(radius, Point{x, y}));
   }
-  std::cout << areaCombination(shapes, threads, tries) << ' ' << areaIntersection(shapes, threads, tries) << '\n';
 }
