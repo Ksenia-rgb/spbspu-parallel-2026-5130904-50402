@@ -1,7 +1,10 @@
 #include <cstddef>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
+
+namespace karpovich {
 
 struct Point
 {
@@ -35,17 +38,31 @@ struct Ellipse : Shape
   {}
 };
 
+}
+
+
 int main(int argc, char **argv)
 {
+  using namespace karpovich;
   if (argc != 3 && argc != 4) {
     std::cerr << "Invalid num of args\n";
     return 1;
   }
-  size_t threads = std::stoull(argv[1]); 
-  size_t tries = std::stoull(argv[2]);
-  size_t seed = 0; 
-  if (argc == 4) {
-    seed = std::stoull(argv[3]);
+  size_t threads = 0;
+  size_t tries = 0;
+  size_t seed = 0;
+  try {
+    threads = std::stoull(argv[1]);
+    tries = std::stoull(argv[2]);
+    if (argc == 4) {
+      seed = std::stoull(argv[3]);
+    }    
+  } catch (const std::invalid_argument &) {
+    std::cerr << "All args must be a number\n";
+    return 1;
+  } catch (const std::out_of_range &) {
+    std::cerr << "Args overflow\n";
+    return 1;
   }
   std::vector< Shape > shapes;
   size_t radius = 0;
@@ -59,6 +76,5 @@ int main(int argc, char **argv)
       continue;
     }
     shapes.push_back(Circle(radius, Point{x, y}));
-  }
-  
+  }  
 }
