@@ -4,42 +4,52 @@
 #include <string>
 #include <vector>
 
-namespace karpovich {
-
-struct Point
+namespace karpovich
 {
-  size_t x, y;
-};
 
-class Shape
-{
-public:
-  bool virtual isInside() const noexcept;
-};
+  struct Point
+  {
+    double x, y;
+  };
 
-struct Circle : Shape
-{
-  size_t radius;
-  Point position;
-  Circle(size_t radius, Point position):
-    radius(radius),
-    position(position)
-  {}
-};
+  class Shape
+  {
+  public:
+    bool virtual isInside(Point p) const noexcept;
+  };
 
-struct Ellipse : Shape
-{
-  size_t radius, second_radius;
-  Point position;
-  Ellipse(size_t r, size_t s_r, Point pos):
-    radius(r),
-    second_radius(s_r),
-    position(pos)
-  {}
-};
+  struct Circle: Shape
+  {
+    double radius;
+    Point position;
+    bool isInside(Point p) const noexcept override
+    {
+      return (p.x - position.x) * (p.x - position.x) + (p.y - position.y) * (p.y - position.y) <= radius * radius;
+    }
+    Circle(size_t radius, Point position):
+      radius(radius),
+      position(position)
+    {}
+  };
+
+  struct Ellipse: Shape
+  {
+    double radius, second_radius;
+    Point position;
+    bool isInside(Point p) const noexcept override
+    {
+      double dx = p.x - position.x;
+      double dy = p.y - position.y;
+      return (dx * dx * second_radius * second_radius + dy * dy * radius * radius) <= (radius * radius * second_radius * second_radius);
+    }
+    Ellipse(size_t r, size_t s_r, Point pos):
+      radius(r),
+      second_radius(s_r),
+      position(pos)
+    {}
+  };
 
 }
-
 
 int main(int argc, char **argv)
 {
@@ -56,7 +66,7 @@ int main(int argc, char **argv)
     tries = std::stoull(argv[2]);
     if (argc == 4) {
       seed = std::stoull(argv[3]);
-    }    
+    }
   } catch (const std::invalid_argument &) {
     std::cerr << "All args must be a number\n";
     return 1;
@@ -65,10 +75,10 @@ int main(int argc, char **argv)
     return 1;
   }
   std::vector< Shape > shapes;
-  size_t radius = 0;
-  size_t second_radius = 0;
-  size_t x = 0;
-  size_t y = 0;
+  double radius = 0;
+  double second_radius = 0;
+  double x = 0;
+  double y = 0;
   while (std::cin >> radius) {
     std::cin >> second_radius >> x >> y;
     if (second_radius) {
@@ -76,5 +86,5 @@ int main(int argc, char **argv)
       continue;
     }
     shapes.push_back(Circle(radius, Point{x, y}));
-  }  
+  }
 }
