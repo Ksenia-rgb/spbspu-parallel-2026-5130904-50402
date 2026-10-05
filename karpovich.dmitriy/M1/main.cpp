@@ -27,7 +27,7 @@ namespace karpovich
     Point position;
     bool isInside(Point p) const noexcept override
     {
-      return (p.x - radius) * (p.x - radius) + (p.y - radius) * (p.y - radius) <= radius * radius;
+      return (p.x - position.x) * (p.x - position.x) + (p.y - position.y) * (p.y - position.y) <= radius * radius;
     }
     Circle(size_t radius, Point position):
       radius(radius),
@@ -45,8 +45,8 @@ namespace karpovich
     Point position;
     bool isInside(Point p) const noexcept override
     {
-      double dx = p.x - radius;
-      double dy = p.y - second_radius;
+      double dx = p.x - position.x;
+      double dy = p.y - position.y;
       return (dx * dx * second_radius * second_radius + dy * dy * radius * radius) <= (radius * radius * second_radius * second_radius);
     }
     Ellipse(size_t r, size_t s_r, Point pos):
@@ -60,7 +60,7 @@ namespace karpovich
     }
   };
 
-  double calculate(const Shape &shape, size_t tests, size_t seed = 0)
+  size_t calculate(const Shape &shape, size_t tests, size_t seed = 0)
   {
     std::default_random_engine gen(seed);
     std::uniform_real_distribution< double > dist_x(0, shape.getMaxCoordinates().first);
@@ -74,6 +74,14 @@ namespace karpovich
     return res;
   }
 
+  double areaIntersection(const std::vector< Shape > &shapes, size_t threads, size_t tests)
+  {
+
+  }
+  double areaCombination(const std::vector< Shape > &shapes, size_t threads, size_t tests)
+  {
+
+  }
 }
 
 int main(int argc, char **argv)
@@ -112,4 +120,5 @@ int main(int argc, char **argv)
     }
     shapes.push_back(Circle(radius, Point{x, y}));
   }
+  std::cout << areaCombination(shapes, threads, tries) << ' ' << areaIntersection(shapes, threads, tries) << '\n';
 }
