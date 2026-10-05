@@ -1,7 +1,9 @@
 #include <cstddef>
 #include <iostream>
+#include <random>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace karpovich
@@ -15,7 +17,8 @@ namespace karpovich
   class Shape
   {
   public:
-    bool virtual isInside(Point p) const noexcept;
+    virtual bool isInside(Point p) const noexcept;
+    virtual std::pair< double, double > getMaxCoordinates() const noexcept;
   };
 
   struct Circle: Shape
@@ -24,12 +27,16 @@ namespace karpovich
     Point position;
     bool isInside(Point p) const noexcept override
     {
-      return (p.x - position.x) * (p.x - position.x) + (p.y - position.y) * (p.y - position.y) <= radius * radius;
+      return (p.x - radius) * (p.x - radius) + (p.y - radius) * (p.y - radius) <= radius * radius;
     }
     Circle(size_t radius, Point position):
       radius(radius),
       position(position)
     {}
+    std::pair< double, double > getMaxCoordinates() const noexcept override
+    {
+      return {radius, radius};
+    }
   };
 
   struct Ellipse: Shape
@@ -38,8 +45,8 @@ namespace karpovich
     Point position;
     bool isInside(Point p) const noexcept override
     {
-      double dx = p.x - position.x;
-      double dy = p.y - position.y;
+      double dx = p.x - radius;
+      double dy = p.y - second_radius;
       return (dx * dx * second_radius * second_radius + dy * dy * radius * radius) <= (radius * radius * second_radius * second_radius);
     }
     Ellipse(size_t r, size_t s_r, Point pos):
@@ -47,7 +54,25 @@ namespace karpovich
       second_radius(s_r),
       position(pos)
     {}
+    std::pair< double, double > getMaxCoordinates() const noexcept override
+    {
+      return {radius, second_radius};
+    }
   };
+
+  double calculate(const Shape &shape, size_t tests, size_t seed = 0)
+  {
+    std::default_random_engine gen(seed);
+    std::uniform_real_distribution< double > dist_x(0, shape.getMaxCoordinates().first);
+    std::uniform_real_distribution< double > dist_y(0, shape.getMaxCoordinates().second);
+    size_t res = 0;
+    for (size_t i = 0; i < tests; i++) {
+      if (shape.isInside({dist_x(gen), dist_y(gen)})) {
+        res++;
+      }
+    }
+    return res;
+  }
 
 }
 
