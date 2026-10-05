@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <thread>
+#include <future>
 #include <random>
 #include <utility>
 #include <limits>
@@ -47,8 +47,14 @@ namespace lavrentev
   };
 
   std::vector< lavrentev::Circle > readInput(lavrentev::Polygon& pg);
-  std::pair< size_t, size_t > calculate(const std::vector< lavrentev::Circle > &figures, const lavrentev::Polygon &pg, int tries, int seed);
+  std::pair< size_t, size_t > calculate(const std::vector< lavrentev::Circle > &figures, const lavrentev::Polygon &pg, size_t tries, int seed);
   size_t countInside(const std::vector< lavrentev::Circle > &figures, double x, double y);
+  std::pair< double, double > area(const std::vector< lavrentev::Circle > &figures,
+    const lavrentev::Polygon &pg,
+    size_t threads,
+    size_t tries,
+    int seed
+  );
 }
 
 int main(int argc, char* argv[])
@@ -59,21 +65,16 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  int threads;
-  int tries;
+  size_t threads;
+  size_t tries;
   try
   {
-    threads = std::stoi(argv[1]);
-    tries = std::stoi(argv[2]);
+    threads = std::stoul(argv[1]);
+    tries = std::stoul(argv[2]);
   }
   catch (const std::exception &e)
   {
     std::cerr << "Invalid threads or tries\n";
-    return 1;
-  }
-  if (threads <= 0 || tries <= 0)
-  {
-    std::cerr << "Invalid number of threads or tries\n";
     return 1;
   }
 
@@ -105,10 +106,8 @@ int main(int argc, char* argv[])
     return 2;
   }
 
-  for (size_t i = 0; i < threads; ++i)
-  {
-
-  }
+  std::pair< double, double > res = lavrentev::area(figures, pg, threads, tries, seed);
+  std::cout << res.first << " " << res.second << "\n";
 }
 
 std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon& pg)
@@ -135,7 +134,7 @@ std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon& pg)
   return figures;
 }
 
-std::pair< size_t, size_t > lavrentev::calculate(const std::vector< lavrentev::Circle > &figures, const lavrentev::Polygon &pg, int tries, int seed)
+std::pair< size_t, size_t > lavrentev::calculate(const std::vector< lavrentev::Circle > &figures, const lavrentev::Polygon &pg, size_t tries, int seed)
 {
   std::default_random_engine engine(seed);
 
@@ -148,7 +147,7 @@ std::pair< size_t, size_t > lavrentev::calculate(const std::vector< lavrentev::C
   {
     double x = distX(engine);
     double y = distY(engine);
-    int countFig = countInside(figures, x, y);
+    size_t countFig = countInside(figures, x, y);
     if (countFig > 0)
     {
       ++resAll;
@@ -173,4 +172,48 @@ size_t lavrentev::countInside(const std::vector< lavrentev::Circle > &figures, d
     }
   }
   return res;
+}
+
+std::pair< double, double > lavrentev::area(const std::vector< lavrentev::Circle > &figures,
+  const lavrentev::Polygon &pg,
+  size_t threads,
+  size_t tries,
+  int seed)
+{
+  std::vector< std::future< std::pair< size_t, size_t > > > results;
+  results.reserve(threads);
+  size_t base_tries = tries / threads;
+  size_t remainder = tries % threads;
+
+  for (size_t i = 0; i < threads; ++i)
+  {
+    size_t thread_tries = base_tries + (i == 0 ? remainder : 0);
+
+    results.push_back(std::async(
+      std::launch::async,
+      lavrentev::calculate,
+      std::cref(figures),
+      std::cref(pg),
+      thread_tries,
+      seed
+    ));
+  }
+
+  size_t totalAll = 0;
+  size_t totalIS = 0;
+  for (size_t i = 0; i < threads; ++i)
+  {
+    std::pair< double, double > res = results[i].get();
+    totalAll += res.first;
+    totalIS += res.second;
+  }
+
+  double pgWidth = static_cast< double >(pg.getMaxX() - pg.getMinX());
+  double pgHeight = static_cast< double >(pg.getMaxY() - pg.getMinY());
+  double totalArea = pgWidth * pgHeight;
+
+  double all = totalArea * static_cast< double >(totalAll) / static_cast< double >(tries);
+  double is = totalArea * static_cast< double >(totalIS) / static_cast< double >(tries);
+
+  return {all, is};
 }
