@@ -60,18 +60,32 @@ namespace karpovich
     }
   };
 
-  size_t calculate(const Shape &shape, size_t tests, size_t seed = 0)
+  std::pair< size_t, size_t > calculate(const std::vector< Shape > &shapes, Point min, Point max, size_t tests, size_t seed = 0)
   {
     std::default_random_engine gen(seed);
-    std::uniform_real_distribution< double > dist_x(0, shape.getMaxCoordinates().first);
-    std::uniform_real_distribution< double > dist_y(0, shape.getMaxCoordinates().second);
-    size_t res = 0;
+    std::uniform_real_distribution< double > dist_x(min.x, max.x);
+    std::uniform_real_distribution< double > dist_y(min.y, max.y);
+    size_t hitsIntersection = 0;
+    size_t hitsCombination = 0;
     for (size_t i = 0; i < tests; i++) {
-      if (shape.isInside({dist_x(gen), dist_y(gen)})) {
-        res++;
+      bool isInsideAny = false;
+      bool isInsideAll = true;
+      Point p{dist_x(gen), dist_y(gen)};
+      for (const Shape & shp: shapes) {
+        if (shp.isInside(p)) {
+          isInsideAny = true;
+        } else {
+          isInsideAll = false;
+        }
+      }
+      if (isInsideAll) {
+        hitsIntersection++;
+      }
+      if (isInsideAny) {
+        hitsCombination++;
       }
     }
-    return res;
+    return {hitsIntersection, hitsCombination};
   }
 
   double areaIntersection(const std::vector< Shape > &shapes, size_t threads, size_t tests)
