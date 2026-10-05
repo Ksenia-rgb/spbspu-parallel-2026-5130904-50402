@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstddef>
 #include <iostream>
 #include <random>
@@ -109,9 +110,15 @@ namespace karpovich
 
   Box findBox(const std::vector< Shape > &shapes)
   {
-    Point max{0, 0}, min{0, 0};
-
-
+    double inf = std::numeric_limits< double >::infinity();
+    Point max{inf, inf};
+    Point min{-inf, -inf};
+    for (const auto &shape : shapes) {
+      min.x = std::min(min.x, shape.getMaxCoordinates().x);
+      max.x = std::max(max.x, shape.getMaxCoordinates().x);
+      min.y = std::min(min.y, shape.getMaxCoordinates().y);
+      max.y = std::max(max.y, shape.getMaxCoordinates().y);
+    }
     return {max, min};
   }
 }
