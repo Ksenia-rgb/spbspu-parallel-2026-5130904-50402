@@ -13,16 +13,6 @@
 namespace karpovich
 {
 
-  struct Point
-  {
-    double x, y;
-  };
-
-  struct Box
-  {
-    Point max, min;
-  };
-
   std::pair< size_t, size_t > calculate(const std::vector< Shape > &shapes, Point max, Point min, size_t tests,
                                         size_t seed)
   {
