@@ -2,6 +2,7 @@
 
 #include <istream>
 #include <stdexcept>
+#include <vector>
 
 sogdanov::Figure::Figure(const long long horizontal_radius, const long long vertical_radius, const long long center_x,
     const long long center_y):
