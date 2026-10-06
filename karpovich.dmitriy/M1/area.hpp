@@ -8,9 +8,8 @@
 
 namespace karpovich
 {
-
-  std::pair< double, double > area(const std::vector< std::unique_ptr< Shape > > &shapes, size_t threads, size_t tests,
-                                   size_t seed = 0);
+  using shapes_t = std::vector< std::unique_ptr< Shape > >;
+  std::pair< double, double > area(const shapes_t &shapes, size_t threads, size_t tests, size_t seed = 0);
 }
 
 #endif
