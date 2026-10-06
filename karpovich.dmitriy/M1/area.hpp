@@ -1,8 +1,9 @@
-#ifndef KARPOVICH_AREA_HPP
-#define KARPOVICH_AREA_HPP
+#ifndef AREA_HPP
+#define AREA_HPP
 
 #include <cstddef>
 #include <memory>
+#include <utility>
 #include <vector>
 #include "shape.hpp"
 

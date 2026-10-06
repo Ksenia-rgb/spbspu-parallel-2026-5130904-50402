@@ -34,14 +34,14 @@ namespace karpovich
   class Ellipse final: public Shape
   {
   public:
-    Ellipse(double horizontalRadius, double verticalRadius, Point center) noexcept;
+    Ellipse(double horizontal_radius, double vertical_radius, Point center) noexcept;
     bool contains(Point point) const noexcept override;
     Point getMinCorner() const noexcept override;
     Point getMaxCorner() const noexcept override;
 
   private:
-    double horizontalRadius_;
-    double verticalRadius_;
+    double horizontal_radius_;
+    double vertical_radius_;
     Point center_;
   };
 

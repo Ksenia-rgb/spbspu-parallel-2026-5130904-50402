@@ -1,10 +1,12 @@
 #include "area.hpp"
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <future>
 #include <limits>
 #include <random>
 #include <stdexcept>
+#include <thread>
 #include <utility>
 #include <vector>
 #include "shape.hpp"
@@ -22,43 +24,51 @@ namespace karpovich
     std::pair< size_t, size_t > calculate(const shapes_t &shapes, Point max, Point min, size_t tests, size_t seed)
     {
       std::default_random_engine gen(seed);
-      std::uniform_real_distribution< double > distX(min.x, max.x);
-      std::uniform_real_distribution< double > distY(min.y, max.y);
-      size_t hitsIntersection = 0;
-      size_t hitsCover = 0;
-      for (size_t i = 0; i < tests; i++) {
-        bool isInsideAny = false;
-        bool isInsideAll = true;
-        Point p{distX(gen), distY(gen)};
-        for (const auto &shp : shapes) {
-          if (shp->contains(p)) {
-            isInsideAny = true;
-          } else {
-            isInsideAll = false;
+      std::uniform_real_distribution< double > dist_x(min.x, max.x);
+      std::uniform_real_distribution< double > dist_y(min.y, max.y);
+      size_t hits_intersection = 0;
+      size_t hits_cover = 0;
+      for (size_t i = 0; i < tests; i++)
+      {
+        bool is_inside_any = false;
+        bool is_inside_all = true;
+        const Point p{dist_x(gen), dist_y(gen)};
+        for (const auto &shp : shapes)
+        {
+          if (shp->contains(p))
+          {
+            is_inside_any = true;
+          }
+          else
+          {
+            is_inside_all = false;
           }
         }
-        if (isInsideAll) {
-          hitsIntersection++;
+        if (is_inside_all)
+        {
+          hits_intersection++;
         }
-        if (isInsideAny) {
-          hitsCover++;
+        if (is_inside_any)
+        {
+          hits_cover++;
         }
       }
-      return {hitsIntersection, hitsCover};
+      return {hits_intersection, hits_cover};
     }
 
     Box findBox(const shapes_t &shapes)
     {
-      double inf = std::numeric_limits< double >::infinity();
+      const double inf = std::numeric_limits< double >::infinity();
       Point max{-inf, -inf};
       Point min{inf, inf};
-      for (const auto &shape : shapes) {
-        Point shapeMin = shape->getMinCorner();
-        Point shapeMax = shape->getMaxCorner();
-        min.x = std::min(min.x, shapeMin.x);
-        min.y = std::min(min.y, shapeMin.y);
-        max.x = std::max(max.x, shapeMax.x);
-        max.y = std::max(max.y, shapeMax.y);
+      for (const auto &shape : shapes)
+      {
+        const Point shape_min = shape->getMinCorner();
+        const Point shape_max = shape->getMaxCorner();
+        min.x = std::min(min.x, shape_min.x);
+        min.y = std::min(min.y, shape_min.y);
+        max.x = std::max(max.x, shape_max.x);
+        max.y = std::max(max.y, shape_max.y);
       }
       return {max, min};
     }
@@ -67,38 +77,42 @@ namespace karpovich
 
   std::pair< double, double > area(const shapes_t &shapes, size_t threads, size_t tests, size_t seed)
   {
-    if (!tests) {
+    if (!tests)
+    {
       throw std::invalid_argument("tests must be > 0");
     }
-    if (shapes.empty()) {
+    if (shapes.empty())
+    {
       return {0.0, 0.0};
     }
-    if (threads == 0) {
+    if (threads == 0)
+    {
       threads = 1;
     }
     const size_t hw = std::thread::hardware_concurrency();
-    const size_t maxThreads = (!hw ? 4 : hw) * 2;
-    if (threads > maxThreads) {
-      threads = maxThreads;
+    const size_t max_threads = (!hw ? 4 : hw) * 2;
+    if (threads > max_threads)
+    {
+      threads = max_threads;
     }
     std::vector< std::future< std::pair< size_t, size_t > > > futures;
-    size_t tests_per_thread = tests / threads;
-    size_t remainder = tests % threads;
-    Box box = findBox(shapes);
-    Point max = box.max;
-    Point min = box.min;
-    for (size_t i = 0; i < threads; i++) {
-      size_t tests = i < remainder ? tests_per_thread + 1 : tests_per_thread;
-      futures.push_back(std::async(std::launch::async, calculate, std::cref(shapes), max, min, tests, seed + i));
+    const size_t tests_per_thread = tests / threads;
+    const size_t remainder = tests % threads;
+    const Box box = findBox(shapes);
+    for (size_t i = 0; i < threads; i++)
+    {
+      const size_t part = i < remainder ? tests_per_thread + 1 : tests_per_thread;
+      futures.push_back(std::async(std::launch::async, calculate, std::cref(shapes), box.max, box.min, part, seed + i));
     }
     size_t inters = 0;
     size_t covers = 0;
-    for (auto &future : futures) {
-      std::pair< size_t, size_t > result = future.get();
+    for (auto &future : futures)
+    {
+      const std::pair< size_t, size_t > result = future.get();
       inters += result.first;
       covers += result.second;
     }
-    double box_area = (box.max.x - box.min.x) * (box.max.y - box.min.y);
+    const double box_area = (box.max.x - box.min.x) * (box.max.y - box.min.y);
     return {box_area * (static_cast< double >(covers) / tests), box_area * (static_cast< double >(inters) / tests)};
   }
 
