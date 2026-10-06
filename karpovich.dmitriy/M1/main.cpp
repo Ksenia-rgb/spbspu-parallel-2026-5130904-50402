@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 #include "area.hpp"
 #include "shape.hpp"
 
@@ -50,12 +51,12 @@ int main(int argc, char **argv)
     std::cerr << "Failed to parse input\n";
     return 1;
   }
-  AreaResult areas{0.0, 0.0};
+  std::pair< double, double > areas{0.0, 0.0};
   try {
     areas = area(shapes, threads, tries, seed);
   } catch (const std::invalid_argument &e) {
     std::cerr << e.what() << '\n';
     return 1;
   }
-  std::cout << areas.coverArea << ' ' << areas.intersectionArea << '\n';
+  std::cout << areas.first << ' ' << areas.second << '\n';
 }

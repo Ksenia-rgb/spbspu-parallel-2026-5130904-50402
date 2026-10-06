@@ -1,5 +1,6 @@
 #include "area.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <future>
 #include <limits>
 #include <random>
@@ -61,13 +62,22 @@ namespace karpovich
     return {max, min};
   }
 
-  AreaResult area(const std::vector< std::unique_ptr< Shape > > &shapes, size_t threads, size_t tests, size_t seed)
+  std::pair< double, double > area(const std::vector< std::unique_ptr< Shape > > &shapes, size_t threads, size_t tests,
+                                   size_t seed)
   {
-    if (!threads || !tests) {
-      throw std::invalid_argument("args must be > 0");
+    if (!tests) {
+      throw std::invalid_argument("tests must be > 0");
     }
     if (shapes.empty()) {
       return {0.0, 0.0};
+    }
+    if (threads == 0) {
+      threads = 1;
+    }
+    const size_t hw = std::thread::hardware_concurrency();
+    const size_t maxThreads = (!hw ? 4 : hw) * 64;
+    if (threads > maxThreads) {
+      threads = maxThreads;
     }
     std::vector< std::future< std::pair< size_t, size_t > > > futures;
     size_t tests_per_thread = tests / threads;

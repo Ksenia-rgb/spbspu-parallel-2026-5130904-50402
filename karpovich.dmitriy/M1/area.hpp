@@ -9,12 +9,8 @@
 namespace karpovich
 {
 
-  struct AreaResult
-  {
-    double coverArea;
-    double intersectionArea;
-  };
-  AreaResult area(const std::vector< std::unique_ptr< Shape > > &shapes, size_t threads, size_t tests, size_t seed = 0);
+  std::pair< double, double > area(const std::vector< std::unique_ptr< Shape > > &shapes, size_t threads, size_t tests,
+                                   size_t seed = 0);
 }
 
 #endif
