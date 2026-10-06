@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "shape.hpp"
 
 namespace karpovich
 {
@@ -20,62 +21,6 @@ namespace karpovich
   struct Box
   {
     Point max, min;
-  };
-
-  class Shape
-  {
-  public:
-    virtual bool isInside(Point p) const noexcept;
-    virtual Point getMaxCoordinates() const noexcept;
-    virtual Point getMinCoordinates() const noexcept;
-  };
-
-  struct Circle: Shape
-  {
-    double radius;
-    Point position;
-    bool isInside(Point p) const noexcept override
-    {
-      return (p.x - position.x) * (p.x - position.x) + (p.y - position.y) * (p.y - position.y) <= radius * radius;
-    }
-    Circle(size_t radius, Point position):
-      radius(radius),
-      position(position)
-    {}
-    Point getMaxCoordinates() const noexcept override
-    {
-      return {radius + position.x, radius + position.y};
-    }
-    Point getMinCoordinates() const noexcept override
-    {
-      return {-radius + position.x, -radius + position.y};
-    }
-  };
-
-  struct Ellipse: Shape
-  {
-    double radius, second_radius;
-    Point position;
-    bool isInside(Point p) const noexcept override
-    {
-      double dx = p.x - position.x;
-      double dy = p.y - position.y;
-      return (dx * dx * second_radius * second_radius + dy * dy * radius * radius)
-             <= (radius * radius * second_radius * second_radius);
-    }
-    Ellipse(size_t r, size_t s_r, Point pos):
-      radius(r),
-      second_radius(s_r),
-      position(pos)
-    {}
-    Point getMaxCoordinates() const noexcept override
-    {
-      return {radius + position.x, second_radius + position.y};
-    }
-    Point getMinCoordinates() const noexcept override
-    {
-      return {-radius + position.x, -second_radius + position.y};
-    }
   };
 
   std::pair< size_t, size_t > calculate(const std::vector< Shape > &shapes, Point max, Point min, size_t tests,
