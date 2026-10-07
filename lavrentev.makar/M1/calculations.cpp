@@ -1,5 +1,4 @@
 #include "calculations.hpp"
-
 #include <cstddef>
 #include <functional>
 #include <future>
@@ -8,8 +7,10 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include "circle.hpp"
+#include "polygon.hpp"
 
-std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon &pg)
+std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon& pg)
 {
   std::vector< lavrentev::Circle > figures;
   int r = 0;
@@ -50,18 +51,16 @@ std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon &pg)
   return figures;
 }
 
-std::pair< std::size_t, std::size_t > lavrentev::calculate(const std::vector< lavrentev::Circle > &figures,
-  const lavrentev::Polygon &pg,
-  std::size_t tries,
-  int seed)
+std::pair< std::size_t, std::size_t > lavrentev::calculate(const std::vector< lavrentev::Circle >& figures,
+                                                           const lavrentev::Polygon& pg, std::size_t tries, int seed)
 {
   std::default_random_engine engine(seed);
 
   std::uniform_real_distribution< double > dist_x(pg.getMinX(), pg.getMaxX());
   std::uniform_real_distribution< double > dist_y(pg.getMinY(), pg.getMaxY());
 
-  std::size_t res_all = 0;
-  std::size_t res_is = 0;
+  size_t res_all = 0;
+  size_t res_is = 0;
   for (std::size_t i = 0; i < tries; ++i)
   {
     const double x = dist_x(engine);
@@ -79,10 +78,10 @@ std::pair< std::size_t, std::size_t > lavrentev::calculate(const std::vector< la
   return {res_all, res_is};
 }
 
-std::size_t lavrentev::countInside(const std::vector< lavrentev::Circle > &figures, double x, double y)
+std::size_t lavrentev::countInside(const std::vector< lavrentev::Circle >& figures, double x, double y)
 {
-  std::size_t res = 0;
-  for (const auto &circle : figures)
+  size_t res = 0;
+  for (const auto& circle : figures)
   {
     const double dx = x - circle.getX();
     const double dy = y - circle.getY();
@@ -95,11 +94,9 @@ std::size_t lavrentev::countInside(const std::vector< lavrentev::Circle > &figur
   return res;
 }
 
-std::pair< double, double > lavrentev::area(const std::vector< lavrentev::Circle > &figures,
-  const lavrentev::Polygon &pg,
-  std::size_t threads,
-  std::size_t tries,
-  int seed)
+std::pair< double, double > lavrentev::area(const std::vector< lavrentev::Circle >& figures,
+                                            const lavrentev::Polygon& pg, std::size_t threads, std::size_t tries,
+                                            int seed)
 {
   std::vector< std::future< std::pair< std::size_t, std::size_t > > > results;
   results.reserve(threads);
@@ -109,15 +106,10 @@ std::pair< double, double > lavrentev::area(const std::vector< lavrentev::Circle
   for (std::size_t i = 0; i < threads; ++i)
   {
     const std::size_t thread_tries = base_tries + (i == 0 ? remainder : 0);
+    const int thread_seed = seed + static_cast< int >(i);
 
-    auto task = std::async(
-      std::launch::async,
-      lavrentev::calculate,
-      std::cref(figures),
-      std::cref(pg),
-      thread_tries,
-      seed + static_cast< int >(i)
-    );
+    auto task = std::async(std::launch::async, lavrentev::calculate, std::cref(figures), std::cref(pg), thread_tries,
+                           thread_seed);
     results.push_back(std::move(task));
   }
 

@@ -1,70 +1,67 @@
-#include <iostream>
-#include <vector>
-#include <utility>
-#include <limits>
 #include <cstddef>
-#include <string>
 #include <exception>
-
+#include <iostream>
+#include <limits>
+#include <string>
+#include <utility>
+#include <vector>
+#include "calculations.hpp"
 #include "circle.hpp"
 #include "polygon.hpp"
-#include "calculations.hpp"
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-  constexpr int MIN_ARGS = 3;
-  constexpr int MAX_ARGS = 4;
-  constexpr int ARG_THREADS_IDX = 1;
-  constexpr int ARG_TRIES_IDX = 2;
-  constexpr int ARG_SEED_IDX = 3;
-  constexpr int ERROR_ARGS = 1;
-  constexpr int ERROR_INPUT = 2;
+  constexpr int min_args = 3;
+  constexpr int max_args = 4;
+  constexpr int arg_threads_idx = 1;
+  constexpr int arg_tries_idx = 2;
+  constexpr int arg_seed_idx = 3;
+  constexpr int error_args = 1;
+  constexpr int error_input = 2;
 
-  if (argc < MIN_ARGS || argc > MAX_ARGS)
+  if (argc < min_args || argc > max_args)
   {
     std::cerr << "Invalid number of arguments\n";
-    return ERROR_ARGS;
+    return error_args;
   }
 
   std::size_t threads = 0;
   std::size_t tries = 0;
   try
   {
-    threads = std::stoul(argv[ARG_THREADS_IDX]);
-    tries = std::stoul(argv[ARG_TRIES_IDX]);
+    threads = std::stoul(argv[arg_threads_idx]);
+    tries = std::stoul(argv[arg_tries_idx]);
   }
-  catch (const std::exception &e)
+  catch (const std::exception& e)
   {
     std::cerr << "Invalid threads or tries\n";
-    return ERROR_ARGS;
+    return error_args;
   }
 
   int seed = 0;
-  if (argc == MAX_ARGS)
+  if (argc == max_args)
   {
-    seed = std::stoi(argv[ARG_SEED_IDX]);
+    seed = std::stoi(argv[arg_seed_idx]);
     if (seed < 0)
     {
       std::cerr << "Invalid seed\n";
-      return ERROR_ARGS;
+      return error_args;
     }
   }
 
-  lavrentev::Polygon pg(
-    std::numeric_limits< int >::max(),
-    std::numeric_limits< int >::max(),
-    std::numeric_limits< int >::min(),
-    std::numeric_limits< int >::min()
-  );
+  const int max_coord = std::numeric_limits< int >::max();
+  const int min_coord = std::numeric_limits< int >::min();
+  lavrentev::Polygon pg(max_coord, max_coord, min_coord, min_coord);
+
   std::vector< lavrentev::Circle > figures;
   try
   {
     figures = lavrentev::readInput(pg);
   }
-  catch (const std::exception &e)
+  catch (const std::exception& e)
   {
     std::cerr << "Input processing error\n";
-    return ERROR_INPUT;
+    return error_input;
   }
 
   const std::pair< double, double > res = lavrentev::area(figures, pg, threads, tries, seed);
