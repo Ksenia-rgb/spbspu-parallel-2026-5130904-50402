@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
   constexpr int arg_seed_idx = 3;
   constexpr int error_args = 1;
   constexpr int error_input = 2;
+  constexpr int max_threads = 1000;
 
   if ((argc < min_args) || (argc > max_args))
   {
@@ -48,9 +49,9 @@ int main(int argc, char *argv[])
   {
     threads = 1;
   }
-  if (threads > 1000)
+  if (threads > max_threads)
   {
-    threads = 1000;
+    threads = max_threads;
   }
 
   int seed = 0;
