@@ -5,11 +5,12 @@
 #include <string>
 #include <utility>
 #include <vector>
+
 #include "calculations.hpp"
 #include "circle.hpp"
 #include "polygon.hpp"
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
   constexpr int min_args = 3;
   constexpr int max_args = 4;
@@ -19,7 +20,7 @@ int main(int argc, char* argv[])
   constexpr int error_args = 1;
   constexpr int error_input = 2;
 
-  if (argc < min_args || argc > max_args)
+  if ((argc < min_args) || (argc > max_args))
   {
     std::cerr << "Invalid number of arguments\n";
     return error_args;
@@ -32,7 +33,13 @@ int main(int argc, char* argv[])
     threads = std::stoul(argv[arg_threads_idx]);
     tries = std::stoul(argv[arg_tries_idx]);
   }
-  catch (const std::exception& e)
+  catch (const std::exception &)
+  {
+    std::cerr << "Invalid threads or tries\n";
+    return error_args;
+  }
+
+  if ((threads == 0) || (tries == 0))
   {
     std::cerr << "Invalid threads or tries\n";
     return error_args;
@@ -41,7 +48,16 @@ int main(int argc, char* argv[])
   int seed = 0;
   if (argc == max_args)
   {
-    seed = std::stoi(argv[arg_seed_idx]);
+    try
+    {
+      seed = std::stoi(argv[arg_seed_idx]);
+    }
+    catch (const std::exception &)
+    {
+      std::cerr << "Invalid seed\n";
+      return error_args;
+    }
+
     if (seed < 0)
     {
       std::cerr << "Invalid seed\n";
@@ -52,13 +68,12 @@ int main(int argc, char* argv[])
   const int max_coord = std::numeric_limits< int >::max();
   const int min_coord = std::numeric_limits< int >::min();
   lavrentev::Polygon pg(max_coord, max_coord, min_coord, min_coord);
-
   std::vector< lavrentev::Circle > figures;
   try
   {
     figures = lavrentev::readInput(pg);
   }
-  catch (const std::exception& e)
+  catch (const std::exception &)
   {
     std::cerr << "Input processing error\n";
     return error_input;

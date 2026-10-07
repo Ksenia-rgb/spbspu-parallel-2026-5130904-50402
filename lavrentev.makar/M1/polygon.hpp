@@ -12,16 +12,17 @@ namespace lavrentev
     int getMaxY() const;
     int getMinX() const;
     int getMinY() const;
+
     void setMaxX(int x);
     void setMaxY(int y);
     void setMinX(int x);
     void setMinY(int y);
 
   private:
-    int max_x_;
-    int max_y_;
     int min_x_;
     int min_y_;
+    int max_x_;
+    int max_y_;
   };
 }
 

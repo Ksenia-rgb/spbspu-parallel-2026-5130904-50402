@@ -1,11 +1,12 @@
 #include "polygon.hpp"
 
 lavrentev::Polygon::Polygon(int x1, int y1, int x2, int y2):
-  max_x_(x2),
-  max_y_(y2),
   min_x_(x1),
-  min_y_(y1)
-{}
+  min_y_(y1),
+  max_x_(x2),
+  max_y_(y2)
+{
+}
 
 int lavrentev::Polygon::getMaxX() const
 {
