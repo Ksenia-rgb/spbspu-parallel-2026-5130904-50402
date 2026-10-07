@@ -212,8 +212,8 @@ std::pair< double, double > lavrentev::area(const std::vector< lavrentev::Circle
   double pgHeight = static_cast< double >(pg.getMaxY() - pg.getMinY());
   double totalArea = pgWidth * pgHeight;
 
-  double all = totalArea * static_cast< double >(totalAll) / static_cast< double >(tries);
-  double is = totalArea * static_cast< double >(totalIS) / static_cast< double >(tries);
+  double allArea = totalArea * static_cast< double >(totalAll) / static_cast< double >(tries);
+  double isArea = totalArea * static_cast< double >(totalIS) / static_cast< double >(tries);
 
-  return {all, is};
+  return {allArea, isArea};
 }
