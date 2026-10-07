@@ -54,9 +54,9 @@ std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon &pg)
 }
 
 std::pair< std::size_t, std::size_t > lavrentev::calculate(const std::vector< lavrentev::Circle > &figures,
-  const lavrentev::Polygon &pg,
-  std::size_t tries,
-  int seed)
+                                                           const lavrentev::Polygon &pg,
+                                                           std::size_t tries,
+                                                           int seed)
 {
   std::default_random_engine engine(seed);
 
@@ -99,10 +99,10 @@ std::size_t lavrentev::countInside(const std::vector< lavrentev::Circle > &figur
 }
 
 std::pair< double, double > lavrentev::area(const std::vector< lavrentev::Circle > &figures,
-  const lavrentev::Polygon &pg,
-  std::size_t threads,
-  std::size_t tries,
-  int seed)
+                                            const lavrentev::Polygon &pg,
+                                            std::size_t threads,
+                                            std::size_t tries,
+                                            int seed)
 {
   std::vector< std::future< std::pair< std::size_t, std::size_t > > > results;
   results.reserve(threads);
@@ -115,11 +115,11 @@ std::pair< double, double > lavrentev::area(const std::vector< lavrentev::Circle
     const int thread_seed = seed + static_cast< int >(i);
 
     auto task = std::async(std::launch::async,
-      lavrentev::calculate,
-      std::cref(figures),
-      std::cref(pg),
-      thread_tries,
-      thread_seed);
+                           lavrentev::calculate,
+                           std::cref(figures),
+                           std::cref(pg),
+                           thread_tries,
+                           thread_seed);
     results.push_back(std::move(task));
   }
 
