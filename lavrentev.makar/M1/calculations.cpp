@@ -12,9 +12,9 @@
 #include "circle.hpp"
 #include "polygon.hpp"
 
-std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon &pg)
+lavrentev::figures_t lavrentev::readInput(Polygon &pg)
 {
-  std::vector< lavrentev::Circle > figures;
+  figures_t figures;
   int r = 0;
   while (std::cin >> r)
   {
@@ -42,7 +42,7 @@ std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon &pg)
     {
       pg.setMaxY(y + r);
     }
-    figures.push_back(lavrentev::Circle(r, x, y));
+    figures.push_back(Circle(r, x, y));
   }
   if (!std::cin.eof() || figures.empty())
   {
@@ -51,10 +51,7 @@ std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon &pg)
   return figures;
 }
 
-std::pair< std::size_t, std::size_t > lavrentev::calculate(const std::vector< lavrentev::Circle > &figures,
-                                                           const lavrentev::Polygon &pg,
-                                                           std::size_t tries,
-                                                           int seed)
+lavrentev::count_pair_t lavrentev::calculate(const figures_t &figures, const Polygon &pg, std::size_t tries, int seed)
 {
   std::default_random_engine engine(seed);
   std::uniform_real_distribution< double > dist_x(pg.getMinX(), pg.getMaxX());
@@ -78,7 +75,7 @@ std::pair< std::size_t, std::size_t > lavrentev::calculate(const std::vector< la
   return {res_all, res_is};
 }
 
-std::size_t lavrentev::countInside(const std::vector< lavrentev::Circle > &figures, double x, double y)
+std::size_t lavrentev::countInside(const figures_t &figures, double x, double y)
 {
   std::size_t res = 0;
   for (const auto &circle : figures)
@@ -94,13 +91,11 @@ std::size_t lavrentev::countInside(const std::vector< lavrentev::Circle > &figur
   return res;
 }
 
-std::pair< double, double > lavrentev::area(const std::vector< lavrentev::Circle > &figures,
-                                            const lavrentev::Polygon &pg,
-                                            std::size_t threads,
-                                            std::size_t tries,
-                                            int seed)
+lavrentev::area_pair_t lavrentev::area(const figures_t &figures,
+                                       const Polygon &pg, std::size_t threads,
+                                       std::size_t tries, int seed)
 {
-  std::vector< std::future< std::pair< std::size_t, std::size_t > > > results;
+  std::vector< std::future< count_pair_t > > results;
   results.reserve(threads);
   const std::size_t base_tries = tries / threads;
   const std::size_t remainder = tries % threads;
@@ -108,19 +103,15 @@ std::pair< double, double > lavrentev::area(const std::vector< lavrentev::Circle
   {
     const std::size_t thread_tries = base_tries + (i == 0 ? remainder : 0);
     const int thread_seed = seed + static_cast< int >(i);
-    auto task = std::async(std::launch::async,
-                           lavrentev::calculate,
-                           std::cref(figures),
-                           std::cref(pg),
-                           thread_tries,
-                           thread_seed);
+    const auto policy = std::launch::async;
+    auto task = std::async(policy, calculate, std::cref(figures), std::cref(pg), thread_tries, thread_seed);
     results.push_back(std::move(task));
   }
   std::size_t total_all = 0;
   std::size_t total_is = 0;
   for (std::size_t i = 0; i < threads; ++i)
   {
-    const std::pair< std::size_t, std::size_t > res = results[i].get();
+    const count_pair_t res = results[i].get();
     total_all += res.first;
     total_is += res.second;
   }

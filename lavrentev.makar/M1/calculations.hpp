@@ -10,20 +10,14 @@
 
 namespace lavrentev
 {
-  std::vector< lavrentev::Circle > readInput(lavrentev::Polygon &pg);
+  using count_pair_t = std::pair< std::size_t, std::size_t >;
+  using area_pair_t = std::pair< double, double >;
+  using figures_t = std::vector< Circle >;
 
-  std::pair< std::size_t, std::size_t > calculate(const std::vector< lavrentev::Circle > &figures,
-                                                  const lavrentev::Polygon &pg,
-                                                  std::size_t tries,
-                                                  int seed);
-
-  std::size_t countInside(const std::vector< lavrentev::Circle > &figures, double x, double y);
-
-  std::pair< double, double > area(const std::vector< lavrentev::Circle > &figures,
-                                   const lavrentev::Polygon &pg,
-                                   std::size_t threads,
-                                   std::size_t tries,
-                                   int seed);
+  figures_t readInput(Polygon &pg);
+  count_pair_t calculate(const figures_t &figures, const Polygon &pg, std::size_t tries, int seed);
+  std::size_t countInside(const figures_t &figures, double x, double y);
+  area_pair_t area(const figures_t &figures, const Polygon &pg, std::size_t threads, std::size_t tries, int seed);
 }
 
 #endif

@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     return error_args;
   }
 
-  std::size_t threads = 0;
+  std::size_t threads = 1;
   std::size_t tries = 0;
   try
   {
@@ -39,10 +39,14 @@ int main(int argc, char *argv[])
     return error_args;
   }
 
-  if ((threads == 0) || (tries == 0))
+  if (tries == 0)
   {
-    std::cerr << "Invalid threads or tries\n";
+    std::cerr << "Invalid tries\n";
     return error_args;
+  }
+  if (threads == 0)
+  {
+    threads = 1;
   }
 
   int seed = 0;
