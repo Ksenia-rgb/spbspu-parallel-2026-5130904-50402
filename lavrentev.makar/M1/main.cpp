@@ -26,8 +26,8 @@ int main(int argc, char *argv[])
     return ERROR_ARGS;
   }
 
-  size_t threads = 0;
-  size_t tries = 0;
+  std::size_t threads = 0;
+  std::size_t tries = 0;
   try
   {
     threads = std::stoul(argv[ARG_THREADS_IDX]);

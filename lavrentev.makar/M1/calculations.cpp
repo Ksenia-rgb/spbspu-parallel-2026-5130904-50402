@@ -1,13 +1,13 @@
 #include "calculations.hpp"
 
-#include <iostream>
-#include <vector>
-#include <future>
-#include <random>
-#include <utility>
 #include <cstddef>
-#include <stdexcept>
 #include <functional>
+#include <future>
+#include <iostream>
+#include <random>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon &pg)
 {
@@ -22,6 +22,7 @@ std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon &pg)
     {
       throw std::runtime_error("Invalid figure parameters");
     }
+    (void)a;
 
     if (x - r < pg.getMinX())
     {
@@ -49,9 +50,9 @@ std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon &pg)
   return figures;
 }
 
-std::pair< size_t, size_t > lavrentev::calculate(const std::vector< lavrentev::Circle > &figures,
+std::pair< std::size_t, std::size_t > lavrentev::calculate(const std::vector< lavrentev::Circle > &figures,
   const lavrentev::Polygon &pg,
-  size_t tries,
+  std::size_t tries,
   int seed)
 {
   std::default_random_engine engine(seed);
@@ -59,13 +60,13 @@ std::pair< size_t, size_t > lavrentev::calculate(const std::vector< lavrentev::C
   std::uniform_real_distribution< double > dist_x(pg.getMinX(), pg.getMaxX());
   std::uniform_real_distribution< double > dist_y(pg.getMinY(), pg.getMaxY());
 
-  size_t res_all = 0;
-  size_t res_is = 0;
-  for (size_t i = 0; i < tries; ++i)
+  std::size_t res_all = 0;
+  std::size_t res_is = 0;
+  for (std::size_t i = 0; i < tries; ++i)
   {
     const double x = dist_x(engine);
     const double y = dist_y(engine);
-    const size_t count_fig = countInside(figures, x, y);
+    const std::size_t count_fig = countInside(figures, x, y);
     if (count_fig > 0)
     {
       ++res_all;
@@ -78,14 +79,15 @@ std::pair< size_t, size_t > lavrentev::calculate(const std::vector< lavrentev::C
   return {res_all, res_is};
 }
 
-size_t lavrentev::countInside(const std::vector< lavrentev::Circle > &figures, double x, double y)
+std::size_t lavrentev::countInside(const std::vector< lavrentev::Circle > &figures, double x, double y)
 {
-  size_t res = 0;
+  std::size_t res = 0;
   for (const auto &circle : figures)
   {
     const double dx = x - circle.getX();
     const double dy = y - circle.getY();
-    if (dx * dx + dy * dy <= circle.getRadius() * circle.getRadius())
+    const double radius = circle.getRadius();
+    if ((dx * dx + dy * dy) <= (radius * radius))
     {
       ++res;
     }
@@ -95,33 +97,35 @@ size_t lavrentev::countInside(const std::vector< lavrentev::Circle > &figures, d
 
 std::pair< double, double > lavrentev::area(const std::vector< lavrentev::Circle > &figures,
   const lavrentev::Polygon &pg,
-  size_t threads,
-  size_t tries,
+  std::size_t threads,
+  std::size_t tries,
   int seed)
 {
-  std::vector< std::future< std::pair< size_t, size_t > > > results;
+  std::vector< std::future< std::pair< std::size_t, std::size_t > > > results;
   results.reserve(threads);
-  const size_t base_tries = tries / threads;
-  const size_t remainder = tries % threads;
+  const std::size_t base_tries = tries / threads;
+  const std::size_t remainder = tries % threads;
 
-  for (size_t i = 0; i < threads; ++i)
+  for (std::size_t i = 0; i < threads; ++i)
   {
-    const size_t thread_tries = base_tries + (i == 0 ? remainder : 0);
+    const std::size_t thread_tries = base_tries + (i == 0 ? remainder : 0);
 
-    results.push_back(std::async(std::launch::async,
+    auto task = std::async(
+      std::launch::async,
       lavrentev::calculate,
       std::cref(figures),
       std::cref(pg),
       thread_tries,
       seed + static_cast< int >(i)
-    ));
+    );
+    results.push_back(std::move(task));
   }
 
-  size_t total_all = 0;
-  size_t total_is = 0;
-  for (size_t i = 0; i < threads; ++i)
+  std::size_t total_all = 0;
+  std::size_t total_is = 0;
+  for (std::size_t i = 0; i < threads; ++i)
   {
-    const std::pair< size_t, size_t > res = results[i].get();
+    const std::pair< std::size_t, std::size_t > res = results[i].get();
     total_all += res.first;
     total_is += res.second;
   }
