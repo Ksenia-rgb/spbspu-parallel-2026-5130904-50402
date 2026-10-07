@@ -12,9 +12,11 @@
 #include "circle.hpp"
 #include "polygon.hpp"
 
-lavrentev::figures_t lavrentev::readInput(Polygon &pg)
+using lavrentev::area_pair_t;
+
+lavrentev::f_t lavrentev::readInput(Polygon &pg)
 {
-  figures_t figures;
+  f_t figures;
   int r = 0;
   while (std::cin >> r)
   {
@@ -51,7 +53,7 @@ lavrentev::figures_t lavrentev::readInput(Polygon &pg)
   return figures;
 }
 
-lavrentev::count_pair_t lavrentev::calculate(const figures_t &figures, const Polygon &pg, std::size_t tries, int seed)
+lavrentev::count_pair_t lavrentev::calculate(const f_t &figures, const Polygon &pg, std::size_t tries, int seed)
 {
   std::default_random_engine engine(seed);
   std::uniform_real_distribution< double > dist_x(pg.getMinX(), pg.getMaxX());
@@ -75,7 +77,7 @@ lavrentev::count_pair_t lavrentev::calculate(const figures_t &figures, const Pol
   return {res_all, res_is};
 }
 
-std::size_t lavrentev::countInside(const figures_t &figures, double x, double y)
+std::size_t lavrentev::countInside(const f_t &figures, double x, double y)
 {
   std::size_t res = 0;
   for (const auto &circle : figures)
@@ -91,11 +93,7 @@ std::size_t lavrentev::countInside(const figures_t &figures, double x, double y)
   return res;
 }
 
-lavrentev::area_pair_t lavrentev::area(const figures_t &figures,
-    const Polygon &pg,
-    std::size_t threads,
-    std::size_t tries,
-    int seed)
+area_pair_t lavrentev::area(const f_t &figures, const Polygon &pg, std::size_t threads, std::size_t tries, int seed)
 {
   std::vector< std::future< count_pair_t > > results;
   results.reserve(threads);
