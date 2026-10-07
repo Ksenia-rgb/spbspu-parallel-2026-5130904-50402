@@ -89,7 +89,7 @@ namespace karpovich
     {
       threads = 1;
     }
-    const size_t max_threads = std::thread::hardware_concurrency();
+    constexpr size_t max_threads = 12;
     if (threads > max_threads)
     {
       threads = max_threads;
