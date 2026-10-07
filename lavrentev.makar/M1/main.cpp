@@ -47,7 +47,10 @@ namespace lavrentev
   };
 
   std::vector< lavrentev::Circle > readInput(lavrentev::Polygon& pg);
-  std::pair< size_t, size_t > calculate(const std::vector< lavrentev::Circle > &figures, const lavrentev::Polygon &pg, size_t tries, int seed);
+  std::pair< size_t, size_t > calculate(
+    const std::vector< lavrentev::Circle > &figures,
+    const lavrentev::Polygon &pg, size_t tries, int seed
+  );
   size_t countInside(const std::vector< lavrentev::Circle > &figures, double x, double y);
   std::pair< double, double > area(const std::vector< lavrentev::Circle > &figures,
     const lavrentev::Polygon &pg,
@@ -134,7 +137,9 @@ std::vector< lavrentev::Circle > lavrentev::readInput(lavrentev::Polygon& pg)
   return figures;
 }
 
-std::pair< size_t, size_t > lavrentev::calculate(const std::vector< lavrentev::Circle > &figures, const lavrentev::Polygon &pg, size_t tries, int seed)
+std::pair< size_t, size_t > lavrentev::calculate(
+  const std::vector< lavrentev::Circle > &figures,
+  const lavrentev::Polygon &pg, size_t tries, int seed)
 {
   std::default_random_engine engine(seed);
 
