@@ -91,8 +91,7 @@ std::size_t lavrentev::countInside(const figures_t &figures, double x, double y)
   return res;
 }
 
-lavrentev::area_pair_t lavrentev::area(const figures_t &figures,
-                                       const Polygon &pg, std::size_t threads,
+lavrentev::area_pair_t lavrentev::area(const figures_t &figures, const Polygon &pg, std::size_t threads,
                                        std::size_t tries, int seed)
 {
   std::vector< std::future< count_pair_t > > results;
