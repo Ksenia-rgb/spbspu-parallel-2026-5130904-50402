@@ -48,6 +48,10 @@ int main(int argc, char *argv[])
   {
     threads = 1;
   }
+  if (threads > 1000)
+  {
+    threads = 1000;
+  }
 
   int seed = 0;
   if (argc == max_args)
