@@ -6,7 +6,6 @@
 #include <limits>
 #include <random>
 #include <stdexcept>
-#include <thread>
 #include <utility>
 #include <vector>
 #include "shape.hpp"
