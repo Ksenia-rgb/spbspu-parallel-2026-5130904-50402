@@ -29,14 +29,13 @@ namespace petrov {
 
   std::istream& operator>>(std::istream& in, p_t& point);
   std::istream& operator>>(std::istream& in, circle_t& circle);
-  std::vector<circle_t> readCircles(std::istream& in);
+  std::vector< circle_t > readCircles(std::istream& in);
   bool isInside(const p_t& point, const circle_t& circle);
-  bool isInsideUnion(const p_t& point, const std::vector<circle_t>& circles);
-  bool isInsideIntersection(const p_t& point, const std::vector<circle_t>& circles);
-  box_t findBoundingBox(const std::vector<circle_t>& circles);
+  bool isInsideUnion(const p_t& point, const std::vector< circle_t >& circles);
+  bool isInsideIntersection(const p_t& point, const std::vector< circle_t >& circles);
+  box_t findBoundingBox(const std::vector< circle_t >& circles);
   double computeBoxArea(const box_t& box);
-  hits_t countHits(const std::vector<circle_t>& circles, const box_t& box,
-                   std::size_t tries, std::size_t seed);
+  hits_t countHits(const std::vector< circle_t >& circles, const box_t& box, std::size_t tries, std::size_t seed);
   double computeArea(const box_t& box, std::size_t hits, std::size_t tries);
 
 }

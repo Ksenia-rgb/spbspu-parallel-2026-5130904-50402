@@ -9,7 +9,8 @@
 
 namespace petrov {
 
-  std::istream& operator>>(std::istream& in, p_t& point) {
+  std::istream& operator>>(std::istream& in, p_t& point)
+  {
     const std::istream::sentry sentry(in);
     if (!sentry) {
       return in;
@@ -17,7 +18,8 @@ namespace petrov {
     return in >> point.x >> point.y;
   }
 
-  std::istream& operator>>(std::istream& in, circle_t& circle) {
+  std::istream& operator>>(std::istream& in, circle_t& circle)
+  {
     const std::istream::sentry sentry(in);
     if (!sentry) {
       return in;
@@ -26,8 +28,9 @@ namespace petrov {
     return in >> circle.radius >> ignored_parameter >> circle.center;
   }
 
-  std::vector<circle_t> readCircles(std::istream& in) {
-    std::vector<circle_t> circles;
+  std::vector< circle_t > readCircles(std::istream& in)
+  {
+    std::vector< circle_t > circles;
     while (true) {
       in >> std::ws;
       if (in.eof()) {
@@ -42,13 +45,15 @@ namespace petrov {
     return circles;
   }
 
-  bool isInside(const p_t& point, const circle_t& circle) {
+  bool isInside(const p_t& point, const circle_t& circle)
+  {
     const double del_x = point.x - circle.center.x;
     const double del_y = point.y - circle.center.y;
     return ((del_x * del_x) + (del_y * del_y)) <= (circle.radius * circle.radius);
   }
 
-  bool isInsideUnion(const p_t& point, const std::vector<circle_t>& circles) {
+  bool isInsideUnion(const p_t& point, const std::vector< circle_t >& circles)
+  {
     for (const circle_t& circle : circles) {
       if (isInside(point, circle)) {
         return true;
@@ -57,7 +62,8 @@ namespace petrov {
     return false;
   }
 
-  bool isInsideIntersection(const p_t& point, const std::vector<circle_t>& circles) {
+  bool isInsideIntersection(const p_t& point, const std::vector< circle_t >& circles)
+  {
     for (const circle_t& circle : circles) {
       if (!isInside(point, circle)) {
         return false;
@@ -66,7 +72,8 @@ namespace petrov {
     return true;
   }
 
-  box_t findBoundingBox(const std::vector<circle_t>& circles) {
+  box_t findBoundingBox(const std::vector< circle_t >& circles)
+  {
     box_t box = {{0.0, 0.0}, {0.0, 0.0}};
     if (circles.empty()) {
       return box;
@@ -85,17 +92,18 @@ namespace petrov {
     return box;
   }
 
-  double computeBoxArea(const box_t& box) {
+  double computeBoxArea(const box_t& box)
+  {
     const double width = box.max_point.x - box.min_point.x;
     const double height = box.max_point.y - box.min_point.y;
     return width * height;
   }
 
-  hits_t countHits(const std::vector<circle_t>& circles, const box_t& box,
-                   std::size_t tries, std::size_t seed) {
+  hits_t countHits(const std::vector< circle_t >& circles, const box_t& box, std::size_t tries, std::size_t seed)
+  {
     std::mt19937 generator(seed);
-    std::uniform_real_distribution<double> x_distribution(box.min_point.x, box.max_point.x);
-    std::uniform_real_distribution<double> y_distribution(box.min_point.y, box.max_point.y);
+    std::uniform_real_distribution< double > x_distribution(box.min_point.x, box.max_point.x);
+    std::uniform_real_distribution< double > y_distribution(box.min_point.y, box.max_point.y);
     hits_t hits = {0, 0};
     for (std::size_t attempt = 0; attempt < tries; ++attempt) {
       const double x = x_distribution(generator);
@@ -111,8 +119,9 @@ namespace petrov {
     return hits;
   }
 
-  double computeArea(const box_t& box, std::size_t hits, std::size_t tries) {
-    const double hit_share = static_cast<double>(hits) / static_cast<double>(tries);
+  double computeArea(const box_t& box, std::size_t hits, std::size_t tries)
+  {
+    const double hit_share = static_cast< double >(hits) / static_cast< double >(tries);
     return computeBoxArea(box) * hit_share;
   }
 
