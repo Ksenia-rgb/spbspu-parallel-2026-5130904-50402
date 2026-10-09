@@ -4,6 +4,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <thread>
+#include <functional>
 #include <vector>
 
 #include "montecarlo.hpp"
@@ -109,7 +111,7 @@ int main(int argc, char **argv)
     const petrov::parameters_t parameters = petrov::parseParameters(argc, argv);
     const std::vector< petrov::circle_t > circles = petrov::readCircles(std::cin);
     const petrov::box_t box = petrov::findBoundingBox(circles);
-    const petrov::hits_t hits = petrov::countHits(circles, box, parameters.tryCount, parameters.seed);
+    const petrov::hits_t hits = petrov::countHitsInThreads(circles, box, parameters);
     const double coveredArea = petrov::computeArea(box, hits.unionCount, parameters.tryCount);
     const double intersectionArea = petrov::computeArea(box, hits.intersectionCount, parameters.tryCount);
     std::cout << coveredArea << ' ' << intersectionArea << '\n';
