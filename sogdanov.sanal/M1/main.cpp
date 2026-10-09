@@ -1,4 +1,3 @@
-#include <array>
 #include <cstddef>
 #include <exception>
 #include <iomanip>
@@ -6,6 +5,7 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "figure.hpp"
 #include "monte_carlo.hpp"
