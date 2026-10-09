@@ -1,9 +1,12 @@
 #include "monte_carlo.hpp"
+#include "figure.hpp"
 
 #include <algorithm>
 #include <random>
 #include <stdexcept>
 #include <thread>
+#include <vector>
+#include <cstdlib>
 
 namespace sogdanov
 {
