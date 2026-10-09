@@ -106,3 +106,34 @@ double petrov::computeBoxArea(const box_t &box)
   const double height = box.maxPoint.y - box.minPoint.y;
   return width * height;
 }
+
+petrov::hits_t petrov::countHits(const std::vector< circle_t > &circles, const box_t &box,
+    std::size_t tries, std::size_t seed)
+{
+  std::mt19937 generator(seed);
+  std::uniform_real_distribution< double > xDistribution(box.minPoint.x, box.maxPoint.x);
+  std::uniform_real_distribution< double > yDistribution(box.minPoint.y, box.maxPoint.y);
+
+  hits_t hits = { 0, 0 };
+  for (std::size_t attempt = 0; attempt < tries; ++attempt)
+  {
+    const double x = xDistribution(generator);
+    const double y = yDistribution(generator);
+    const p_t point = { x, y };
+    if (isInsideUnion(point, circles))
+    {
+      ++hits.unionCount;
+    }
+    if (isInsideIntersection(point, circles))
+    {
+      ++hits.intersectionCount;
+    }
+  }
+  return hits;
+}
+
+double petrov::computeArea(const box_t &box, std::size_t hits, std::size_t tries)
+{
+  const double hitShare = static_cast< double >(hits) / static_cast< double >(tries);
+  return computeBoxArea(box) * hitShare;
+}

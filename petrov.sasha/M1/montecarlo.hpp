@@ -42,6 +42,10 @@ namespace petrov
 
   box_t findBoundingBox(const std::vector< circle_t > &circles);
   double computeBoxArea(const box_t &box);
+
+  hits_t countHits(const std::vector< circle_t > &circles, const box_t &box,
+      std::size_t tries, std::size_t seed);
+  double computeArea(const box_t &box, std::size_t hits, std::size_t tries);
 }
 
 #endif
