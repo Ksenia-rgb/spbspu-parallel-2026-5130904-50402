@@ -58,6 +58,47 @@ namespace petrov
       const std::size_t seed = (argc == maximalArgumentCount) ? parseSize(argv[seedArgumentIndex]) : defaultSeed;
       return { threadCount, tryCount, seed };
     }
+
+    void runMonteCarlo(const std::vector< circle_t > &circles, const box_t &box,
+        std::size_t tries, std::size_t seed, hits_t &result)
+    {
+      result = countHits(circles, box, tries, seed);
+    }
+
+    hits_t countHitsInThreads(const std::vector< circle_t > &circles, const box_t &box,
+        const parameters_t &parameters)
+    {
+      const std::size_t requestedCount = (parameters.threadCount == 0) ? 1 : parameters.threadCount;
+      const std::size_t hardwareCount = static_cast< std::size_t >(std::thread::hardware_concurrency());
+      const std::size_t hardwareLimit = (hardwareCount == 0) ? 1 : hardwareCount;
+      const std::size_t workerCount = std::min(requestedCount, hardwareLimit);
+      const std::size_t triesPerWorker = parameters.tryCount / workerCount;
+      const std::size_t remainder = parameters.tryCount % workerCount;
+
+      std::vector< hits_t > results(workerCount);
+      std::vector< std::thread > workers;
+      workers.reserve(workerCount);
+
+      for (std::size_t workerIndex = 0; workerIndex < workerCount; ++workerIndex)
+      {
+        const std::size_t workerTries = triesPerWorker + ((workerIndex < remainder) ? 1 : 0);
+        const std::size_t workerSeed = parameters.seed + workerIndex;
+        workers.emplace_back(runMonteCarlo, std::cref(circles), std::cref(box), workerTries, workerSeed,
+            std::ref(results[workerIndex]));
+      }
+      for (std::thread &worker : workers)
+      {
+        worker.join();
+      }
+
+      hits_t totalHits = { 0, 0 };
+      for (const hits_t &hits : results)
+      {
+        totalHits.unionCount += hits.unionCount;
+        totalHits.intersectionCount += hits.intersectionCount;
+      }
+      return totalHits;
+    }
   }
 }
 
