@@ -101,7 +101,7 @@ namespace petrov {
 
   hits_t countHits(const std::vector< circle_t >& circles, const box_t& box, std::size_t tries, std::size_t seed)
   {
-    std::mt19937 generator(seed);
+    std::default_random_engine generator(seed);
     std::uniform_real_distribution< double > x_distribution(box.min_point.x, box.max_point.x);
     std::uniform_real_distribution< double > y_distribution(box.min_point.y, box.max_point.y);
     hits_t hits = {0, 0};
