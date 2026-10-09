@@ -1,2 +1,18 @@
+#include <exception>
 #include <iostream>
-int main(){}
+#include <vector>
+
+#include "montecarlo.hpp"
+
+int main()
+{
+  try
+  {
+  }
+  catch (const std::exception &exception)
+  {
+    std::cerr << exception.what() << '\n';
+    return 1;
+  }
+  return 0;
+}
