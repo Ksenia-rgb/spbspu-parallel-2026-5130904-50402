@@ -1,6 +1,7 @@
-#ifndef MONTE_CARLO_HPP
-#define MONTE_CARLO_HPP
+#ifndef MONTECARLO_HPP
+#define MONTECARLO_HPP
 
+#include <cstddef>
 #include <iosfwd>
 #include <vector>
 
@@ -24,10 +25,20 @@ namespace petrov
     p_t maxPoint;
   };
 
+  struct hits_t
+  {
+    std::size_t unionCount;
+    std::size_t intersectionCount;
+  };
+
   std::istream &operator>>(std::istream &in, p_t &point);
   std::istream &operator>>(std::istream &in, circle_t &circle);
 
   std::vector< circle_t > readCircles(std::istream &in);
+
+  bool isInside(const p_t &point, const circle_t &circle);
+  bool isInsideUnion(const p_t &point, const std::vector< circle_t > &circles);
+  bool isInsideIntersection(const p_t &point, const std::vector< circle_t > &circles);
 
   box_t findBoundingBox(const std::vector< circle_t > &circles);
   double computeBoxArea(const box_t &box);

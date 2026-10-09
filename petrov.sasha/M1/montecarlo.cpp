@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <istream>
+#include <random>
 #include <stdexcept>
 
 std::istream &petrov::operator>>(std::istream &in, p_t &point)
@@ -43,6 +44,37 @@ std::vector< petrov::circle_t > petrov::readCircles(std::istream &in)
     circles.push_back(circle);
   }
   return circles;
+}
+
+bool petrov::isInside(const p_t &point, const circle_t &circle)
+{
+  const double delX = point.x - circle.center.x;
+  const double delY = point.y - circle.center.y;
+  return ((delX * delX) + (delY * delY)) <= (circle.radius * circle.radius);
+}
+
+bool petrov::isInsideUnion(const p_t &point, const std::vector< circle_t > &circles)
+{
+  for (const circle_t &circle : circles)
+  {
+    if (isInside(point, circle))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool petrov::isInsideIntersection(const p_t &point, const std::vector< circle_t > &circles)
+{
+  for (const circle_t &circle : circles)
+  {
+    if (!isInside(point, circle))
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 petrov::box_t petrov::findBoundingBox(const std::vector< circle_t > &circles)
