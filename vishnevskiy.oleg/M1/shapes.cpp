@@ -55,4 +55,25 @@ namespace vishnevskiy
     px = distX(gen);
     py = distY(gen);
   }
+
+  size_t calcUnion(std::vector<Circle>& circles, size_t tests, size_t seed, CircleBoundaries& b);
+  {
+    std::mt19937_64 gen(seed);
+    size_t count = 0;
+    for (size_t i = 0; i < tests; ++i)
+    {
+      double x = 0.0;
+      double y = 0.0;
+      generatePoint(gen, b, x, y);
+      for (size_t j = 0; j < circles.size(); ++j)
+      {
+        if (isInside(x, y, circles[j]))
+        {
+          count++;
+          break;
+        }
+      }
+    }
+    return count;
+  }
 }
