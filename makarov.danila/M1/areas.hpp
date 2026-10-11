@@ -11,7 +11,7 @@ namespace makarov {
     double all;
   };
 
-  Areas getAreas(const std::vector< Circle > & circles, std::size_t threads, std::size_t tries, std::size_t seed);
+  Areas getAreas(const std::vector< Circle >& circles, std::size_t threads, std::size_t tries, std::size_t seed);
 }
 
 #endif

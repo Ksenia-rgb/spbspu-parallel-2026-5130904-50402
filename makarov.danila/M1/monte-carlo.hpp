@@ -12,7 +12,7 @@ namespace makarov {
     std::size_t all;
   };
 
-  Hits countHits(const std::vector< Circle > & circles, const Box & box, std::size_t tries, std::size_t seed);
+  Hits countHits(const std::vector< Circle >& circles, const Box& box, std::size_t tries, std::size_t seed);
 }
 
 #endif

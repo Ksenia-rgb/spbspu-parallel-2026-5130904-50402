@@ -1,7 +1,7 @@
 #include "circle.hpp"
 #include <stdexcept>
 
-std::istream & makarov::operator>>(std::istream & in, Circle & circle)
+std::istream& makarov::operator>>(std::istream& in, Circle& circle)
 {
   const std::istream::sentry sentry(in);
   if (!sentry) {
@@ -21,7 +21,7 @@ std::istream & makarov::operator>>(std::istream & in, Circle & circle)
   return in;
 }
 
-std::vector< makarov::Circle > makarov::readCircles(std::istream & in)
+std::vector< makarov::Circle > makarov::readCircles(std::istream& in)
 {
   std::vector< Circle > circles;
   while (!(in >> std::ws).eof()) {

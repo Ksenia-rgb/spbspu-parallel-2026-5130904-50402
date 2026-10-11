@@ -10,14 +10,14 @@ namespace {
   const int argsWithoutSeed = seedIndex;
   const int argsWithSeed = seedIndex + 1;
 
-  long long parseInteger(const char * str, const std::string & name)
+  long long parseInteger(const char* str, const std::string& name)
   {
     const std::string text(str);
     std::size_t parsed = 0;
     long long value = 0;
     try {
       value = std::stoll(text, std::addressof(parsed));
-    } catch (const std::logic_error &) {
+    } catch (const std::logic_error&) {
       throw std::invalid_argument(name + " is not a valid integer");
     }
     if (parsed != text.size()) {
@@ -27,7 +27,7 @@ namespace {
   }
 }
 
-makarov::Parameters makarov::parseParameters(int argc, const char * const * argv)
+makarov::Parameters makarov::parseParameters(int argc, const char* const* argv)
 {
   if (argc != argsWithoutSeed && argc != argsWithSeed) {
     throw std::invalid_argument("wrong number of arguments, expected: threads tries [seed]");

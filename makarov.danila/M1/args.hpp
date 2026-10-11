@@ -10,7 +10,7 @@ namespace makarov {
     std::size_t seed;
   };
 
-  Parameters parseParameters(int argc, const char * const * argv);
+  Parameters parseParameters(int argc, const char* const* argv);
 }
 
 #endif

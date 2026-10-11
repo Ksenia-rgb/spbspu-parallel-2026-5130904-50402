@@ -11,8 +11,8 @@ namespace makarov {
     double y;
   };
 
-  std::istream & operator>>(std::istream & in, Circle & circle);
-  std::vector< Circle > readCircles(std::istream & in);
+  std::istream& operator>>(std::istream& in, Circle& circle);
+  std::vector< Circle > readCircles(std::istream& in);
 }
 
 #endif

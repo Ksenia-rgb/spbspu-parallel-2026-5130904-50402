@@ -4,8 +4,8 @@
 #include "geometry.hpp"
 #include "monte-carlo.hpp"
 
-makarov::Areas makarov::getAreas(const std::vector< Circle > & circles, std::size_t threads, std::size_t tries,
-    std::size_t seed)
+makarov::Areas makarov::getAreas(
+    const std::vector< Circle >& circles, std::size_t threads, std::size_t tries, std::size_t seed)
 {
   if (circles.empty()) {
     return Areas{0.0, 0.0};
@@ -20,7 +20,7 @@ makarov::Areas makarov::getAreas(const std::vector< Circle > & circles, std::siz
     tasks.push_back(std::async(std::launch::async, countHits, std::cref(circles), std::cref(box), count, seed + i));
   }
   Hits total{0, 0};
-  for (std::future< Hits > & task : tasks) {
+  for (std::future< Hits >& task : tasks) {
     const Hits hits = task.get();
     total.any += hits.any;
     total.all += hits.all;
