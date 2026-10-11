@@ -4,8 +4,10 @@
 #include <vector>
 #include "circle.hpp"
 
-namespace makarov {
-  struct Box {
+namespace makarov
+{
+  struct Box
+  {
     double left;
     double right;
     double bottom;

@@ -6,8 +6,10 @@
 #include "circle.hpp"
 #include "geometry.hpp"
 
-namespace makarov {
-  struct Hits {
+namespace makarov
+{
+  struct Hits
+  {
     std::size_t any;
     std::size_t all;
   };

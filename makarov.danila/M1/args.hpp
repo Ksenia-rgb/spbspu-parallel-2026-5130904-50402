@@ -3,8 +3,10 @@
 
 #include <cstddef>
 
-namespace makarov {
-  struct Parameters {
+namespace makarov
+{
+  struct Parameters
+  {
     std::size_t threads;
     std::size_t tries;
     std::size_t seed;

@@ -4,8 +4,10 @@
 #include <istream>
 #include <vector>
 
-namespace makarov {
-  struct Circle {
+namespace makarov
+{
+  struct Circle
+  {
     double r;
     double x;
     double y;

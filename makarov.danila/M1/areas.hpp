@@ -5,8 +5,10 @@
 #include <vector>
 #include "circle.hpp"
 
-namespace makarov {
-  struct Areas {
+namespace makarov
+{
+  struct Areas
+  {
     double any;
     double all;
   };
