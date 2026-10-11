@@ -1,6 +1,24 @@
 #include <cstddef>
 #include <iostream>
 #include <string>
+#include <vector>
+
+namespace saldaev
+{
+  struct Point
+  {
+    double x, y;
+  };
+
+  struct Circle
+  {
+    double radius;
+    Point position;
+    bool contain(Point point) const noexcept;
+  };
+
+  std::pair< double, double > area(const std::vector< Circle > &circles, size_t threads, size_t tries, size_t seed);
+};
 
 int main(int argc, char **argv)
 {
@@ -38,4 +56,23 @@ int main(int argc, char **argv)
     std::cerr << "Overflow in arguments\n";
     return 1;
   }
+
+  double r = 0, place_holder = 0, x = 0, y = 0;
+  std::vector< saldaev::Circle > circles;
+  while (std::cin >> r >> place_holder >> x >> y) {
+    circles.push_back({r, {x, y}});
+  }
+  if (!std::cin.eof()) {
+    std::cerr << "invalid input";
+    return 1;
+  }
+
+  if (circles.size() == 0) {
+    std::cout << "0.0 0.0\n";
+    return 0;
+  }
+
+  const std::pair< double, double > areas = saldaev::area(circles, threads, tries, seed);
+
+  std::cout << areas.first << ' ' << areas.second << '\n';
 }
