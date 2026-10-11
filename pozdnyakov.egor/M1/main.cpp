@@ -9,19 +9,19 @@
 
 namespace
 {
-  pozdnyakov::circles_t readCircles(std::istream& in)
+  pozdnyakov::ellipses_t readEllipses(std::istream& in)
   {
-    pozdnyakov::circles_t circles;
+    pozdnyakov::ellipses_t ellipses;
     while (!(in >> std::ws).eof())
     {
-      pozdnyakov::circle_t circle{{0.0, 0.0}, 0.0};
-      if (!(in >> circle))
+      pozdnyakov::ellipse_t ellipse{{0.0, 0.0}, 0.0, 0.0};
+      if (!(in >> ellipse))
       {
         throw std::invalid_argument("figure parameters must be four integers");
       }
-      circles.push_back(circle);
+      ellipses.push_back(ellipse);
     }
-    return circles;
+    return ellipses;
   }
 }
 
@@ -32,8 +32,8 @@ int main(int argc, char** argv)
   try
   {
     const pozdnyakov::arguments_t args = pozdnyakov::parseArguments(argc, argv);
-    const pozdnyakov::circles_t circles = readCircles(std::cin);
-    const pozdnyakov::areas_t areas = pozdnyakov::computeAreas(circles, args);
+    const pozdnyakov::ellipses_t ellipses = readEllipses(std::cin);
+    const pozdnyakov::areas_t areas = pozdnyakov::computeAreas(ellipses, args);
     std::cout << std::setprecision(std::numeric_limits< double >::max_digits10);
     std::cout << areas.coverage << ' ' << areas.intersection << '\n';
   }

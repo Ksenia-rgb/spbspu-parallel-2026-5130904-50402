@@ -19,7 +19,7 @@ namespace
   using engine_t = std::minstd_rand0;
   using pool_t = std::vector< std::thread >;
 
-  void countHits(const pozdnyakov::circles_t& circles, const pozdnyakov::rectangle_t& frame, std::size_t tries,
+  void countHits(const pozdnyakov::ellipses_t& ellipses, const pozdnyakov::rectangle_t& frame, std::size_t tries,
       std::size_t seed, hits_t& hits)
   {
     engine_t engine(static_cast< engine_t::result_type >(seed));
@@ -32,9 +32,9 @@ namespace
       const double y = ordinate(engine);
       const pozdnyakov::point_t point{x, y};
       std::size_t owners = 0;
-      for (const pozdnyakov::circle_t& circle : circles)
+      for (const pozdnyakov::ellipse_t& ellipse : ellipses)
       {
-        if (pozdnyakov::isInside(circle, point))
+        if (pozdnyakov::isInside(ellipse, point))
         {
           ++owners;
         }
@@ -43,7 +43,7 @@ namespace
       {
         ++local.covered;
       }
-      if (owners == circles.size())
+      if (owners == ellipses.size())
       {
         ++local.intersected;
       }
@@ -71,15 +71,15 @@ namespace
   }
 }
 
-pozdnyakov::areas_t pozdnyakov::computeAreas(const circles_t& circles, const arguments_t& args)
+pozdnyakov::areas_t pozdnyakov::computeAreas(const ellipses_t& ellipses, const arguments_t& args)
 {
   const std::size_t tries = args.tries;
   const std::size_t seed = args.seed;
-  if (circles.empty())
+  if (ellipses.empty())
   {
     return {0.0, 0.0};
   }
-  const rectangle_t frame = getFrame(circles);
+  const rectangle_t frame = getFrame(ellipses);
   const std::size_t workers = getWorkers(args.threads, tries);
   std::vector< hits_t > hits(workers, hits_t{0, 0});
   pool_t pool;
@@ -89,9 +89,9 @@ pozdnyakov::areas_t pozdnyakov::computeAreas(const circles_t& circles, const arg
     for (std::size_t i = 1; i < workers; ++i)
     {
       const std::size_t share = getShare(tries, workers, i);
-      pool.emplace_back(countHits, std::cref(circles), std::cref(frame), share, seed + i, std::ref(hits[i]));
+      pool.emplace_back(countHits, std::cref(ellipses), std::cref(frame), share, seed + i, std::ref(hits[i]));
     }
-    countHits(circles, frame, getShare(tries, workers, 0), seed, hits[0]);
+    countHits(ellipses, frame, getShare(tries, workers, 0), seed, hits[0]);
   }
   catch (...)
   {

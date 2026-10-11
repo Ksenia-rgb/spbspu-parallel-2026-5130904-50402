@@ -12,7 +12,7 @@ namespace pozdnyakov
     double intersection;
   };
 
-  areas_t computeAreas(const circles_t& circles, const arguments_t& args);
+  areas_t computeAreas(const ellipses_t& ellipses, const arguments_t& args);
 }
 
 #endif

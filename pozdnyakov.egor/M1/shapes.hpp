@@ -12,10 +12,11 @@ namespace pozdnyakov
     double y;
   };
 
-  struct circle_t
+  struct ellipse_t
   {
     point_t center;
-    double radius;
+    double horizontal_radius;
+    double vertical_radius;
   };
 
   struct rectangle_t
@@ -24,13 +25,13 @@ namespace pozdnyakov
     point_t right_top;
   };
 
-  using circles_t = std::vector< circle_t >;
+  using ellipses_t = std::vector< ellipse_t >;
 
-  std::istream& operator>>(std::istream& in, circle_t& circle);
+  std::istream& operator>>(std::istream& in, ellipse_t& ellipse);
 
-  bool isInside(const circle_t& circle, const point_t& point);
-  rectangle_t getFrame(const circle_t& circle);
-  rectangle_t getFrame(const circles_t& circles);
+  bool isInside(const ellipse_t& ellipse, const point_t& point);
+  rectangle_t getFrame(const ellipse_t& ellipse);
+  rectangle_t getFrame(const ellipses_t& ellipses);
   double getArea(const rectangle_t& rectangle);
 }
 
