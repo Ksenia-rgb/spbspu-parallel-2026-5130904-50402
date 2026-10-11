@@ -76,4 +76,30 @@ namespace vishnevskiy
     }
     return count;
   }
+
+  size_t calcIntersection(std::vector<Circle>& circles, size_t tests, size_t seed, CircleBoundaries& b);
+  {
+    std::mt19937_64 gen(seed);
+    size_t count = 0;
+    for (size_t i = 0; i < tests; ++i)
+    {
+      double x = 0.0;
+      double y = 0.0;
+      generatePoint(gen, b, x, y);
+      bool insideAll = true;
+      for (size_t j = 0; j < circles.size(); ++j)
+      {
+        if (!isInside(x, y, circles[j]))
+        {
+          insideAll = false;
+          break;
+        }
+      }
+      if (insideAll)
+      {
+        count++;
+      }
+    }
+    return count;
+  }
 }

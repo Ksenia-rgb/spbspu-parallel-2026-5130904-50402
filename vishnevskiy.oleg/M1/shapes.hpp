@@ -30,6 +30,8 @@ namespace vishnevskiy
   };
 
   bool isInside(long long x, long long y, Circle& c);
-  CircleBoundaries getBoundaries(std::vector<Circle>& cirkles);
+  CircleBoundaries getBoundaries(std::vector<Circle>& circles);
+  size_t calcUnion(std::vector<Circle>& circles, size_t tests, size_t seed, CircleBoundaries& b);
+  size_t calcIntersection(std::vector<Circle>& circles, size_t tests, size_t seed, CircleBoundaries& b);
 }
 #endif
