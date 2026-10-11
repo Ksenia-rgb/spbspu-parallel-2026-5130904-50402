@@ -9,7 +9,7 @@
 int main(int argc, char ** argv)
 {
   try {
-    const makarov::Parameters params = makarov::parseParameters (argc, argv);
+    const makarov::Parameters params = makarov::parseParameters(argc, argv);
     const std::vector< makarov::Circle > circles = makarov::readCircles(std::cin);
     const makarov::Areas areas = makarov::getAreas(circles, params.threads, params.tries, params.seed);
     std::cout << areas.any << " " << areas.all << "\n";
