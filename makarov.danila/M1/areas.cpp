@@ -1,6 +1,9 @@
 #include "areas.hpp"
+#include <cstddef>
 #include <functional>
 #include <future>
+#include <vector>
+#include "circle.hpp"
 #include "geometry.hpp"
 #include "monte-carlo.hpp"
 
@@ -11,11 +14,12 @@ makarov::Areas makarov::getAreas(
     return Areas{0.0, 0.0};
   }
   const Box box = getBox(circles);
-  const std::size_t part = tries / threads;
-  const std::size_t rest = tries % threads;
+  const std::size_t workers = (threads == 0) ? 1 : threads;
+  const std::size_t part = tries / workers;
+  const std::size_t rest = tries % workers;
   std::vector< std::future< Hits > > tasks;
-  tasks.reserve(threads);
-  for (std::size_t i = 0; i < threads; ++i) {
+  tasks.reserve(workers);
+  for (std::size_t i = 0; i < workers; ++i) {
     const std::size_t count = (i < rest) ? part + 1 : part;
     tasks.push_back(std::async(std::launch::async, countHits, std::cref(circles), std::cref(box), count, seed + i));
   }

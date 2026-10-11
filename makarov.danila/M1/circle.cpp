@@ -1,5 +1,8 @@
 #include "circle.hpp"
+#include <ios>
+#include <istream>
 #include <stdexcept>
+#include <vector>
 
 std::istream& makarov::operator>>(std::istream& in, Circle& circle)
 {

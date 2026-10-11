@@ -1,4 +1,5 @@
 #include "args.hpp"
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -33,8 +34,8 @@ makarov::Parameters makarov::parseParameters(int argc, const char* const* argv)
     throw std::invalid_argument("wrong number of arguments, expected: threads tries [seed]");
   }
   const long long threads = parseInteger(argv[threadsIndex], "threads");
-  if (threads <= 0) {
-    throw std::invalid_argument("threads count is not positive");
+  if (threads < 0) {
+    throw std::invalid_argument("threads count is negative");
   }
   const long long tries = parseInteger(argv[triesIndex], "tries");
   if (tries <= 0) {

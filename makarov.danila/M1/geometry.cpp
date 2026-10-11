@@ -1,5 +1,7 @@
 #include "geometry.hpp"
 #include <algorithm>
+#include <vector>
+#include "circle.hpp"
 
 bool makarov::isInside(const Circle& c, double x, double y)
 {
