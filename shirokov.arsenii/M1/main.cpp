@@ -3,6 +3,7 @@
 #include <future>
 #include <iostream>
 #include <limits>
+#include <new>
 #include <random>
 #include <stdexcept>
 #include <vector>
@@ -58,22 +59,21 @@ int main(int argc, char** argv)
   }
 
   std::vector< shirokov::Circle > circles;
-  while (std::cin)
+  int _;
+  long long r = 0, x = 0, y = 0;
+  while (std::cin >> r >> _ >> x >> y)
   {
-    int _;
-    long long r = 0, x = 0, y = 0;
-    std::cin >> r >> _ >> x >> y;
-    if (std::cin.fail() && circles.empty())
-    {
-      std::cerr << "Input error" << '\n';
-      return 2;
-    }
     if (r < 0)
     {
       std::cerr << "Negative radius" << '\n';
       return 2;
     }
     circles.push_back({static_cast< double >(r), static_cast< double >(x), static_cast< double >(y)});
+  }
+  if (circles.empty())
+  {
+    std::cerr << "Input error" << '\n';
+    return 2;
   }
 
   std::pair< double, double > res = shirokov::area(circles, threads, tries, seed);
@@ -167,10 +167,17 @@ std::pair< double, double > shirokov::area(
     threads = 1;
   }
 
+  std::vector< std::future< std::pair< size_t, size_t > > > results;
+  try
+  {
+    results.reserve(threads);
+  }
+  catch (const std::bad_alloc&)
+  {
+    threads = 1;
+  }
   size_t base = tries / threads;
   size_t remainder = tries % threads;
-  std::vector< std::future< std::pair< size_t, size_t > > > results;
-  results.reserve(threads);
 
   MinMaxes minMaxes = shirokov::getMinMaxes(circles);
 
