@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <future>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -17,7 +18,14 @@ namespace saldaev
     bool contain(Point point) const noexcept;
   };
 
+  struct Frame
+  {
+    Point min, max;
+  };
+
   std::pair< double, double > area(const std::vector< Circle > &circles, size_t threads, size_t tries, size_t seed);
+  std::pair< size_t, size_t > calculate(Frame frame, const std::vector< Circle > &circles, size_t tries, size_t seed);
+  Frame getBorders(const std::vector< Circle > &circles);
 };
 
 int main(int argc, char **argv)
@@ -75,4 +83,31 @@ int main(int argc, char **argv)
   const std::pair< double, double > areas = saldaev::area(circles, threads, tries, seed);
 
   std::cout << areas.first << ' ' << areas.second << '\n';
+}
+
+std::pair< double, double > saldaev::area(const std::vector< Circle > &circles, size_t threads, size_t tries,
+                                          size_t seed)
+{
+  std::vector< std::future< std::pair< size_t, size_t > > > futures;
+
+  const size_t tries_per_thread = tries / threads;
+  const size_t remainder = tries % threads;
+
+  Frame frame = getBorders(circles);
+  for (size_t i = 0; i < threads; ++i) {
+    size_t part = tries_per_thread + (i < remainder ? 1 : 0);
+    futures.push_back(std::async(std::launch::async, calculate, frame, std::cref(circles), part, seed + i));
+  }
+
+  size_t hits = 0;
+  size_t complete_hits = 0;
+  for (size_t i = 0; i < threads; i++) {
+    const std::pair< size_t, size_t > res = futures[i].get();
+    hits += res.first;
+    complete_hits += res.second;
+  }
+
+  const double frame_area = (frame.max.x - frame.min.x) * (frame.max.y - frame.min.y);
+  return {frame_area * (static_cast< double >(hits) / tries),
+          frame_area * (static_cast< double >(complete_hits) / tries)};
 }
