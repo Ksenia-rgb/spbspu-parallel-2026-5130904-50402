@@ -102,4 +102,54 @@ namespace vishnevskiy
     }
     return count;
   }
+
+  size_t runUnion(std::vector<Circle>& circles, size_t threads, size_t tests, size_t seed, CircleBoundaries& b)
+  {
+    size_t block = tests / threads;
+    size_t remainder = tests % threads;
+    std::vector<std::future<size_t>> futures;
+    futures.reserve(threads);
+
+    for (size_t i = 0; i < threads; ++i)
+    {
+      size_t currTests = block;
+      if (i < remainder)
+      {
+        currTests++;
+      }
+      futures.push_back(std::async(std::launch::async, calcUnion, circles, currTests, seed, b));
+    }
+
+    size_t res = 0;
+    for (size_t i = 0; i < futures.size(); ++i)
+    {
+      res += futures[i].get();
+    }
+    return res;
+  }
+
+  size_t runIntersection(std::vector<Circle>& circles, size_t threads, size_t tests, size_t seed, CircleBoundaries& b)
+  {
+    size_t block = tests / threads;
+    size_t remainder = tests % threads;
+    std::vector<std::future<size_t>> futures;
+    futures.reserve(threads);
+
+    for (size_t i = 0; i < threads; ++i)
+    {
+      size_t currTests = block;
+      if (i < remainder)
+      {
+        currTests++;
+      }
+      futures.push_back(std::async(std::launch::async, calcIntersection, circles, currTests, seed, b));
+    }
+
+    size_t res = 0;
+    for (size_t i = 0; i < futures.size(); ++i)
+    {
+      res += futures[i].get();
+    }
+    return res;
+  }
 }

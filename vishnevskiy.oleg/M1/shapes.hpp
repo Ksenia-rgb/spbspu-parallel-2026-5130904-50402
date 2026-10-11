@@ -33,5 +33,7 @@ namespace vishnevskiy
   CircleBoundaries getBoundaries(std::vector<Circle>& circles);
   size_t calcUnion(std::vector<Circle>& circles, size_t tests, size_t seed, CircleBoundaries& b);
   size_t calcIntersection(std::vector<Circle>& circles, size_t tests, size_t seed, CircleBoundaries& b);
+  size_t runUnion(std::vector<Circle>& circles, size_t threads, size_t tests, size_t seed, CircleBoundaries& b);
+  size_t runIntersection(std::vector<Circle>& circles, size_t threads, size_t tests, size_t seed, CircleBoundaries& b);
 }
 #endif
