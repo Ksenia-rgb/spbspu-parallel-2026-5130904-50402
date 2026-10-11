@@ -9,7 +9,6 @@
 #include <random>
 #include <stdexcept>
 #include <vector>
-#include <thread>
 #include <algorithm>
 #include <cstdlib>
 
@@ -183,17 +182,13 @@ std::pair< size_t, size_t > shirokov::calc(
 const std::pair< double, double > shirokov::area(
     const std::vector< Circle >& circles, size_t threads, size_t tries, size_t seed)
 {
-  size_t max_threads = std::thread::hardware_concurrency();
-  if (max_threads == 0)
-  {
-    max_threads = 1;
-  }
-
-  if (threads == 0)
+  if (!threads)
   {
     threads = 1;
   }
-  threads = std::min(threads, max_threads);
+
+  constexpr size_t max_allowed_threads = 64;
+  threads = std::min(threads, max_allowed_threads);
   threads = std::min(threads, tries);
 
   std::vector< std::future< std::pair< size_t, size_t > > > results;
