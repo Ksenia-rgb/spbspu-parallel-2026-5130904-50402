@@ -5,9 +5,31 @@ namespace vishnevskiy
 {
   struct Circle
   {
-    int r, x, y;
+    long long r, x, y;
   };
 
-  bool isInside(int x, int y, Circle& c);
+  struct CircleBoundaries
+  {
+    long long minX;
+    long long maxX;
+    long long minY;
+    long long maxY;
+
+    long long width()
+    {
+      return maxX - minX;
+    }
+    long long height()
+    {
+      return maxY - minY;
+    }
+    long long area()
+    {
+      return width() * height();
+    }
+  };
+
+  bool isInside(long long x, long long y, Circle& c);
+  CircleBoundaries getBoundaries(std::vector<Circle>& cirkles);
 }
 #endif
