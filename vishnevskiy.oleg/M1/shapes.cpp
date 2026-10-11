@@ -47,4 +47,12 @@ namespace vishnevskiy
     }
     return b;
   }
+
+  void generatePoint(std::mt19937_64& gen, CircleBoundaries& b, double& px, double& py)
+  {
+    std::uniform_real_distribution<double> distX(static_cast<double>(b.minX), static_cast<double>(b.maxX));
+    std::uniform_real_distribution<double> distY(static_cast<double>(b.minY), static_cast<double>(b.maxY));
+    px = distX(gen);
+    py = distY(gen);
+  }
 }
