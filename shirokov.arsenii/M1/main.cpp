@@ -12,6 +12,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstdlib>
+#include <functional>
 
 namespace shirokov
 {
@@ -37,7 +38,7 @@ namespace shirokov
 
   struct Shape
   {
-    double x_ = 0.0, y_ = 0.0;
+    double x = 0.0, y = 0.0;
 
     Shape(double x, double y);
     virtual ~Shape() = default;
@@ -47,7 +48,7 @@ namespace shirokov
 
   struct Ellipse: Shape
   {
-    double hr_, vr_;
+    double hr, vr;
 
     Ellipse(double x, double y, double hr, double vr);
     bool isInside(double x, double y) const noexcept override;
@@ -56,7 +57,7 @@ namespace shirokov
 
   struct Circle: Shape
   {
-    double r_;
+    double r;
 
     Circle(double x, double y, double r);
     bool isInside(double x, double y) const noexcept override;
@@ -164,15 +165,15 @@ size_t shirokov::stringToSizeT(const char* str)
 
 bool shirokov::Circle::isInside(double x, double y) const noexcept
 {
-  const double dx = x - x_;
-  const double dy = y - y_;
-  return dx * dx + dy * dy <= r_ * r_;
+  const double dx = x - x;
+  const double dy = y - y;
+  return dx * dx + dy * dy <= r * r;
 }
 
 bool shirokov::Ellipse::isInside(double x, double y) const noexcept
 {
-  const double nx = (x - x_) / hr_;
-  const double ny = (y - y_) / vr_;
+  const double nx = (x - x) / hr;
+  const double ny = (y - y) / vr;
   return nx * nx + ny * ny <= 1.0;
 }
 
@@ -276,27 +277,27 @@ shirokov::MinMaxes shirokov::getAllMinMaxes(const shape_list& shapes)
 }
 
 shirokov::Shape::Shape(double x, double y):
-  x_(x),
-  y_(y)
+  x(x),
+  y(y)
 {}
 
 shirokov::Ellipse::Ellipse(double x, double y, double hr, double vr):
   Shape(x, y),
-  hr_(hr),
-  vr_(vr)
+  hr(hr),
+  vr(vr)
 {}
 
 shirokov::Circle::Circle(double x, double y, double r):
   Shape(x, y),
-  r_(r)
+  r(r)
 {}
 
 shirokov::MinMaxes shirokov::Ellipse::getMinMaxes() const noexcept
 {
-  return {x_ - hr_, x_ + hr_, y_ - vr_, y_ + vr_};
+  return {x - hr, x + hr, y - vr, y + vr};
 }
 
 shirokov::MinMaxes shirokov::Circle::getMinMaxes() const noexcept
 {
-  return {x_ - r_, x_ + r_, y_ - r_, y_ + r_};
+  return {x - r, x + r, y - r, y + r};
 }
