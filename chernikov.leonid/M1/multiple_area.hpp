@@ -5,17 +5,22 @@
 #include <vector>
 
 namespace chernikov {
-  struct thread_data_t {
+  struct circle_t {
     double r;
+    double x;
+    double y;
+  };
+  struct thread_data_t {
+    circle_t circle;
     size_t tests;
     size_t seed;
     size_t result;
   };
 
-  bool isInside(double x, double y, double r);
-  void fillThreadData(std::vector< thread_data_t > &data, double r, size_t tests);
+  bool isInside(double x, double y, const circle_t &circle);
+  void fillThreadData(std::vector< thread_data_t > &data, const circle_t &circle, size_t tests);
   void countHits(thread_data_t &data);
-  double area(double r, size_t threads, size_t tests);
+  double area(const circle_t &circle, size_t threads, size_t tests);
 }
 
 #endif
