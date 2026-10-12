@@ -42,7 +42,7 @@ namespace shirokov
 
     Shape(double x, double y);
     virtual ~Shape() = default;
-    virtual bool isInside(double x, double y) const noexcept = 0;
+    virtual bool isInside(double px, double py) const noexcept = 0;
     virtual MinMaxes getMinMaxes() const noexcept = 0;
   };
 
@@ -51,7 +51,7 @@ namespace shirokov
     double hr, vr;
 
     Ellipse(double x, double y, double hr, double vr);
-    bool isInside(double x, double y) const noexcept override;
+    bool isInside(double px, double py) const noexcept override;
     MinMaxes getMinMaxes() const noexcept override;
   };
 
@@ -60,7 +60,7 @@ namespace shirokov
     double r;
 
     Circle(double x, double y, double r);
-    bool isInside(double x, double y) const noexcept override;
+    bool isInside(double px, double py) const noexcept override;
     MinMaxes getMinMaxes() const noexcept override;
   };
 
@@ -163,17 +163,17 @@ size_t shirokov::stringToSizeT(const char* str)
   return static_cast< size_t >(res);
 }
 
-bool shirokov::Circle::isInside(double x, double y) const noexcept
+bool shirokov::Circle::isInside(double px, double py) const noexcept
 {
-  const double dx = x - x;
-  const double dy = y - y;
+  const double dx = px - x;
+  const double dy = py - y;
   return dx * dx + dy * dy <= r * r;
 }
 
-bool shirokov::Ellipse::isInside(double x, double y) const noexcept
+bool shirokov::Ellipse::isInside(double px, double py) const noexcept
 {
-  const double nx = (x - x) / hr;
-  const double ny = (y - y) / vr;
+  const double nx = (px - x) / hr;
+  const double ny = (py - y) / vr;
   return nx * nx + ny * ny <= 1.0;
 }
 
