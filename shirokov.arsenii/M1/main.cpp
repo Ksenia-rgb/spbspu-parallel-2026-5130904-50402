@@ -89,14 +89,10 @@ int main(int argc, const char* argv[])
     }
     if (!vr)
     {
-      ellipses.push_back(
-          {static_cast< double >(x), static_cast< double >(y), static_cast< double >(hr), static_cast< double >(hr)});
+      vr = hr;
     }
-    else
-    {
-      ellipses.push_back(
-          {static_cast< double >(x), static_cast< double >(y), static_cast< double >(hr), static_cast< double >(vr)});
-    }
+    ellipses.push_back(
+        {static_cast< double >(x), static_cast< double >(y), static_cast< double >(hr), static_cast< double >(vr)});
   }
   if (!std::cin.eof() || ellipses.empty())
   {
