@@ -1,6 +1,7 @@
 #ifndef MULTIPLE_AREA_HPP
 #define MULTIPLE_AREA_HPP
 
+#include <utility>
 #include <cstddef>
 #include <vector>
 
@@ -33,5 +34,4 @@ namespace chernikov {
   void countHits(thread_data_t &data);
   std::pair< double, double > area(const circles_t &circles, size_t threads, size_t tests, size_t seed);
 }
-
 #endif
