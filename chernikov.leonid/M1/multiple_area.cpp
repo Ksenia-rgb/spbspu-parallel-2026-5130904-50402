@@ -1,4 +1,5 @@
 #include "multiple_area.hpp"
+#include <algorithm>
 #include <functional>
 #include <random>
 #include <thread>
@@ -25,6 +26,7 @@ chernikov::frame_t chernikov::getShapesFrame(const circles_t &circles)
   frame.max.x = std::max(frame.max.x, circle_max.x);
   frame.max.y = std::max(frame.max.y, circle_max.y);
   }
+  return frame;
 }
 
 void chernikov::fillThreadData(std::vector< thread_data_t > &data, const circles_t &circles, const frame_t &frame, size_t tests, size_t seed)
