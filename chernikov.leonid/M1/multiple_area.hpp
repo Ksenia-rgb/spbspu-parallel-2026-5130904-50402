@@ -13,6 +13,7 @@ namespace chernikov {
     double r;
     point_t center;
   };
+  using circles_t = std::vector<circle_t>;
   struct frame_t {
     point_t min;
     point_t max;
@@ -25,7 +26,7 @@ namespace chernikov {
   };
 
   bool isInside(const point_t &p, const circle_t &circle);
-  //frame_t getShapesFrame();
+  chernikov::frame_t chernikov::getShapesFrame(const circles_t &circles);
   void fillThreadData(std::vector< thread_data_t > &data, const circle_t &circle, size_t tests);
   void countHits(thread_data_t &data);
   double area(const circle_t &circle, size_t threads, size_t tests);

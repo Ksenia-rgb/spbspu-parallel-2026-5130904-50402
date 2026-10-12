@@ -10,6 +10,23 @@ bool chernikov::isInside(const point_t &p, const circle_t &circle)
   return dx * dx + dy * dy <= circle.r * circle.r;
 }
 
+chernikov::frame_t chernikov::getShapesFrame(const circles_t &circles)
+{
+  const circle_t &first = circles.front();
+  frame_t frame = {
+    {first.center.x - first.r, first.center.y - first.r},
+    {first.center.x + first.r, first.center.y + first.r}
+  };
+  for (const circle_t &c: circles) {
+  const point_t circle_min = {c.center.x - c.r, c.center.y - c.r};
+  const point_t circle_max = {c.center.x + c.r, c.center.y + c.r};
+  frame.min.x = std::min(frame.min.x, circle_min.x);
+  frame.min.y = std::min(frame.min.y, circle_min.y);
+  frame.max.x = std::max(frame.max.x, circle_max.x);
+  frame.max.y = std::max(frame.max.y, circle_max.y);
+  }
+}
+
 void chernikov::fillThreadData(std::vector< thread_data_t > &data, const circle_t &circle, size_t tests)
 {
   const size_t threads = data.size();
