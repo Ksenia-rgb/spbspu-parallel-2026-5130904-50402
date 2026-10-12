@@ -74,8 +74,9 @@ int main(int argc, char *argv[])
     return 1;
   }
   try {
-    const std::pair< double, double > result = chernikov::area(circles, static_cast< size_t >(threads),
-        static_cast< size_t >(tries), static_cast< size_t >(seed));    std::cout << result.first << " " << result.second << "\n";
+    const std::pair< double, double > result = chernikov::area(
+        circles, static_cast< size_t >(threads), static_cast< size_t >(tries), static_cast< size_t >(seed));
+    std::cout << result.first << " " << result.second << "\n";
   } catch (const std::exception &e) {
     std::cerr << "Error: " << e.what() << "\n";
     return 2;
