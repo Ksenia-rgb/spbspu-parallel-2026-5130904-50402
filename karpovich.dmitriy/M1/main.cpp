@@ -8,19 +8,10 @@
 #include "area.hpp"
 #include "shape.hpp"
 
-namespace
-{
-  constexpr int argc_without_seed = 3;
-  constexpr int argc_with_seed = 4;
-  constexpr int arg_threads = 1;
-  constexpr int arg_tries = 2;
-  constexpr int arg_seed = 3;
-}
-
 int main(int argc, char **argv)
 {
   using namespace karpovich;
-  if (argc != argc_without_seed && argc != argc_with_seed)
+  if (argc != 3 && argc != 4)
   {
     std::cerr << "Invalid num of args\n";
     return 1;
@@ -30,21 +21,21 @@ int main(int argc, char **argv)
   size_t seed = 0;
   try
   {
-    if (argv[arg_threads][0] == '-' || argv[arg_tries][0] == '-')
+    if (argv[1][0] == '-' || argv[2][0] == '-')
     {
       std::cerr << "Args must be non-negative\n";
       return 1;
     }
-    threads = std::stoull(argv[arg_threads]);
-    tries = std::stoull(argv[arg_tries]);
-    if (argc == argc_with_seed)
+    threads = std::stoull(argv[1]);
+    tries = std::stoull(argv[2]);
+    if (argc == 4)
     {
-      if (argv[arg_seed][0] == '-')
+      if (argv[3][0] == '-')
       {
         std::cerr << "Seed must be non-negative\n";
         return 1;
       }
-      seed = std::stoull(argv[arg_seed]);
+      seed = std::stoull(argv[3]);
     }
   }
   catch (const std::invalid_argument &)
