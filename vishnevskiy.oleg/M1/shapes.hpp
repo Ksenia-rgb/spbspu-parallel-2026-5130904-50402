@@ -9,31 +9,31 @@ namespace vishnevskiy
 {
   struct Circle
   {
-    long long r, x, y;
+    double r, x, y;
   };
 
   struct CircleBoundaries
   {
-    long long minX;
-    long long maxX;
-    long long minY;
-    long long maxY;
+    double minX;
+    double maxX;
+    double minY;
+    double maxY;
 
-    long long width()
+    double width()
     {
       return maxX - minX;
     }
-    long long height()
+    double height()
     {
       return maxY - minY;
     }
-    long long area()
+    double area()
     {
       return width() * height();
     }
   };
 
-  bool isInside(const long long x, const long long y, const Circle& c);
+  bool isInside(const double x, const double y, const Circle& c);
   void generatePoint(std::mt19937_64& gen, const CircleBoundaries& b, double& px, double& py);
   CircleBoundaries getBoundaries(std::vector<Circle>& circles);
   size_t calcUnion(const std::vector<Circle>& circles, size_t tests, size_t seed, const CircleBoundaries& b);

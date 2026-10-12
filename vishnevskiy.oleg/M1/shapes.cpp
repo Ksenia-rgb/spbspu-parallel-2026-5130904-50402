@@ -1,33 +1,35 @@
 #include "shapes.hpp"
 #include <future>
 #include <random>
+#include <iostream>
 #include <limits>
 
 namespace vishnevskiy
 {
-  bool isInside(const long long x, const long long y, const Circle& c)
+  bool isInside(double x, double y, const Circle& c)
   {
-    long long rx = x - c.x;
-    long long ry = y - c.y;
-    return (rx * rx + ry * ry) <= (c.r * c.r);
+    double rx = x - c.x;
+    double ry = y - c.y;
+    double r  = c.r;
+    return (rx * rx + ry * ry) <= (r * r);
   }
 
   CircleBoundaries getBoundaries(std::vector<Circle>& circles)
   {
     CircleBoundaries b
     {
-      std::numeric_limits<long long>::max(),
-      std::numeric_limits<long long>::lowest(),
-      std::numeric_limits<long long>::max(),
-      std::numeric_limits<long long>::lowest()
+      std::numeric_limits<double>::max(),
+      std::numeric_limits<double>::lowest(),
+      std::numeric_limits<double>::max(),
+      std::numeric_limits<double>::lowest()
     };
     for (size_t i = 0; i < circles.size(); ++i)
     {
       const Circle& c = circles[i];
-      long long curMinX = c.x - c.r;
-      long long curMaxX = c.x + c.r;
-      long long curMinY = c.y - c.r;
-      long long curMaxY = c.y + c.r;
+      double curMinX = c.x - c.r;
+      double curMaxX = c.x + c.r;
+      double curMinY = c.y - c.r;
+      double curMaxY = c.y + c.r;
       if (curMinX < b.minX)
       {
         b.minX = curMinX;
