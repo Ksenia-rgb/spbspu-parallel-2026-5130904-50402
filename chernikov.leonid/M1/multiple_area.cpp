@@ -38,7 +38,7 @@ void chernikov::fillThreadData(std::vector< thread_data_t > &data, const circles
     data[i].circles = &circles;
     data[i].frame = frame;
     data[i].tests = (i < rem) ? whole + 1 : whole;
-    data[i].seed = i;
+    data[i].seed = seed + i;
     data[i].in_any = 0;
     data[i].in_all = 0;
   }

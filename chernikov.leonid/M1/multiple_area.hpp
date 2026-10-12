@@ -29,7 +29,7 @@ namespace chernikov {
   };
 
   bool isInside(const point_t &p, const circle_t &circle);
-  chernikov::frame_t chernikov::getShapesFrame(const circles_t &circles);
+  frame_t getShapesFrame(const circles_t &circles);
   void fillThreadData(std::vector< thread_data_t > &data, const circles_t &circles, const frame_t &frame, size_t tests, size_t seed);
   void countHits(thread_data_t &data);
   std::pair< double, double > area(const circles_t &circles, size_t threads, size_t tests, size_t seed);
