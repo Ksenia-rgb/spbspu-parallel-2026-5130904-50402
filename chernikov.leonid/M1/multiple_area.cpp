@@ -73,6 +73,12 @@ void chernikov::countHits(thread_data_t &data)
 
 std::pair< double, double > chernikov::area(const circles_t &circles, size_t threads, size_t tests, size_t seed)
 {
+  if (circles.empty()) {
+    return {0.0, 0.0};
+  }
+  if (threads == 0) {
+    threads = 1;
+  }
   const frame_t frame = getShapesFrame(circles);
   std::vector< thread_data_t > data(threads);
   fillThreadData(data, circles, frame, tests, seed);
