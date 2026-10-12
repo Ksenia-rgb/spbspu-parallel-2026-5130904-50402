@@ -27,54 +27,68 @@ chernikov::frame_t chernikov::getShapesFrame(const circles_t &circles)
   }
 }
 
-void chernikov::fillThreadData(std::vector< thread_data_t > &data, const circle_t &circle, size_t tests)
+void chernikov::fillThreadData(std::vector< thread_data_t > &data, const circles_t &circles, const frame_t &frame, size_t tests, size_t seed)
 {
   const size_t threads = data.size();
   const size_t whole = tests / threads;
   const size_t rem = tests % threads;
   for (size_t i = 0; i < threads; ++i) {
-    data[i].circle = circle;
+    data[i].circles = &circles;
+    data[i].frame = frame;
     data[i].tests = (i < rem) ? whole + 1 : whole;
     data[i].seed = i;
-    data[i].result = 0;
+    data[i].in_any = 0;
+    data[i].in_all = 0;
   }
 }
 
 void chernikov::countHits(thread_data_t &data)
 {
-  circle_t &c = data.circle;
+  size_t in_any = 0;
+  size_t in_all = 0;
   std::default_random_engine gen(data.seed);
-  std::uniform_real_distribution< double > dist_x(c.center.x - c.r, c.center.x + c.r);
-  std::uniform_real_distribution< double > dist_y(c.center.y - c.r, c.center.y + c.r);
-  size_t hits = 0;
+  std::uniform_real_distribution< double > dist_x(data.frame.min.x, data.frame.max.x);
+  std::uniform_real_distribution< double > dist_y(data.frame.min.y, data.frame.max.y);
   for (size_t i = 0; i < data.tests; ++i) {
-    const double x = dist_x(gen);
-    const double y = dist_y(gen);
-    point_t p {x,y};
-    if (isInside(p, c)) {
-      ++hits;
+    const point_t p = {dist_x(gen), dist_y(gen)};
+    bool any = false;
+    bool all = true;
+    for (const circle_t &c: *data.circles) {
+      if (isInside(p, c)) {
+        any = true;
+      } else {
+        all = false;
+      }
+    }
+    if (any) {
+      ++in_any;
+    }
+    if (all) {
+      ++in_all;
     }
   }
-  data.result = hits;
+  data.in_any = in_any;
+  data.in_all = in_all;
 }
 
-double chernikov::area(const circle_t &circle, size_t threads, size_t tests)
+std::pair< double, double > chernikov::area(const circles_t &circles, size_t threads, size_t tests, size_t seed)
 {
+  const frame_t frame = getShapesFrame(circles);
   std::vector< thread_data_t > data(threads);
-  fillThreadData(data, circle, tests);
-
+  fillThreadData(data, circles, frame, tests, seed);
   std::vector< std::thread > workers;
   workers.reserve(threads);
   for (size_t i = 0; i < threads; ++i) {
     workers.emplace_back(countHits, std::ref(data[i]));
   }
-
-  size_t hits = 0;
+  size_t in_any = 0;
+  size_t in_all = 0;
   for (size_t i = 0; i < threads; ++i) {
     workers[i].join();
-    hits += data[i].result;
+    in_any += data[i].in_any;
+    in_all += data[i].in_all;
   }
-
-  const double square_area = (2 * circle.r) * (2 * circle.r);
-  return square_area * static_cast< double >(hits) / static_cast< double >(tests);
+  const double frame_area = (frame.max.x - frame.min.x) * (frame.max.y - frame.min.y);
+  const double total = static_cast< double >(tests);
+  return {frame_area * static_cast< double >(in_any) / total, frame_area * static_cast< double >(in_all) / total};
 }
