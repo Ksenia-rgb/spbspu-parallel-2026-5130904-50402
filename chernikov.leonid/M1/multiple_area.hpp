@@ -14,7 +14,7 @@ namespace chernikov {
     double r;
     point_t center;
   };
-  using circles_t = std::vector<circle_t>;
+  using circles_t = std::vector< circle_t >;
   struct frame_t {
     point_t min;
     point_t max;
@@ -30,7 +30,8 @@ namespace chernikov {
 
   bool isInside(const point_t &p, const circle_t &circle);
   frame_t getShapesFrame(const circles_t &circles);
-  void fillThreadData(std::vector< thread_data_t > &data, const circles_t &circles, const frame_t &frame, size_t tests, size_t seed);
+  void fillThreadData(
+      std::vector< thread_data_t > &data, const circles_t &circles, const frame_t &frame, size_t tests, size_t seed);
   void countHits(thread_data_t &data);
   std::pair< double, double > area(const circles_t &circles, size_t threads, size_t tests, size_t seed);
 }

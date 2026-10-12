@@ -1,8 +1,11 @@
 #include "multiple_area.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <functional>
 #include <random>
 #include <thread>
+#include <utility>
+#include <vector>
 
 bool chernikov::isInside(const point_t &p, const circle_t &circle)
 {
@@ -14,23 +17,21 @@ bool chernikov::isInside(const point_t &p, const circle_t &circle)
 chernikov::frame_t chernikov::getShapesFrame(const circles_t &circles)
 {
   const circle_t &first = circles.front();
-  frame_t frame = {
-    {first.center.x - first.r, first.center.y - first.r},
-    {first.center.x + first.r, first.center.y + first.r}
-  };
-  for (const circle_t &c: circles) {
-  const point_t circle_min = {c.center.x - c.r, c.center.y - c.r};
-  const point_t circle_max = {c.center.x + c.r, c.center.y + c.r};
-  frame.min.x = std::min(frame.min.x, circle_min.x);
-  frame.min.y = std::min(frame.min.y, circle_min.y);
-  frame.max.x = std::max(frame.max.x, circle_max.x);
-  frame.max.y = std::max(frame.max.y, circle_max.y);
+  frame_t frame
+      = {{first.center.x - first.r, first.center.y - first.r}, {first.center.x + first.r, first.center.y + first.r}};
+  for (const circle_t &c : circles) {
+    const point_t circle_min = {c.center.x - c.r, c.center.y - c.r};
+    const point_t circle_max = {c.center.x + c.r, c.center.y + c.r};
+    frame.min.x = std::min(frame.min.x, circle_min.x);
+    frame.min.y = std::min(frame.min.y, circle_min.y);
+    frame.max.x = std::max(frame.max.x, circle_max.x);
+    frame.max.y = std::max(frame.max.y, circle_max.y);
   }
   return frame;
 }
 
-void chernikov::fillThreadData(std::vector< thread_data_t > &data, const circles_t &circles, const frame_t &frame,
-    size_t tests, size_t seed)
+void chernikov::fillThreadData(
+    std::vector< thread_data_t > &data, const circles_t &circles, const frame_t &frame, size_t tests, size_t seed)
 {
   const size_t threads = data.size();
   const size_t whole = tests / threads;
@@ -56,7 +57,7 @@ void chernikov::countHits(thread_data_t &data)
     const point_t p = {dist_x(gen), dist_y(gen)};
     bool any = false;
     bool all = true;
-    for (const circle_t &c: *data.circles) {
+    for (const circle_t &c : *data.circles) {
       if (isInside(p, c)) {
         any = true;
       } else {
