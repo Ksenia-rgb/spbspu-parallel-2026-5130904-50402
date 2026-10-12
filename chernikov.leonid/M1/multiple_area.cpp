@@ -29,7 +29,8 @@ chernikov::frame_t chernikov::getShapesFrame(const circles_t &circles)
   return frame;
 }
 
-void chernikov::fillThreadData(std::vector< thread_data_t > &data, const circles_t &circles, const frame_t &frame, size_t tests, size_t seed)
+void chernikov::fillThreadData(std::vector< thread_data_t > &data, const circles_t &circles, const frame_t &frame,
+    size_t tests, size_t seed)
 {
   const size_t threads = data.size();
   const size_t whole = tests / threads;
