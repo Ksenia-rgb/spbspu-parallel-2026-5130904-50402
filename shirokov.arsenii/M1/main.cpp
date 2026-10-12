@@ -3,6 +3,7 @@
 #include <future>
 #include <iomanip>
 #include <cstddef>
+#include <memory>
 #include <utility>
 #include <iostream>
 #include <limits>
@@ -14,6 +15,8 @@
 
 namespace shirokov
 {
+  struct Shape;
+  using shape_list = std::vector< std::unique_ptr< Shape > >;
 
   constexpr int status_ok = 0;
   constexpr int status_error_invalid_args = 1;
@@ -26,24 +29,44 @@ namespace shirokov
   constexpr size_t tries_arg_pos = 2;
   constexpr int seed_arg_pos = 3;
 
-  struct Circle
-  {
-    double r, x, y;
-  };
-
   struct MinMaxes
   {
     double min_x, max_x;
     double min_y, max_y;
   };
 
+  struct Shape
+  {
+    double x_ = 0.0, y_ = 0.0;
+
+    Shape(double x, double y);
+    virtual ~Shape() = default;
+    virtual bool isInside(double x, double y) const noexcept = 0;
+    virtual MinMaxes getMinMaxes() const noexcept = 0;
+  };
+
+  struct Ellipse: Shape
+  {
+    double hr_, vr_;
+
+    Ellipse(double x, double y, double hr, double vr);
+    bool isInside(double x, double y) const noexcept override;
+    MinMaxes getMinMaxes() const noexcept override;
+  };
+
+  struct Circle: Shape
+  {
+    double r_;
+
+    Circle(double x, double y, double r);
+    bool isInside(double x, double y) const noexcept override;
+    MinMaxes getMinMaxes() const noexcept override;
+  };
+
   size_t stringToSizeT(const char* line);
-  bool isInside(double x, double y, const Circle& circle);
-  std::pair< size_t, size_t > calc(
-      const std::vector< Circle >& circles, size_t tries, size_t seed, const MinMaxes& min_maxes);
-  const std::pair< double, double > area(
-      const std::vector< Circle >& circles, size_t threads, size_t tries, size_t seed);
-  MinMaxes getMinMaxes(const std::vector< Circle >& circles);
+  std::pair< size_t, size_t > calc(const shape_list& shapes, size_t tries, size_t seed, const MinMaxes& min_maxes);
+  const std::pair< double, double > area(const shape_list& shapes, size_t threads, size_t tries, size_t seed);
+  MinMaxes getAllMinMaxes(const shape_list& shapes);
 }
 
 int main(int argc, const char* argv[])
@@ -75,25 +98,31 @@ int main(int argc, const char* argv[])
     return shirokov::status_error_invalid_args;
   }
 
-  std::vector< shirokov::Circle > circles;
-  int temp = 0;
-  long long r = 0, x = 0, y = 0;
-  while (std::cin >> r >> temp >> x >> y)
+  std::vector< std::unique_ptr< shirokov::Shape > > shapes;
+  long long hr = 0, vr = 0, x = 0, y = 0;
+  while (std::cin >> hr >> vr >> x >> y)
   {
-    if (r < 0)
+    if (hr < 0 || vr < 0)
     {
       std::cerr << "Negative radius" << '\n';
       return shirokov::status_error_invalid_input;
     }
-    circles.push_back({static_cast< double >(r), static_cast< double >(x), static_cast< double >(y)});
+    if (!vr)
+    {
+      shapes.push_back(std::make_unique< shirokov::Circle >(x, y, hr));
+    }
+    else
+    {
+      shapes.push_back(std::make_unique< shirokov::Ellipse >(x, y, hr, vr));
+    }
   }
-  if (!std::cin.eof() || circles.empty())
+  if (!std::cin.eof() || shapes.empty())
   {
     std::cerr << "Input error" << '\n';
     return shirokov::status_error_invalid_input;
   }
 
-  const std::pair< double, double > res = shirokov::area(circles, threads, tries, seed);
+  const std::pair< double, double > res = shirokov::area(shapes, threads, tries, seed);
   std::cout << std::fixed << std::setprecision(std::numeric_limits< double >::max_digits10);
   std::cout << res.first << ' ' << res.second << '\n';
 
@@ -133,15 +162,22 @@ size_t shirokov::stringToSizeT(const char* str)
   return static_cast< size_t >(res);
 }
 
-bool shirokov::isInside(double x, double y, const Circle& circle)
+bool shirokov::Circle::isInside(double x, double y) const noexcept
 {
-  const double dx = x - circle.x;
-  const double dy = y - circle.y;
-  return dx * dx + dy * dy <= circle.r * circle.r;
+  const double dx = x - x_;
+  const double dy = y - y_;
+  return dx * dx + dy * dy <= r_ * r_;
+}
+
+bool shirokov::Ellipse::isInside(double x, double y) const noexcept
+{
+  const double nx = (x - x_) / hr_;
+  const double ny = (y - y_) / vr_;
+  return nx * nx + ny * ny <= 1.0;
 }
 
 std::pair< size_t, size_t > shirokov::calc(
-    const std::vector< Circle >& circles, size_t tries, size_t seed, const MinMaxes& min_maxes)
+    const shape_list& shapes, size_t tries, size_t seed, const MinMaxes& min_maxes)
 {
   std::default_random_engine engine(seed);
 
@@ -156,9 +192,9 @@ std::pair< size_t, size_t > shirokov::calc(
     const double y = dist_y(engine);
     bool is_in_circle = false;
     bool is_in_intersection = true;
-    for (const Circle& c : circles)
+    for (const std::unique_ptr< Shape >& s : shapes)
     {
-      if (isInside(x, y, c))
+      if (s->isInside(x, y))
       {
         is_in_circle = true;
       }
@@ -179,8 +215,7 @@ std::pair< size_t, size_t > shirokov::calc(
   return {count_of_total_coverage, count_of_intersection};
 }
 
-const std::pair< double, double > shirokov::area(
-    const std::vector< Circle >& circles, size_t threads, size_t tries, size_t seed)
+const std::pair< double, double > shirokov::area(const shape_list& shapes, size_t threads, size_t tries, size_t seed)
 {
   if (!threads)
   {
@@ -197,12 +232,12 @@ const std::pair< double, double > shirokov::area(
   const size_t base = tries / threads;
   const size_t remainder = tries % threads;
 
-  const MinMaxes min_maxes = shirokov::getMinMaxes(circles);
+  const MinMaxes min_maxes = shirokov::getAllMinMaxes(shapes);
 
   for (size_t i = 0; i < threads; ++i)
   {
     const size_t curr_tries_count = base + ((i < remainder) ? 1 : 0);
-    results.push_back(std::async(std::launch::async, calc, circles, curr_tries_count, seed + i, min_maxes));
+    results.push_back(std::async(std::launch::async, calc, std::cref(shapes), curr_tries_count, seed + i, min_maxes));
   }
 
   size_t count_of_total_coverage = 0;
@@ -224,20 +259,44 @@ const std::pair< double, double > shirokov::area(
   return {total_coverage, intersection_area};
 }
 
-shirokov::MinMaxes shirokov::getMinMaxes(const std::vector< Circle >& circles)
+shirokov::MinMaxes shirokov::getAllMinMaxes(const shape_list& shapes)
 {
-  double min_x = circles[0].x - circles[0].r;
-  double max_x = circles[0].x + circles[0].r;
-  double min_y = circles[0].y - circles[0].r;
-  double max_y = circles[0].y + circles[0].r;
+  MinMaxes res_mm = shapes[0]->getMinMaxes();
 
-  for (const auto& c : circles)
+  for (const std::unique_ptr< Shape >& s : shapes)
   {
-    min_x = std::min(min_x, c.x - c.r);
-    max_x = std::max(max_x, c.x + c.r);
-    min_y = std::min(min_y, c.y - c.r);
-    max_y = std::max(max_y, c.y + c.r);
+    const MinMaxes curr_mm = s->getMinMaxes();
+    res_mm.max_x = std::max(res_mm.max_x, curr_mm.max_x);
+    res_mm.min_x = std::min(res_mm.min_x, curr_mm.min_x);
+    res_mm.max_y = std::max(res_mm.max_y, curr_mm.max_y);
+    res_mm.min_y = std::min(res_mm.min_y, curr_mm.min_y);
   }
 
-  return {min_x, max_x, min_y, max_y};
+  return res_mm;
+}
+
+shirokov::Shape::Shape(double x, double y):
+  x_(x),
+  y_(y)
+{}
+
+shirokov::Ellipse::Ellipse(double x, double y, double hr, double vr):
+  Shape(x, y),
+  hr_(hr),
+  vr_(vr)
+{}
+
+shirokov::Circle::Circle(double x, double y, double r):
+  Shape(x, y),
+  r_(r)
+{}
+
+shirokov::MinMaxes shirokov::Ellipse::getMinMaxes() const noexcept
+{
+  return {x_ - hr_, x_ + hr_, y_ - vr_, y_ + vr_};
+}
+
+shirokov::MinMaxes shirokov::Circle::getMinMaxes() const noexcept
+{
+  return {x_ - r_, x_ + r_, y_ - r_, y_ + r_};
 }
