@@ -10,6 +10,14 @@ namespace chernikov {
     double x;
     double y;
   };
+  struct point_t {
+    double x;
+    double y;
+  };
+  struct frame_t {
+    point_t min;
+    point_t max;
+  };
   struct thread_data_t {
     circle_t circle;
     size_t tests;
