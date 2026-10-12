@@ -3,10 +3,10 @@
 #include <random>
 #include <thread>
 
-bool chernikov::isInside(double x, double y, const circle_t &circle)
+bool chernikov::isInside(const point_t &p, const circle_t &circle)
 {
-  const double dx = x - circle.x;
-  const double dy = y - circle.y;
+  const double dx = p.x - circle.center.x;
+  const double dy = p.y - circle.center.y;
   return dx * dx + dy * dy <= circle.r * circle.r;
 }
 
@@ -27,13 +27,14 @@ void chernikov::countHits(thread_data_t &data)
 {
   circle_t &c = data.circle;
   std::default_random_engine gen(data.seed);
-  std::uniform_real_distribution< double > dist_x(c.x - c.r, c.x + c.r);
-  std::uniform_real_distribution< double > dist_y(c.y - c.r, c.y + c.r);
+  std::uniform_real_distribution< double > dist_x(c.center.x - c.r, c.center.x + c.r);
+  std::uniform_real_distribution< double > dist_y(c.center.y - c.r, c.center.y + c.r);
   size_t hits = 0;
   for (size_t i = 0; i < data.tests; ++i) {
     const double x = dist_x(gen);
     const double y = dist_y(gen);
-    if (isInside(x, y, c)) {
+    point_t p {x,y};
+    if (isInside(p, c)) {
       ++hits;
     }
   }
