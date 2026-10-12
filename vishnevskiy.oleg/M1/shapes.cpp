@@ -5,14 +5,14 @@
 
 namespace vishnevskiy
 {
-  bool isInside(long long x, long long y, Circle& c)
+  bool isInside(const long long x, const long long y, const Circle& c)
   {
     long long rx = x - c.x;
     long long ry = y - c.y;
     return (rx * rx + ry * ry) <= (c.r * c.r);
   }
 
-  CircleBoundaries getBoundaries(std::vector<Circle>& circles);
+  CircleBoundaries getBoundaries(std::vector<Circle>& circles)
   {
     CircleBoundaries b
     {
@@ -21,13 +21,13 @@ namespace vishnevskiy
       std::numeric_limits<long long>::max(),
       std::numeric_limits<long long>::lowest()
     };
-    for (size_t i = 0; i < c.size(); ++i)
+    for (size_t i = 0; i < circles.size(); ++i)
     {
       const Circle& c = circles[i];
-      long long curMinX = c.x - c.radius;
-      long long curMaxX = c.x + c.radius;
-      long long curMinY = c.y - c.radius;
-      long long curMaxY = c.y + c.radius;
+      long long curMinX = c.x - c.r;
+      long long curMaxX = c.x + c.r;
+      long long curMinY = c.y - c.r;
+      long long curMaxY = c.y + c.r;
       if (curMinX < b.minX)
       {
         b.minX = curMinX;
@@ -48,7 +48,7 @@ namespace vishnevskiy
     return b;
   }
 
-  void generatePoint(std::mt19937_64& gen, CircleBoundaries& b, double& px, double& py)
+  void generatePoint(std::mt19937_64& gen, const CircleBoundaries& b, double& px, double& py)
   {
     std::uniform_real_distribution<double> distX(static_cast<double>(b.minX), static_cast<double>(b.maxX));
     std::uniform_real_distribution<double> distY(static_cast<double>(b.minY), static_cast<double>(b.maxY));
@@ -56,7 +56,7 @@ namespace vishnevskiy
     py = distY(gen);
   }
 
-  size_t calcUnion(std::vector<Circle>& circles, size_t tests, size_t seed, CircleBoundaries& b);
+  size_t calcUnion(const std::vector<Circle>& circles, size_t tests, size_t seed, const CircleBoundaries& b)
   {
     std::mt19937_64 gen(seed);
     size_t count = 0;
@@ -77,7 +77,7 @@ namespace vishnevskiy
     return count;
   }
 
-  size_t calcIntersection(std::vector<Circle>& circles, size_t tests, size_t seed, CircleBoundaries& b);
+  size_t calcIntersection(const std::vector<Circle>& circles, size_t tests, size_t seed, const CircleBoundaries& b)
   {
     std::mt19937_64 gen(seed);
     size_t count = 0;
