@@ -19,17 +19,19 @@ namespace chernikov {
     point_t max;
   };
   struct thread_data_t {
-    circle_t circle;
+    const circles_t *circles;
+    frame_t frame;
     size_t tests;
     size_t seed;
-    size_t result;
+    size_t in_any;
+    size_t in_all;
   };
 
   bool isInside(const point_t &p, const circle_t &circle);
   chernikov::frame_t chernikov::getShapesFrame(const circles_t &circles);
-  void fillThreadData(std::vector< thread_data_t > &data, const circle_t &circle, size_t tests);
+  void fillThreadData(std::vector< thread_data_t > &data, const circles_t &circles, const frame_t &frame, size_t tests, size_t seed);
   void countHits(thread_data_t &data);
-  double area(const circle_t &circle, size_t threads, size_t tests);
+  std::pair< double, double > area(const circles_t &circles, size_t threads, size_t tests, size_t seed);
 }
 
 #endif
