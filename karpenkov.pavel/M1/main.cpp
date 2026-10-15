@@ -6,6 +6,15 @@ constexpr size_t count_of_args = 4;
 constexpr size_t invalid_args_count_error = 1;
 constexpr size_t base_of_ten = 10;
 constexpr size_t invalid_args = 2;
+struct Circle {
+public:
+  Circle(int x, int y, int radius) : x(x), y(y), radius(radius) {}
+
+private:
+  int x;
+  int y;
+  int radius;
+};
 size_t stringToSizeT(const char *lms) {
   char *end = nullptr;
   const unsigned long long rms = std::strtoull(lms, &end, base_of_ten);
