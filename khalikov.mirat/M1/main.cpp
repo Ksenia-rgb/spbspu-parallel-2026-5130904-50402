@@ -9,6 +9,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <exception>
 
 namespace khalikov {
 struct Circle {
@@ -47,7 +48,7 @@ Frame findFrames(const std::vector<Circle> &circles) {
   return frame;
 }
 
-Point genPoint(const Frame &frame, std::mt19937 &gen) {
+Point genPoint(const Frame &frame, std::default_random_engine &gen) {
   std::uniform_real_distribution<double> dist_x(frame.min_x, frame.max_x);
   std::uniform_real_distribution<double> dist_y(frame.min_y, frame.max_y);
   Point pt;
@@ -90,7 +91,7 @@ double getIntersectionArea(size_t tries, size_t intersection_hits,
 std::pair<size_t, size_t> calculate(const std::vector<Circle> &circles,
                                     const Frame &frame, size_t tries,
                                     size_t seed) {
-  std::mt19937 gen(seed);
+  std::default_random_engine gen(seed);
   size_t union_hits = 0;
   size_t intersection_hits = 0;
   for (size_t i = 0; i < tries; i++) {
