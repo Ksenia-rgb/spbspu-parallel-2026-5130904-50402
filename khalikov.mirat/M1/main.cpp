@@ -44,7 +44,8 @@ namespace khalikov
     frame.max_y = it->center.y + it->r;
     it++;
 
-    for (; it != circles.end(); it++) {
+    for (; it != circles.end(); it++)
+    {
       frame.min_x = std::min(frame.min_x, it->center.x - it->r);
       frame.max_x = std::max(frame.max_x, it->center.x + it->r);
       frame.min_y = std::min(frame.min_y, it->center.y - it->r);
@@ -65,8 +66,10 @@ namespace khalikov
 
   bool isInUnion(const std::vector< Circle > &circles, const Point &pt)
   {
-    for (auto it = circles.begin(); it != circles.end(); it++) {
-      if (isIn(*it, pt)) {
+    for (auto it = circles.begin(); it != circles.end(); it++)
+    {
+      if (isIn(*it, pt))
+      {
         return true;
       }
     }
@@ -75,7 +78,8 @@ namespace khalikov
 
   bool isInIntersection(const std::vector< Circle > &circles, const Point &pt)
   {
-    for (auto it = circles.begin(); it != circles.end(); it++) {
+    for (auto it = circles.begin(); it != circles.end(); it++)
+    {
       if (!isIn(*it, pt)) {
         return false;
       }
@@ -104,7 +108,8 @@ namespace khalikov
     std::default_random_engine gen(seed);
     size_t union_hits = 0;
     size_t intersection_hits = 0;
-    for (size_t i = 0; i < tries; i++) {
+    for (size_t i = 0; i < tries; i++)
+    {
       const Point example = genPoint(frame, gen);
       intersection_hits += isInIntersection(circles, example);
       union_hits += isInUnion(circles, example);
@@ -115,7 +120,8 @@ namespace khalikov
 
 int main(int argc, char **argv)
 {
-  if (argc > 4 || argc < 3) {
+  if (argc > 4 || argc < 3)
+  {
     std::cerr << "Incorrect arguments\n";
     return 1;
   }
@@ -124,25 +130,31 @@ int main(int argc, char **argv)
   size_t tries = 0;
   size_t seed = 0;
 
-  for (int i = 1; i < argc; i++) {
-    if (argv[i][0] == '-') {
+  for (int i = 1; i < argc; i++)
+  {
+    if (argv[i][0] == '-')
+    {
       std::cerr << "Incorrect arguments\n";
       return 1;
     }
   }
 
-  try {
+  try
+  {
     threads = std::stoull(argv[1]);
     tries = std::stoull(argv[2]);
-    if (argc == 4) {
+    if (argc == 4)
+    {
       seed = std::stoull(argv[3]);
     }
-  } catch (const std::exception &e) {
+  } catch (const std::exception &e)
+  {
     std::cerr << e.what() << "Incorrect arguments\n";
     return 2;
   }
 
-  if (tries == 0) {
+  if (tries == 0)
+  {
     std::cerr << "Incorrect arguments\n";
     return 2;
   }
@@ -152,7 +164,8 @@ int main(int argc, char **argv)
   std::vector< khalikov::Circle > circles;
   std::string line;
 
-  while (std::getline(std::cin, line)) {
+  while (std::getline(std::cin, line))
+  {
     std::istringstream iss(line);
     int r = 0;
     int c = 0;
@@ -160,7 +173,8 @@ int main(int argc, char **argv)
     int y = 0;
     std::string extra;
 
-    if (!(iss >> r >> c >> x >> y) || (iss >> extra)) {
+    if (!(iss >> r >> c >> x >> y) || (iss >> extra))
+    {
       std::cerr << "Incorrect input\n";
       return 1;
     }
@@ -172,12 +186,14 @@ int main(int argc, char **argv)
     circles.push_back(circle);
   }
 
-  if (std::cin.fail() && !std::cin.eof()) {
+  if (std::cin.fail() && !std::cin.eof())
+  {
     std::cerr << "Incorrect input\n";
     return 1;
   }
 
-  if (circles.empty()) {
+  if (circles.empty())
+  {
     std::cout << "0 0\n";
     return 0;
   }
@@ -187,7 +203,8 @@ int main(int argc, char **argv)
   const size_t remainder = tries % threads;
   std::vector< std::future< std::pair< size_t, size_t > > > futures;
 
-  for (size_t i = 0; i < threads; i++) {
+  for (size_t i = 0; i < threads; i++)
+  {
     const size_t local_tries = base_tries + (i < remainder ? 1 : 0);
     const size_t local_seed = seed + i;
     futures.push_back(std::async(std::launch::async, khalikov::calculate, std::cref(circles), std::cref(frame),
@@ -195,7 +212,8 @@ int main(int argc, char **argv)
   }
   size_t union_hits = 0;
   size_t intersection_hits = 0;
-  for (size_t i = 0; i < futures.size(); i++) {
+  for (size_t i = 0; i < futures.size(); i++)
+  {
     auto result = futures[i].get();
     union_hits += result.first;
     intersection_hits += result.second;
