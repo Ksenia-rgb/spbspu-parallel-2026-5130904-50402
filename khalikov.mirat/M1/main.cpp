@@ -5,6 +5,9 @@
 #include <sstream>
 #include <algorithm>
 #include <random>
+#include <future>
+#include <utility>
+#include <functional>
 #include "Point.hpp"
 
 namespace khalikov {
@@ -98,6 +101,19 @@ namespace khalikov {
     return frame_area * intersection_hits / tries;
   }
 
+  std::pair< size_t, size_t > calculate(const std::vector< Circle >& circles, const Frame& frame, size_t tries, size_t seed)
+  {
+    std::mt19937 gen(seed);
+    size_t union_hits = 0;
+    size_t intersection_hits = 0;
+    for (size_t i = 0; i < tries; i++)
+    {
+      Point example = genPoint(frame, gen);
+      intersection_hits += isInIntersection(circles, example);
+      union_hits += isInUnion(circles, example);
+    }
+    return {union_hits, intersection_hits};
+  }
 }
 
 int main(int argc, char** argv)
@@ -108,7 +124,7 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  int threads = std::stoi(argv[1]);
+  size_t threads = std::stoull(argv[1]);
   size_t tries = std::stoull(argv[2]);
 
   if (threads <= 0 || tries == 0)
@@ -152,18 +168,38 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  khalikov::Frame frame = khalikov::findFrames(circles);
-  std::mt19937 gen(seed);
-  size_t union_hits = 0;
-  size_t intersection_hits = 0;
-
-  for (size_t i = 0; i < tries; i++)
+  if (circles.empty())
   {
-    khalikov::Point example = genPoint(frame, gen);
-    intersection_hits += isInIntersection(circles, example);
-    union_hits += isInUnion(circles, example);
+    std::cout << "0 0\n";
+    return 0;
   }
 
+  khalikov::Frame frame = khalikov::findFrames(circles);
+  size_t base_tries = tries / threads;
+  size_t remainder = tries % threads;
+  std::vector< std::future< std::pair< size_t, size_t > > > futures;
+
+  for (size_t i = 0; i < threads; i++)
+  {
+    size_t local_tries = base_tries + (i < remainder ? 1 : 0);
+    size_t local_seed = seed + i;
+    futures.push_back(std::async(
+        std::launch::async,
+        khalikov::calculate,
+        std::cref(circles),
+        std::cref(frame),
+        local_tries,
+        local_seed
+    ));
+  }
+  size_t union_hits = 0;
+  size_t intersection_hits = 0;
+  for (size_t i = 0; i < futures.size(); i++)
+  {
+    auto result = futures[i].get();
+    union_hits += result.first;
+    intersection_hits += result.second;
+  }
   double frame_area = khalikov::getFrameArea(frame);
   std::cout << khalikov::getUnionArea(tries, union_hits, frame_area) << ' ';
   std::cout << khalikov::getIntersectionArea(tries, intersection_hits, frame_area) << '\n';
