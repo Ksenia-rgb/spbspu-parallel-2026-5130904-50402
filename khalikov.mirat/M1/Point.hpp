@@ -2,10 +2,9 @@
 #define POINT_HPP
 
 namespace khalikov {
-  struct Point
-  {
-    double x, y;
-  };
-}
+struct Point {
+  double x, y;
+};
+} // namespace khalikov
 
 #endif
