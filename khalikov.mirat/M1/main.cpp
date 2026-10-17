@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 #include "Point.hpp"
 
 namespace khalikov {
@@ -11,6 +12,42 @@ namespace khalikov {
     khalikov::Point center;
     double r;
   };
+
+  struct Frame
+  {
+    double min_x;
+    double max_x;
+    double min_y;
+    double max_y;
+  };
+
+  bool isIn(const Circle& circle, const Point& pt)
+  {
+    double dx = pt.x - circle.center.x;
+    double dy = pt.y - circle.center.y;
+    return dx * dx + dy * dy <= circle.r * circle.r;
+  }
+
+  Frame findFrames(const std::vector< Circle >& circles)
+  {
+    auto it = circles.begin();
+    Frame frame;
+    frame.min_x = it->center.x - it->r;
+    frame.max_x = it->center.x + it->r;
+    frame.min_y = it->center.y - it->r;
+    frame.max_y = it->center.y + it->r;
+    it++;
+
+    for (; it != circles.end(); it++)
+    {
+      frame.min_x = std::min(frame.min_x, it->center.x - it->r);
+      frame.max_x = std::max(frame.max_x, it->center.x + it->r);
+      frame.min_y = std::min(frame.min_y, it->center.y - it->r);
+      frame.max_y = std::max(frame.max_y, it->center.y + it->r);
+    }
+    return frame;
+  }
+
 }
 
 int main(int argc, char** argv)
@@ -31,13 +68,13 @@ int main(int argc, char** argv)
   }
 
   size_t seed = 0;
+  (void)seed;
+
 
   if (argc == 4)
   {
     seed = std::stoull(argv[3]);
   }
-
-  (void)seed;
 
   std::vector< khalikov::Circle > circles;
   std::string line;
@@ -48,7 +85,7 @@ int main(int argc, char** argv)
     int r, c, x, y;
     std::string extra;
 
-    if (!(iss >> r >> c >> x >> y) || (iss >> extra) || (r <= 0))
+    if (!(iss >> r >> c >> x >> y) || (iss >> extra))
     {
       std::cerr << "Incorrect input\n";
       return 1;
