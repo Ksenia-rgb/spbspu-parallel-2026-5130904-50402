@@ -7,6 +7,6 @@ namespace khalikov
   {
     double x, y;
   };
-} // namespace khalikov
+}
 
 #endif
