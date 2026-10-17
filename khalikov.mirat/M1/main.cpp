@@ -83,6 +83,21 @@ namespace khalikov {
     return true;
   }
 
+  double getFrameArea(const Frame& frame)
+  {
+    return ((frame.max_x - frame.min_x) * (frame.max_y - frame.min_y));
+  }
+
+  double getUnionArea(size_t tries, size_t union_hits, double frame_area)
+  {
+    return frame_area * union_hits / tries;
+  }
+
+  double getIntersectionArea(size_t tries, size_t intersection_hits, double frame_area)
+  {
+    return frame_area * intersection_hits / tries;
+  }
+
 }
 
 int main(int argc, char** argv)
@@ -148,4 +163,8 @@ int main(int argc, char** argv)
     intersection_hits += isInIntersection(circles, example);
     union_hits += isInUnion(circles, example);
   }
+
+  double frame_area = khalikov::getFrameArea(frame);
+  std::cout << khalikov::getUnionArea(tries, union_hits, frame_area) << ' ';
+  std::cout << khalikov::getIntersectionArea(tries, intersection_hits, frame_area) << '\n';
 }
