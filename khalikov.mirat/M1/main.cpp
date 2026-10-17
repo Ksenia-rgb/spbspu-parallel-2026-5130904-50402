@@ -4,6 +4,7 @@
 #include <vector>
 #include <sstream>
 #include <algorithm>
+#include <random>
 #include "Point.hpp"
 
 namespace khalikov {
@@ -48,6 +49,40 @@ namespace khalikov {
     return frame;
   }
 
+  Point genPoint(const Frame& frame, std::mt19937& gen)
+  {
+    std::uniform_real_distribution< double > dist_x(frame.min_x, frame.max_x);
+    std::uniform_real_distribution< double > dist_y(frame.min_y, frame.max_y);
+    Point pt;
+    pt.x = dist_x(gen);
+    pt.y = dist_y(gen);
+    return pt;
+  }
+
+  bool isInUnion(const std::vector< Circle >& circles, const Point& pt)
+  {
+    for (auto it = circles.begin(); it != circles.end(); it++)
+    {
+      if (isIn(*it, pt))
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool isInIntersection(const std::vector< Circle >& circles, const Point& pt)
+  {
+    for (auto it = circles.begin(); it != circles.end(); it++)
+    {
+      if (!isIn(*it, pt))
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+
 }
 
 int main(int argc, char** argv)
@@ -68,8 +103,6 @@ int main(int argc, char** argv)
   }
 
   size_t seed = 0;
-  (void)seed;
-
 
   if (argc == 4)
   {
@@ -102,5 +135,17 @@ int main(int argc, char** argv)
   {
     std::cerr << "Incorrect input\n";
     return 1;
+  }
+
+  khalikov::Frame frame = khalikov::findFrames(circles);
+  std::mt19937 gen(seed);
+  size_t union_hits = 0;
+  size_t intersection_hits = 0;
+
+  for (size_t i = 0; i < tries; i++)
+  {
+    khalikov::Point example = genPoint(frame, gen);
+    intersection_hits += isInIntersection(circles, example);
+    union_hits += isInUnion(circles, example);
   }
 }
