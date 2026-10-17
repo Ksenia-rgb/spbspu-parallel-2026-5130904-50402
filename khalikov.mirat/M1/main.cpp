@@ -80,7 +80,8 @@ namespace khalikov
   {
     for (auto it = circles.begin(); it != circles.end(); it++)
     {
-      if (!isIn(*it, pt)) {
+      if (!isIn(*it, pt))
+      {
         return false;
       }
     }
@@ -89,7 +90,7 @@ namespace khalikov
 
   double getFrameArea(const Frame &frame)
   {
-    return ((frame.max_x - frame.min_x) * (frame.max_y - frame.min_y));
+    return (frame.max_x - frame.min_x) * (frame.max_y - frame.min_y);
   }
 
   double getUnionArea(size_t tries, size_t union_hits, double frame_area)
@@ -102,8 +103,7 @@ namespace khalikov
     return frame_area * intersection_hits / tries;
   }
 
-  std::pair< size_t, size_t > calculate(const std::vector< Circle > &circles, const Frame &frame, size_t tries,
-                                        size_t seed)
+  std::pair< size_t, size_t > calculate(const std::vector< Circle > &circles, const Frame &frame, size_t tries, size_t seed)
   {
     std::default_random_engine gen(seed);
     size_t union_hits = 0;
@@ -207,8 +207,8 @@ int main(int argc, char **argv)
   {
     const size_t local_tries = base_tries + (i < remainder ? 1 : 0);
     const size_t local_seed = seed + i;
-    futures.push_back(std::async(std::launch::async, khalikov::calculate, std::cref(circles), std::cref(frame),
-                                 local_tries, local_seed));
+    futures.push_back(std::async(std::launch::async, khalikov::calculate, std::cref(circles),
+        std::cref(frame), local_tries, local_seed));
   }
   size_t union_hits = 0;
   size_t intersection_hits = 0;
