@@ -33,16 +33,17 @@ size_t stringToSizeT(const char *lms) {
 size_t monteCarloGenerator(const size_t &count, const int &radius,
                            const size_t &seed) {
   std::default_random_engine randomGenerator(seed);
-  std::uniform_int_distribution<int> dist_x(0, 2 * radius);
-  std::uniform_int_distribution<int> dist_y(0, 2 * radius);
+  std::uniform_int_distribution<int> dist(0, 2 * radius);
 
   size_t N_in = 0;
-  size_t x = 0, y = 0;
+  int x = 0, y = 0;
   for (size_t i = 0; i < count; ++i) {
-    x = dist_x(randomGenerator);
-    y = dist_y(randomGenerator);
+    x = dist(randomGenerator);
+    y = dist(randomGenerator);
 
-    if (x * x + y * y <= radius * radius) {
+    int dx = x - radius;
+    int dy = y - radius;
+    if (dx * dx + dy * dy <= radius * radius) {
       N_in++;
     }
   }
@@ -50,17 +51,21 @@ size_t monteCarloGenerator(const size_t &count, const int &radius,
 }
 double getCircleSquare(Circle a, const size_t &threads, const size_t &tries,
                        const size_t &seed) {
-  size_t count = tries / threads;
+  size_t base = tries / threads;
+  size_t rem  = tries % threads;
+  int radius = a.getRadius();
   std::vector<std::future<size_t>> results;
   for (size_t i = 0; i < threads; ++i) {
-    results.push_back(std::async(std::launch::async, monteCarloGenerator, count,
-                                 a.getRadius(), seed));
+    size_t count = base + (i < rem ? 1 : 0);
+    results.push_back(std::async(std::launch::async, monteCarloGenerator,
+                                 count, radius, seed + i));
   }
   size_t N_in = 0;
   for(auto it = results.begin(); it != results.end(); ++it){
     N_in += it->get();
   }
-  return 4*a.getRadius()*a.getRadius()*N_in/tries;
+  double r = static_cast<double>(radius);
+  return 4.0 * r * r * static_cast<double>(N_in) / static_cast<double>(tries);
 }
 bool readCircles(std::istream& in, std::vector<Circle>& out){
   int radius = 0, x = 0, y = 0;
@@ -96,4 +101,5 @@ int main(int argc, const char *argv[]) {
     return karpenkov::invalid_input;
   }
 
+  
 }
