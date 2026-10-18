@@ -2,16 +2,19 @@
 #include <future>
 #include <iostream>
 #include <random>
+#include <vector>
 
 namespace karpenkov {
 constexpr size_t count_of_args = 4;
+constexpr size_t count_of_args_without_seed = 3;
 constexpr size_t invalid_args_count_error = 1;
 constexpr size_t base_of_ten = 10;
 constexpr size_t invalid_args = 2;
+constexpr size_t invalid_input = 3;
 struct Circle {
 public:
   Circle(int x, int y, int radius) : x(x), y(y), radius(radius) {}
-  int getRadius(){
+  int getRadius() const{
     return radius;
   }
 private:
@@ -20,6 +23,9 @@ private:
   int radius;
 };
 size_t stringToSizeT(const char *lms) {
+  if(*lms == '-'){
+    throw std::invalid_argument("Negative argument is not allowed");
+  }
   char *end = nullptr;
   const unsigned long long rms = std::strtoull(lms, &end, base_of_ten);
   return static_cast<size_t>(rms);
@@ -56,10 +62,20 @@ double getCircleSquare(Circle a, const size_t &threads, const size_t &tries,
   }
   return 4*a.getRadius()*a.getRadius()*N_in/tries;
 }
+bool readCircles(std::istream& in, std::vector<Circle>& out){
+  int radius = 0, x = 0, y = 0;
+  while (in >> radius){
+    if (!(in >> x >> y)){
+      return false;
+    }
+    out.emplace_back(x,y,radius);
+  }
+  return in.eof();
+}
 }; 
 
 int main(int argc, const char *argv[]) {
-  if (argc < karpenkov::count_of_args) {
+  if (argc != karpenkov::count_of_args_without_seed && argc != karpenkov::count_of_args) {
     std::cerr << "Invalid count of arguments";
     return karpenkov::invalid_args_count_error;
   }
@@ -67,9 +83,17 @@ int main(int argc, const char *argv[]) {
   try {
     threads = karpenkov::stringToSizeT(argv[1]);
     tries = karpenkov::stringToSizeT(argv[2]);
-    seed = karpenkov::stringToSizeT(argv[3]);
-  } catch (...) {
-    std::cerr << "Invalid argument";
+    if(argc == 4){
+      seed = karpenkov::stringToSizeT(argv[3]);
+    }
+  } catch (const std::invalid_argument& e) {
+    std::cerr << "Invalid argument: " << e.what() << '\n';
     return karpenkov::invalid_args;
-  } 
+  }
+  std::vector<karpenkov::Circle> circles;
+  if(!karpenkov::readCircles(std::cin, circles)){
+    std::cerr << "Invalid input";
+    return karpenkov::invalid_input;
+  }
+
 }
