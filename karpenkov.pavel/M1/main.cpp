@@ -17,7 +17,11 @@ constexpr size_t invalid_args = 2;
 constexpr size_t invalid_input = 3;
 struct Circle {
 public:
-  Circle(int x, int y, int radius) : x(x), y(y), radius(radius) {}
+  Circle(int x, int y, int radius) : x(x), y(y), radius(radius) {
+    if (radius <= 0){
+      throw std::invalid_argument("Radius must be positive");
+    }
+  }
   int getRadius() const{
     return radius;
   }
