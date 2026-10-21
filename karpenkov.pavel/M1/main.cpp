@@ -3,6 +3,10 @@
 #include <iostream>
 #include <random>
 #include <vector>
+#include <cctype>
+#include <cerrno>
+#include <stdexcept>
+
 
 namespace karpenkov {
 constexpr size_t count_of_args = 4;
@@ -27,7 +31,11 @@ size_t stringToSizeT(const char *lms) {
     throw std::invalid_argument("Negative argument is not allowed");
   }
   char *end = nullptr;
+  errno = 0;
   const unsigned long long rms = std::strtoull(lms, &end, base_of_ten);
+  if(*end != '\0' || errno == ERANGE){
+    throw std::invalid_argument("Bad number format");
+  }
   return static_cast<size_t>(rms);
 }
 size_t monteCarloGenerator(const size_t &count, const int &radius,
@@ -77,18 +85,18 @@ bool readCircles(std::istream& in, std::vector<Circle>& out){
   }
   return in.eof();
 }
-}; 
+}
 
 int main(int argc, const char *argv[]) {
   if (argc != karpenkov::count_of_args_without_seed && argc != karpenkov::count_of_args) {
-    std::cerr << "Invalid count of arguments";
+    std::cerr << "Invalid count of arguments\n";
     return karpenkov::invalid_args_count_error;
   }
   size_t threads = 0, tries = 0, seed = 0;
   try {
     threads = karpenkov::stringToSizeT(argv[1]);
     tries = karpenkov::stringToSizeT(argv[2]);
-    if(argc == 4){
+    if(argc == karpenkov::count_of_args){
       seed = karpenkov::stringToSizeT(argv[3]);
     }
   } catch (const std::invalid_argument& e) {
@@ -97,9 +105,9 @@ int main(int argc, const char *argv[]) {
   }
   std::vector<karpenkov::Circle> circles;
   if(!karpenkov::readCircles(std::cin, circles)){
-    std::cerr << "Invalid input";
+    std::cerr << "Invalid input\n";
     return karpenkov::invalid_input;
   }
 
-  
+
 }
