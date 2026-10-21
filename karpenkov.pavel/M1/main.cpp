@@ -78,42 +78,64 @@ Box boundingBox(const std::vector<Circle> &circles) {
   }
   return box;
 }
-size_t monteCarloGenerator(const size_t &count, const int &radius,
-                           const size_t &seed) {
+std::pair<size_t, size_t> monteCarloGenerator(const std::vector<Circle> &circles,
+                                              const Box &box, size_t count,
+                                              size_t seed) {
   std::default_random_engine randomGenerator(seed);
-  std::uniform_int_distribution<int> dist(0, 2 * radius);
+  std::uniform_real_distribution<double> distX(box.minX, box.maxX);
+  std::uniform_real_distribution<double> distY(box.minY, box.maxY);
 
-  size_t N_in = 0;
-  int x = 0, y = 0;
+  size_t inUnion = 0;
+  size_t inIntersection = 0;
   for (size_t i = 0; i < count; ++i) {
-    x = dist(randomGenerator);
-    y = dist(randomGenerator);
+    const double x = distX(randomGenerator);
+    const double y = distY(randomGenerator);
 
-    int dx = x - radius;
-    int dy = y - radius;
-    if (dx * dx + dy * dy <= radius * radius) {
-      N_in++;
+    size_t inside = 0;
+    for (const Circle &c : circles) {
+      if (c.contains(x, y)) {
+        ++inside;
+      }
+    }
+    if (inside > 0) {
+      ++inUnion;
+    }
+    if (inside == circles.size()) {
+      ++inIntersection;
     }
   }
-  return N_in;
+  return {inUnion, inIntersection};
 }
-double getCircleSquare(Circle a, const size_t &threads, const size_t &tries,
-                       const size_t &seed) {
-  size_t base = tries / threads;
-  size_t rem  = tries % threads;
-  int radius = a.getRadius();
-  std::vector<std::future<size_t>> results;
+struct Areas {
+  double unionArea;
+  double intersectionArea;
+};
+Areas getAreas(const std::vector<Circle> &circles, size_t threads,
+               size_t tries, size_t seed) {
+  const Box box = boundingBox(circles);
+  const size_t base = tries / threads;
+  const size_t rem = tries % threads;
+
+  std::vector<std::future<std::pair<size_t, size_t>>> results;
   for (size_t i = 0; i < threads; ++i) {
-    size_t count = base + (i < rem ? 1 : 0);
+    const size_t count = base + (i < rem ? 1 : 0);
     results.push_back(std::async(std::launch::async, monteCarloGenerator,
-                                 count, radius, seed + i));
+                                 std::cref(circles), std::cref(box), count,
+                                 seed + i));
   }
-  size_t N_in = 0;
-  for(auto it = results.begin(); it != results.end(); ++it){
-    N_in += it->get();
+
+  size_t inUnion = 0;
+  size_t inIntersection = 0;
+  for (auto &f : results) {
+    const std::pair<size_t, size_t> part = f.get();
+    inUnion += part.first;
+    inIntersection += part.second;
   }
-  double r = static_cast<double>(radius);
-  return 4.0 * r * r * static_cast<double>(N_in) / static_cast<double>(tries);
+
+  const double boxArea = box.area();
+  const double total = static_cast<double>(tries);
+  return {boxArea * static_cast<double>(inUnion) / total,
+          boxArea * static_cast<double>(inIntersection) / total};
 }
 bool readCircles(std::istream& in, std::vector<Circle>& out){
   int radius = 0, x = 0, y = 0;
