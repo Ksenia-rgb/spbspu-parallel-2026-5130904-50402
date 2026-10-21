@@ -25,6 +25,24 @@ public:
   int getRadius() const{
     return radius;
   }
+    double left() const {
+    return static_cast<double>(x) - radius;
+  }
+  double right() const {
+    return static_cast<double>(x) + radius;
+  }
+  double bottom() const {
+    return static_cast<double>(y) - radius;
+  }
+  double top() const {
+    return static_cast<double>(y) + radius;
+  }
+  bool contains(double px, double py) const {
+    const double dx = px - x;
+    const double dy = py - y;
+    const double r = radius;
+    return dx * dx + dy * dy <= r * r;
+  }
 private:
   int x;
   int y;
