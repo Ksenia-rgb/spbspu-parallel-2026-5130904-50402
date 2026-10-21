@@ -137,7 +137,7 @@ bool readCircles(std::istream &in, std::vector<Circle> &out) {
   }
   return in.eof();
 }
-} // namespace karpenkov
+}
 
 int main(int argc, const char *argv[]) {
   if (argc != karpenkov::count_of_args_without_seed &&
