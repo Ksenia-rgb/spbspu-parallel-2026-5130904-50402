@@ -6,6 +6,7 @@
 #include <cctype>
 #include <cerrno>
 #include <stdexcept>
+#include <algorithm>
 
 
 namespace karpenkov {
@@ -25,7 +26,7 @@ public:
   int getRadius() const{
     return radius;
   }
-    double left() const {
+  double left() const {
     return static_cast<double>(x) - radius;
   }
   double right() const {
@@ -59,6 +60,23 @@ size_t stringToSizeT(const char *lms) {
     throw std::invalid_argument("Bad number format");
   }
   return static_cast<size_t>(rms);
+}
+struct Box {
+  double minX, maxX, minY, maxY;
+  double area() const {
+    return (maxX - minX) * (maxY - minY);
+  }
+};
+Box boundingBox(const std::vector<Circle> &circles) {
+  Box box{circles[0].left(), circles[0].right(), circles[0].bottom(),
+          circles[0].top()};
+  for (const Circle &c : circles) {
+    box.minX = std::min(box.minX, c.left());
+    box.maxX = std::max(box.maxX, c.right());
+    box.minY = std::min(box.minY, c.bottom());
+    box.maxY = std::max(box.maxY, c.top());
+  }
+  return box;
 }
 size_t monteCarloGenerator(const size_t &count, const int &radius,
                            const size_t &seed) {
