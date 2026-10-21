@@ -103,6 +103,13 @@ int main(int argc, const char *argv[]) {
     std::cerr << "Invalid argument: " << e.what() << '\n';
     return karpenkov::invalid_args;
   }
+  if (tries == 0){
+    std::cerr << "Tries must be postivie number";
+    return karpenkov::invalid_args;
+  }
+  if (threads == 0){
+    threads = 1;
+  }
   std::vector<karpenkov::Circle> circles;
   if(!karpenkov::readCircles(std::cin, circles)){
     std::cerr << "Invalid input\n";
