@@ -7,6 +7,8 @@
 #include <cerrno>
 #include <stdexcept>
 #include <algorithm>
+#include <iomanip>
+#include <limits>
 
 
 namespace karpenkov {
@@ -177,6 +179,11 @@ int main(int argc, const char *argv[]) {
     std::cerr << "Invalid input\n";
     return karpenkov::invalid_input;
   }
-
-
+  karpenkov::Areas areas{0.0, 0.0};
+  if (!circles.empty()) {
+    areas = karpenkov::getAreas(circles, threads, tries, seed);
+  }
+  std::cout << std::setprecision(std::numeric_limits<double>::max_digits10)
+            << areas.unionArea << ' ' << areas.intersectionArea << '\n';
+  return 0;
 }
