@@ -28,6 +28,23 @@ namespace karpovich
         out << e->getHorizontalRadius() << " " << e->getVerticalRadius() << " " << e->getCenter() << "\n";
       }
     }
+
+    size_t send(int &err, int wr, const void *buf, size_t k)
+    {
+      const char *p = static_cast< const char * >(buf);
+      size_t r = 0;
+      while (r < k)
+      {
+        err = write(wr, p + r, k - r);
+        if (err <= 0)
+        {
+          break;
+        }
+        r += err;
+      }
+      return r;
+    }
+
   }
 
   void cmdCircle(std::istream &in, std::ostream &, Data &data)
