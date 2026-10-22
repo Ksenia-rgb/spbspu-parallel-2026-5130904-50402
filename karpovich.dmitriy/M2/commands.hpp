@@ -13,11 +13,26 @@ namespace karpovich
 {
   using Set = std::vector< std::string >;
 
+  struct Calc
+  {
+    std::string proc;
+    size_t calc_id = 0;
+    enum State
+    {
+      IN_PROGRESS,
+      DONE
+    } state = IN_PROGRESS;
+    double ms = 0.0;
+    double area = 0.0;
+  };
+
   struct Data
   {
     std::map< std::string, std::shared_ptr< Shape > > shapes;
     std::map< std::string, Set > sets;
     std::map< std::string, Worker > workers;
+    std::map< std::string, Calc > calcs;
+    size_t next_calc_id = 0;
   };
 
   void cmdCircle(std::istream &, std::ostream &, Data &);
