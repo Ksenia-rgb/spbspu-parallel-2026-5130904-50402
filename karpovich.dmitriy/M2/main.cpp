@@ -3,15 +3,23 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include "commands.hpp"
-#include <sys/wait.h>
 #include <unistd.h>
+#include <signal.h>
+#include <sys/wait.h>
+#include <sys/mman.h>
+#include <pthread.h>
+#include "commands.hpp"
+#include "worker.hpp"
 
 int main()
 {
   using cmd_t = void (*)(std::istream &, std::ostream &, karpovich::Data &);
-  karpovich::Data data;
 
+  struct sigaction act = {};
+  act.sa_handler = SIG_IGN;
+  sigaction(SIGPIPE, &act, nullptr);
+
+  karpovich::Data data;
   std::unordered_map< std::string, cmd_t > cmds;
   cmds["circle"] = karpovich::cmdCircle;
   cmds["set"] = karpovich::cmdSet;
@@ -44,10 +52,30 @@ int main()
       std::cin.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
     }
   }
-  for (auto &entry : data.workers)
+
+  for (auto &kv : data.workers)
   {
-    karpovich::Worker &w = entry.second;
-    close(w.wr);
-    waitpid(w.pid, nullptr, 0);
+    karpovich::Worker &w = kv.second;
+    if (w.wr >= 0)
+    {
+      close(w.wr);
+    }
+    if (w.pid > 0)
+    {
+      waitpid(w.pid, nullptr, 0);
+    }
+    if (w.sh)
+    {
+      pthread_mutex_destroy(&w.sh->mtx);
+      munmap(w.sh, sizeof(karpovich::WorkerShared));
+    }
+    if (w.shm_fd >= 0)
+    {
+      close(w.shm_fd);
+    }
+    if (!w.shm_name.empty())
+    {
+      shm_unlink(w.shm_name.c_str());
+    }
   }
 }

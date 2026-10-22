@@ -19,7 +19,7 @@ namespace karpovich
       while (r < k)
       {
         err = read(rd, p + r, k - r);
-        if (err < 0)
+        if (err <= 0)
         {
           break;
         }
