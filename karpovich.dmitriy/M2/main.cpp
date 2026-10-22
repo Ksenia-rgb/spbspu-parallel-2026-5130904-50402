@@ -11,16 +11,13 @@
 #include "commands.hpp"
 #include "worker.hpp"
 
-namespace
-{
-  using cmd_t = void (*)(std::istream &, std::ostream &, karpovich::Data &);
-}
-
 int main()
 {
-  struct sigaction act = {};
-  act.sa_handler = SIG_IGN;
-  sigaction(SIGPIPE, &act, nullptr);
+  if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+  {
+    return 1;
+  }
+  using cmd_t = void (*)(std::istream &, std::ostream &, karpovich::Data &);
 
   karpovich::Data data;
   std::unordered_map< std::string, cmd_t > cmds;
@@ -40,7 +37,8 @@ int main()
   {
     try
     {
-      cmds.at(cmd)(std::cin, std::cout, data);
+      auto func = cmds.at(cmd);
+      func(std::cin, std::cout, data);
     }
     catch (const std::out_of_range &)
     {
