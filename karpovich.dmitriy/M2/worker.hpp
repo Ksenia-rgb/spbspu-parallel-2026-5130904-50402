@@ -49,7 +49,7 @@ namespace karpovich
     int seen = 0;
   };
 
-  void runWorker(int rd, int seed, WorkerShared *sh);
+  void runWorker(int rd, size_t seed, WorkerShared *sh);
 }
 
 #endif
