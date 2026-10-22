@@ -5,8 +5,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "area.hpp"
-#include "shape.hpp"
+#include "../common/area.hpp"
+#include "../common/shape.hpp"
 
 int main(int argc, char **argv)
 {
@@ -57,11 +57,11 @@ int main(int argc, char **argv)
   {
     if (second_radius)
     {
-      shapes.push_back(std::unique_ptr< Shape >(new Ellipse(radius, second_radius, Point{x, y})));
+      shapes.push_back(std::unique_ptr< Shape >(new Ellipse(radius, second_radius, point_t{x, y})));
     }
     else
     {
-      shapes.push_back(std::unique_ptr< Shape >(new Circle(radius, Point{x, y})));
+      shapes.push_back(std::unique_ptr< Shape >(new Circle(radius, point_t{x, y})));
     }
   }
   if (!std::cin.eof())
