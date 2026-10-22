@@ -5,6 +5,9 @@
 #include <string>
 #include <iostream>
 #include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 namespace karpovich
 {
@@ -181,12 +184,8 @@ namespace karpovich
   void cmdSpawn(std::istream &in, std::ostream &, Data &data)
   {
     std::string name;
-    int seed = 0;
+    size_t seed = 0;
     if (!(in >> name >> seed))
-    {
-      throw std::invalid_argument("invalid");
-    }
-    if (seed < 0)
     {
       throw std::invalid_argument("invalid");
     }
@@ -195,9 +194,41 @@ namespace karpovich
       throw std::invalid_argument("invalid");
     }
 
+    const std::string shm_name = "/M2-" + std::to_string(getpid()) + "-" + name;
+    const int shm_fd = shm_open(shm_name.c_str(), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+    if (shm_fd < 0)
+    {
+      throw std::invalid_argument("shm_open");
+    }
+    if ((ftruncate(shm_fd, 4096)) < 0)
+    {
+      close(shm_fd);
+      shm_unlink(shm_name.c_str());
+      throw std::invalid_argument("ftruncate");
+    }
+    void *addr = mmap(nullptr, sizeof(WorkerShared), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (addr == MAP_FAILED)
+    {
+      close(shm_fd);
+      shm_unlink(shm_name.c_str());
+      throw std::invalid_argument("mmap");
+    }
+    WorkerShared *sh = static_cast< WorkerShared * >(addr);
+
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+    pthread_mutex_init(&sh->mtx, &attr);
+    pthread_mutexattr_destroy(&attr);
+    sh->completed = 0;
+
     int pps[2] = {};
     if (pipe(pps) < 0)
     {
+      pthread_mutex_destroy(&sh->mtx);
+      munmap(sh, sizeof(WorkerShared));
+      close(shm_fd);
+      shm_unlink(shm_name.c_str());
       throw std::invalid_argument("pipe");
     }
     const int rd = pps[0];
@@ -208,15 +239,28 @@ namespace karpovich
     {
       close(rd);
       close(wr);
+      pthread_mutex_destroy(&sh->mtx);
+      munmap(sh, sizeof(WorkerShared));
+      close(shm_fd);
+      shm_unlink(shm_name.c_str());
       throw std::invalid_argument("fork");
     }
     if (pid == 0)
     {
       close(wr);
-      runWorker(rd, seed);
+      runWorker(rd, seed, sh);
+      _exit(0);
     }
     close(rd);
-    data.workers[name] = Worker{pid, wr};
+
+    Worker w;
+    w.pid = pid;
+    w.wr = wr;
+    w.shm_fd = shm_fd;
+    w.shm_name = shm_name;
+    w.sh = sh;
+    w.seen = 0;
+    data.workers[name] = w;
   }
 
   void cmdAreaOn(std::istream &, std::ostream &, Data &)
