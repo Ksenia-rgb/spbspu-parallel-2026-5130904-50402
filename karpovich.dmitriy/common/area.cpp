@@ -14,13 +14,8 @@ namespace karpovich
 {
   namespace
   {
-    struct Box
-    {
-      Point max;
-      Point min;
-    };
 
-    std::pair< size_t, size_t > calculate(const shapes_t &shapes, Point max, Point min, size_t tests, size_t seed)
+    std::pair< size_t, size_t > calculate(const shapes_t &shapes, point_t max, point_t min, size_t tests, size_t seed)
     {
       std::default_random_engine gen(seed);
       std::uniform_real_distribution< double > dist_x(min.x, max.x);
@@ -31,7 +26,7 @@ namespace karpovich
       {
         bool is_inside_any = false;
         bool is_inside_all = true;
-        const Point p{dist_x(gen), dist_y(gen)};
+        const point_t p{dist_x(gen), dist_y(gen)};
         for (const auto &shp : shapes)
         {
           if (shp->contains(p))
@@ -55,23 +50,23 @@ namespace karpovich
       return {hits_intersection, hits_cover};
     }
 
-    Box findBox(const shapes_t &shapes)
-    {
-      const double inf = std::numeric_limits< double >::infinity();
-      Point max{-inf, -inf};
-      Point min{inf, inf};
-      for (const auto &shape : shapes)
-      {
-        const Point shape_min = shape->getMinCorner();
-        const Point shape_max = shape->getMaxCorner();
-        min.x = std::min(min.x, shape_min.x);
-        min.y = std::min(min.y, shape_min.y);
-        max.x = std::max(max.x, shape_max.x);
-        max.y = std::max(max.y, shape_max.y);
-      }
-      return {max, min};
-    }
+  }
 
+  rectangle_t getBoundingBox(const shapes_t &shapes)
+  {
+    const double inf = std::numeric_limits< double >::infinity();
+    point_t max{-inf, -inf};
+    point_t min{inf, inf};
+    for (const auto &shape : shapes)
+    {
+      const point_t shape_min = shape->getMinCorner();
+      const point_t shape_max = shape->getMaxCorner();
+      min.x = std::min(min.x, shape_min.x);
+      min.y = std::min(min.y, shape_min.y);
+      max.x = std::max(max.x, shape_max.x);
+      max.y = std::max(max.y, shape_max.y);
+    }
+    return {max, min};
   }
 
   std::pair< double, double > area(const shapes_t &shapes, size_t threads, size_t tests, size_t seed)
@@ -96,7 +91,7 @@ namespace karpovich
     std::vector< std::future< std::pair< size_t, size_t > > > futures;
     const size_t tests_per_thread = tests / threads;
     const size_t remainder = tests % threads;
-    const Box box = findBox(shapes);
+    const rectangle_t box = getBoundingBox(shapes);
     for (size_t i = 0; i < threads; i++)
     {
       const size_t part = i < remainder ? tests_per_thread + 1 : tests_per_thread;
