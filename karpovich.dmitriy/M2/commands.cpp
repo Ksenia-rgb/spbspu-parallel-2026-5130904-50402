@@ -164,7 +164,7 @@ namespace karpovich
   void cmdSpawn(std::istream &in, std::ostream &, Data &data)
   {
     std::string name;
-    size_t seed = 0;
+    int seed = 0;
     if (!(in >> name >> seed))
     {
       throw std::invalid_argument("invalid");
@@ -201,5 +201,14 @@ namespace karpovich
     close(rd);
     data.workers[name] = Worker{pid, wr};
   }
+
+  void cmdAreaOn(std::istream &, std::ostream &, Data &)
+  {}
+
+  void cmdStatus(std::istream &, std::ostream &, Data &)
+  {}
+
+  void cmdWait(std::istream &, std::ostream &, Data &)
+  {}
 
 }

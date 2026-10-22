@@ -27,6 +27,9 @@ namespace karpovich
   void cmdFrame(std::istream &, std::ostream &, Data &);
   void cmdFrameSet(std::istream &, std::ostream &, Data &);
   void cmdSpawn(std::istream &, std::ostream &, Data &);
+  void cmdAreaOn(std::istream &, std::ostream &, Data &);
+  void cmdStatus(std::istream &, std::ostream &, Data &);
+  void cmdWait(std::istream &, std::ostream &, Data &);
 }
 
 #endif

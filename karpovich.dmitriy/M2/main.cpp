@@ -20,6 +20,9 @@ int main()
   cmds["frame"] = karpovich::cmdFrame;
   cmds["frameset"] = karpovich::cmdFrameSet;
   cmds["spawn"] = karpovich::cmdSpawn;
+  cmds["area-on"] = karpovich::cmdAreaOn;
+  cmds["status"] = karpovich::cmdStatus;
+  cmds["wait"] = karpovich::cmdWait;
 
   std::string cmd;
   while (std::cin >> cmd)
