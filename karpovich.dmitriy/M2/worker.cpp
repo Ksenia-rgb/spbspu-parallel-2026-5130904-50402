@@ -1,11 +1,13 @@
 #include "worker.hpp"
+#include <chrono>
 #include <cstddef>
 #include <memory>
+#include <pthread.h>
+#include <ratio>
 #include <unistd.h>
 #include <vector>
-#include <chrono>
-#include "../common/shape.hpp"
 #include "../common/area.hpp"
+#include "../common/shape.hpp"
 
 namespace karpovich
 {
@@ -14,7 +16,7 @@ namespace karpovich
   {
     size_t take(int &err, int rd, void *buf, size_t k)
     {
-      char *p = static_cast< char * >(buf);
+      char *const p = static_cast< char * >(buf);
       size_t r = 0;
       while (r < k)
       {
@@ -43,20 +45,23 @@ namespace karpovich
   {
     while (true)
     {
-      size_t hdr[5] = {};
+      size_t hdr[PROTO_HEADER_WORDS] = {};
       int err = 0;
       take(err, rd, hdr, sizeof hdr);
-      if (err < 0)
+      if (err <= 0)
       {
         break;
       }
 
       std::vector< ShapeData > raw(hdr[4]);
-      err = 0;
-      take(err, rd, raw.data(), raw.size() * sizeof(ShapeData));
-      if (err < 0)
+      if (!raw.empty())
       {
-        break;
+        err = 0;
+        take(err, rd, raw.data(), raw.size() * sizeof(ShapeData));
+        if (err <= 0)
+        {
+          break;
+        }
       }
 
       shapes_t shapes;

@@ -2,13 +2,14 @@
 #define WORKER_HPP
 
 #include <cstddef>
-#include <pthread.h>
 #include <string>
+#include <bits/pthreadtypes.h>
 #include <sys/types.h>
 
 namespace karpovich
 {
   constexpr int WORKER_MAX_SLOTS = 1024;
+  constexpr size_t PROTO_HEADER_WORDS = 5;
 
   enum class ShapeType : unsigned char
   {

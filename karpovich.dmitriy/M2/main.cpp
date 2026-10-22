@@ -1,20 +1,23 @@
 #include <iostream>
 #include <limits>
+#include <pthread.h>
+#include <signal.h>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
-#include <unistd.h>
-#include <signal.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
-#include <pthread.h>
+#include <unistd.h>
+#include <unordered_map>
 #include "commands.hpp"
 #include "worker.hpp"
 
-int main()
+namespace
 {
   using cmd_t = void (*)(std::istream &, std::ostream &, karpovich::Data &);
+}
 
+int main()
+{
   struct sigaction act = {};
   act.sa_handler = SIG_IGN;
   sigaction(SIGPIPE, &act, nullptr);
@@ -55,7 +58,7 @@ int main()
 
   for (auto &kv : data.workers)
   {
-    karpovich::Worker &w = kv.second;
+    const karpovich::Worker &w = kv.second;
     if (w.wr >= 0)
     {
       close(w.wr);

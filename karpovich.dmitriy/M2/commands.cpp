@@ -1,14 +1,24 @@
-#include "commands.hpp"
+#include <algorithm>
+#include <istream>
+#include <ostream>
+#include <chrono>
 #include <cstddef>
+#include <cstdio>
 #include <memory>
+#include <sys/types.h>
+#include <bits/pthreadtypes.h>
+#include <pthread.h>
 #include <stdexcept>
 #include <string>
-#include <iostream>
+#include <sys/mman.h>
 #include <thread>
 #include <unistd.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
+#include <utility>
+#include <vector>
 #include <fcntl.h>
+#include "../common/shape.hpp"
+#include "worker.hpp"
+#include "commands.hpp"
 
 namespace karpovich
 {
@@ -35,7 +45,7 @@ namespace karpovich
 
     size_t send(int &err, int wr, const void *buf, size_t k)
     {
-      const char *p = static_cast< const char * >(buf);
+      const char *const p = static_cast< const char * >(buf);
       size_t r = 0;
       while (r < k)
       {
@@ -48,6 +58,7 @@ namespace karpovich
       }
       return r;
     }
+
     void pumpAll(karpovich::Data &data)
     {
       using namespace karpovich;
@@ -62,9 +73,9 @@ namespace karpovich
           for (auto &cc : data.calcs)
           {
             Calc &calc = cc.second;
-            if (calc.calc_id == s.calc_id && calc.state == Calc::IN_PROGRESS)
+            if (calc.calc_id == s.calc_id && calc.state == CalcState::IN_PROGRESS)
             {
-              calc.state = Calc::DONE;
+              calc.state = CalcState::DONE;
               calc.ms = s.ms;
               calc.area = s.area;
             }
@@ -77,9 +88,9 @@ namespace karpovich
 
     void printStatus(std::ostream &out, const karpovich::Calc &c)
     {
-      if (c.state == karpovich::Calc::DONE)
+      if (c.state == karpovich::CalcState::DONE)
       {
-        out << c.proc << " " << c.ms << " " << c.area << "\n";
+        out << c.proc << " " << static_cast< int >(c.ms) << " " << c.area << "\n";
       }
       else
       {
@@ -232,26 +243,26 @@ namespace karpovich
       throw std::invalid_argument("invalid");
     }
 
-    const std::string shm_name = "/M2-" + std::to_string(getpid()) + "-" + name;
+    const std::string shm_name = "/lab2-" + std::to_string(getpid()) + "-" + name;
     const int shm_fd = shm_open(shm_name.c_str(), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
     if (shm_fd < 0)
     {
       throw std::invalid_argument("shm_open");
     }
-    if ((ftruncate(shm_fd, 4096)) < 0)
+    if (ftruncate(shm_fd, static_cast< off_t >(sizeof(WorkerShared))) < 0)
     {
       close(shm_fd);
       shm_unlink(shm_name.c_str());
       throw std::invalid_argument("ftruncate");
     }
-    void *addr = mmap(nullptr, sizeof(WorkerShared), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    void *const addr = mmap(nullptr, sizeof(WorkerShared), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (addr == MAP_FAILED)
     {
       close(shm_fd);
       shm_unlink(shm_name.c_str());
       throw std::invalid_argument("mmap");
     }
-    WorkerShared *sh = static_cast< WorkerShared * >(addr);
+    WorkerShared *const sh = static_cast< WorkerShared * >(addr);
 
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
@@ -340,14 +351,14 @@ namespace karpovich
       }
       else if (auto e = dynamic_cast< const Ellipse * >(&sh))
       {
-        double hr = e->getHorizontalRadius();
-        double vr = e->getVerticalRadius();
+        const double hr = e->getHorizontalRadius();
+        const double vr = e->getVerticalRadius();
         raw.push_back(ShapeData{ShapeType::Ellipse, hr, vr, e->getCenter().x, e->getCenter().y});
       }
     }
 
     const size_t calc_id = data.next_calc_id++;
-    size_t hdr[5] = {1, calc_id, threads, tries, raw.size()};
+    size_t hdr[PROTO_HEADER_WORDS] = {1, calc_id, threads, tries, raw.size()};
 
     int err = 0;
     send(err, wit->second.wr, hdr, sizeof hdr);
@@ -367,7 +378,7 @@ namespace karpovich
     Calc c;
     c.proc = proc;
     c.calc_id = calc_id;
-    c.state = Calc::IN_PROGRESS;
+    c.state = CalcState::IN_PROGRESS;
     data.calcs[calc] = c;
   }
 
@@ -399,10 +410,10 @@ namespace karpovich
     {
       throw std::invalid_argument("invalid");
     }
-    while (it->second.state != Calc::DONE)
+    while (it->second.state != CalcState::DONE)
     {
       pumpAll(data);
-      if (it->second.state == Calc::DONE)
+      if (it->second.state == CalcState::DONE)
       {
         break;
       }
