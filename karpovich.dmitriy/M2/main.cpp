@@ -4,6 +4,8 @@
 #include <string>
 #include <unordered_map>
 #include "commands.hpp"
+#include <sys/wait.h>
+#include <unistd.h>
 
 int main()
 {
@@ -17,6 +19,7 @@ int main()
   cmds["showset"] = karpovich::cmdShowSet;
   cmds["frame"] = karpovich::cmdFrame;
   cmds["frameset"] = karpovich::cmdFrameSet;
+  cmds["spawn"] = karpovich::cmdSpawn;
 
   std::string cmd;
   while (std::cin >> cmd)
@@ -37,5 +40,11 @@ int main()
       std::cin.clear();
       std::cin.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
     }
+  }
+  for (auto &entry : data.workers)
+  {
+    karpovich::Worker &w = entry.second;
+    close(w.wr);
+    waitpid(w.pid, nullptr, 0);
   }
 }

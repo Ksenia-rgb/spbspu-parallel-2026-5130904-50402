@@ -1,8 +1,10 @@
 #include "commands.hpp"
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <iostream>
+#include <unistd.h>
 
 namespace karpovich
 {
@@ -17,7 +19,7 @@ namespace karpovich
     void printShape(std::ostream &out, const karpovich::Shape &sh)
     {
       using namespace karpovich;
-      if (auto c = dynamic_cast< const Circle * >(&sh)) // еее
+      if (auto c = dynamic_cast< const Circle * >(&sh))
       {
         out << c->getRadius() << " " << c->getCenter() << "\n";
       }
@@ -157,6 +159,47 @@ namespace karpovich
       mx.y = std::max(mx.y, b.y);
     }
     out << mn << " " << mx << "\n";
+  }
+
+  void cmdSpawn(std::istream &in, std::ostream &, Data &data)
+  {
+    std::string name;
+    size_t seed = 0;
+    if (!(in >> name >> seed))
+    {
+      throw std::invalid_argument("invalid");
+    }
+    if (seed < 0)
+    {
+      throw std::invalid_argument("invalid");
+    }
+    if (data.workers.count(name))
+    {
+      throw std::invalid_argument("invalid");
+    }
+
+    int pps[2] = {};
+    if (pipe(pps) < 0)
+    {
+      throw std::invalid_argument("pipe");
+    }
+    const int rd = pps[0];
+    const int wr = pps[1];
+
+    const pid_t pid = fork();
+    if (pid < 0)
+    {
+      close(rd);
+      close(wr);
+      throw std::invalid_argument("fork");
+    }
+    if (pid == 0)
+    {
+      close(wr);
+      runWorker(rd, seed);
+    }
+    close(rd);
+    data.workers[name] = Worker{pid, wr};
   }
 
 }

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "../common/shape.hpp"
+#include "worker.hpp"
 
 namespace karpovich
 {
@@ -16,6 +17,7 @@ namespace karpovich
   {
     std::map< std::string, std::shared_ptr< Shape > > shapes;
     std::map< std::string, Set > sets;
+    std::map< std::string, Worker > workers;
   };
 
   void cmdCircle(std::istream &, std::ostream &, Data &);
@@ -24,6 +26,7 @@ namespace karpovich
   void cmdShowSet(std::istream &, std::ostream &, Data &);
   void cmdFrame(std::istream &, std::ostream &, Data &);
   void cmdFrameSet(std::istream &, std::ostream &, Data &);
+  void cmdSpawn(std::istream &, std::ostream &, Data &);
 }
 
 #endif
