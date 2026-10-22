@@ -263,8 +263,75 @@ namespace karpovich
     data.workers[name] = w;
   }
 
-  void cmdAreaOn(std::istream &, std::ostream &, Data &)
-  {}
+  void cmdAreaOn(std::istream &in, std::ostream &, Data &data)
+  {
+    std::string proc, calc, setname;
+    size_t threads = 0, tries = 0;
+    if (!(in >> proc >> calc >> setname >> threads >> tries))
+    {
+      throw std::invalid_argument("invalid");
+    }
+    if (threads == 0 || tries == 0)
+    {
+      throw std::invalid_argument("invalid");
+    }
+
+    auto wit = data.workers.find(proc);
+    if (wit == data.workers.end())
+    {
+      throw std::invalid_argument("invalid");
+    }
+    auto sit = data.sets.find(setname);
+    if (sit == data.sets.end())
+    {
+      throw std::invalid_argument("invalid");
+    }
+    if (data.calcs.count(calc))
+    {
+      throw std::invalid_argument("invalid");
+    }
+
+    std::vector< ShapeData > raw;
+    raw.reserve(sit->second.size());
+    for (const auto &sname : sit->second)
+    {
+      const Shape &sh = *data.shapes.at(sname);
+      if (auto c = dynamic_cast< const Circle * >(&sh))
+      {
+        raw.push_back(ShapeData{ShapeType::Circle, c->getRadius(), 0.0, c->getCenter().x, c->getCenter().y});
+      }
+      else if (auto e = dynamic_cast< const Ellipse * >(&sh))
+      {
+        double hr = e->getHorizontalRadius();
+        double vr = e->getVerticalRadius();
+        raw.push_back(ShapeData{ShapeType::Ellipse, hr, vr, e->getCenter().x, e->getCenter().y});
+      }
+    }
+
+    const size_t calc_id = data.next_calc_id++;
+    size_t hdr[5] = {1, calc_id, threads, tries, raw.size()};
+
+    int err = 0;
+    send(err, wit->second.wr, hdr, sizeof hdr);
+    if (err <= 0)
+    {
+      throw std::invalid_argument("write");
+    }
+    if (!raw.empty())
+    {
+      send(err, wit->second.wr, raw.data(), raw.size() * sizeof(ShapeData));
+      if (err <= 0)
+      {
+        throw std::invalid_argument("write");
+      }
+    }
+
+    Calc c;
+    c.proc = proc;
+    c.calc_id = calc_id;
+    c.state = Calc::IN_PROGRESS;
+    data.calcs[calc] = c;
+  }
 
   void cmdStatus(std::istream &, std::ostream &, Data &)
   {}
