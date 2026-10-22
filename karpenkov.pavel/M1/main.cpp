@@ -9,6 +9,7 @@
 #include <random>
 #include <stdexcept>
 #include <vector>
+#include <string>
 
 namespace karpenkov {
 constexpr size_t count_of_args = 4;
@@ -129,8 +130,9 @@ Areas getAreas(const std::vector<Circle> &circles, size_t threads, size_t tries,
 }
 bool readCircles(std::istream &in, std::vector<Circle> &out) {
   int radius = 0, x = 0, y = 0;
+  std::string second;
   while (in >> radius) {
-    if (!(in >> x >> y)) {
+    if (!(in >> second >> x >> y) || radius <= 0) {
       return false;
     }
     out.emplace_back(x, y, radius);
