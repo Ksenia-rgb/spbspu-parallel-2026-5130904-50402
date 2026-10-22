@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <iostream>
+#include <thread>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -47,7 +48,44 @@ namespace karpovich
       }
       return r;
     }
+    void pumpAll(karpovich::Data &data)
+    {
+      using namespace karpovich;
+      for (auto &kv : data.workers)
+      {
+        Worker &w = kv.second;
+        pthread_mutex_lock(&w.sh->mtx);
+        const int c = w.sh->completed;
+        for (int i = w.seen; i < c; ++i)
+        {
+          const ResultSlot &s = w.sh->slots[i % WORKER_MAX_SLOTS];
+          for (auto &cc : data.calcs)
+          {
+            Calc &calc = cc.second;
+            if (calc.calc_id == s.calc_id && calc.state == Calc::IN_PROGRESS)
+            {
+              calc.state = Calc::DONE;
+              calc.ms = s.ms;
+              calc.area = s.area;
+            }
+          }
+        }
+        w.seen = c;
+        pthread_mutex_unlock(&w.sh->mtx);
+      }
+    }
 
+    void printStatus(std::ostream &out, const karpovich::Calc &c)
+    {
+      if (c.state == karpovich::Calc::DONE)
+      {
+        out << c.proc << " " << c.ms << " " << c.area << "\n";
+      }
+      else
+      {
+        out << c.proc << " <IN PROGRESS>\n";
+      }
+    }
   }
 
   void cmdCircle(std::istream &in, std::ostream &, Data &data)
@@ -333,10 +371,44 @@ namespace karpovich
     data.calcs[calc] = c;
   }
 
-  void cmdStatus(std::istream &, std::ostream &, Data &)
-  {}
+  void cmdStatus(std::istream &in, std::ostream &out, Data &data)
+  {
+    std::string name;
+    if (!(in >> name))
+    {
+      throw std::invalid_argument("invalid");
+    }
+    auto it = data.calcs.find(name);
+    if (it == data.calcs.end())
+    {
+      throw std::invalid_argument("invalid");
+    }
+    pumpAll(data);
+    printStatus(out, it->second);
+  }
 
-  void cmdWait(std::istream &, std::ostream &, Data &)
-  {}
+  void cmdWait(std::istream &in, std::ostream &out, Data &data)
+  {
+    std::string name;
+    if (!(in >> name))
+    {
+      throw std::invalid_argument("invalid");
+    }
+    auto it = data.calcs.find(name);
+    if (it == data.calcs.end())
+    {
+      throw std::invalid_argument("invalid");
+    }
+    while (it->second.state != Calc::DONE)
+    {
+      pumpAll(data);
+      if (it->second.state == Calc::DONE)
+      {
+        break;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    printStatus(out, it->second);
+  }
 
 }
