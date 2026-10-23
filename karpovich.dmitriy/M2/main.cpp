@@ -47,8 +47,6 @@ int main()
     catch (const std::invalid_argument &)
     {
       std::cout << "<INVALID COMMAND>\n";
-      std::cin.clear();
-      std::cin.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
     }
   }
 
