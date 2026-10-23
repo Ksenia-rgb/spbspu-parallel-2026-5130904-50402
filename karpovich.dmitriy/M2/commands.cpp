@@ -63,10 +63,6 @@ namespace karpovich
             }
             continue;
           }
-          if (n < 0)
-          {
-            break;
-          }
           if (n == 0)
           {
             close(w.result_rd);
