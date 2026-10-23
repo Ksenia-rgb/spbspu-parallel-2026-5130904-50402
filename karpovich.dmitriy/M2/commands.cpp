@@ -4,18 +4,15 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdio>
+#include <fcntl.h>
 #include <memory>
-#include <sys/types.h>
-#include <bits/pthreadtypes.h>
-#include <pthread.h>
 #include <stdexcept>
 #include <string>
-#include <sys/mman.h>
+#include <sys/types.h>
 #include <thread>
 #include <unistd.h>
 #include <utility>
 #include <vector>
-#include <fcntl.h>
 #include "../common/shape.hpp"
 #include "worker.hpp"
 #include "commands.hpp"
@@ -25,14 +22,13 @@ namespace karpovich
 
   namespace
   {
-    std::ostream &operator<<(std::ostream &out, karpovich::point_t p)
+    std::ostream &operator<<(std::ostream &out, point_t p)
     {
       return out << "(" << p.x << " " << p.y << ")";
     }
 
-    void printShape(std::ostream &out, const karpovich::Shape &sh)
+    void printShape(std::ostream &out, const Shape &sh)
     {
-      using namespace karpovich;
       if (auto c = dynamic_cast< const Circle * >(&sh))
       {
         out << c->getRadius() << " " << c->getCenter() << "\n";
@@ -43,52 +39,47 @@ namespace karpovich
       }
     }
 
-    size_t send(int &err, int wr, const void *buf, size_t k)
-    {
-      const char *const p = static_cast< const char * >(buf);
-      size_t r = 0;
-      while (r < k)
-      {
-        err = write(wr, p + r, k - r);
-        if (err <= 0)
-        {
-          break;
-        }
-        r += err;
-      }
-      return r;
-    }
-
     void pumpAll(karpovich::Data &data)
     {
       using namespace karpovich;
       for (auto &kv : data.workers)
       {
         Worker &w = kv.second;
-        pthread_mutex_lock(&w.sh->mtx);
-        const int c = w.sh->completed;
-        for (int i = w.seen; i < c; ++i)
+        while (w.result_rd >= 0)
         {
-          const ResultSlot &s = w.sh->slots[i % WORKER_MAX_SLOTS];
-          for (auto &cc : data.calcs)
+          ResultSlot s{};
+          const size_t n = read(w.result_rd, &s, sizeof s);
+          if (n == (sizeof s))
           {
-            Calc &calc = cc.second;
-            if (calc.calc_id == s.calc_id && calc.state == CalcState::IN_PROGRESS)
+            for (auto &cc : data.calcs)
             {
-              calc.state = CalcState::DONE;
-              calc.ms = s.ms;
-              calc.area = s.area;
+              Calc &calc = cc.second;
+              if (calc.calc_id == s.calc_id && calc.state == CalcState::IN_PROGRESS)
+              {
+                calc.state = CalcState::DONE;
+                calc.ms = s.ms;
+                calc.area = s.area;
+              }
             }
+            continue;
           }
+          if (n < 0)
+          {
+            break;
+          }
+          if (n == 0)
+          {
+            close(w.result_rd);
+            w.result_rd = -1;
+          }
+          break;
         }
-        w.seen = c;
-        pthread_mutex_unlock(&w.sh->mtx);
       }
     }
 
-    void printStatus(std::ostream &out, const karpovich::Calc &c)
+    void printStatus(std::ostream &out, const Calc &c)
     {
-      if (c.state == karpovich::CalcState::DONE)
+      if (c.state == CalcState::DONE)
       {
         out << c.proc << " " << static_cast< int >(c.ms) << " " << c.area << "\n";
       }
@@ -139,11 +130,7 @@ namespace karpovich
     for (size_t i = 0; i < n; ++i)
     {
       std::string shape;
-      if (!(in >> shape))
-      {
-        throw std::invalid_argument("invalid");
-      }
-      if (!data.shapes.count(shape))
+      if (!(in >> shape) || !data.shapes.count(shape))
       {
         throw std::invalid_argument("invalid");
       }
@@ -243,72 +230,63 @@ namespace karpovich
       throw std::invalid_argument("invalid");
     }
 
-    const std::string shm_name = "/lab2-" + std::to_string(getpid()) + "-" + name;
-    const int shm_fd = shm_open(shm_name.c_str(), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-    if (shm_fd < 0)
+    int req[2] = {-1, -1};
+    int res[2] = {-1, -1};
+    if (pipe(req) < 0)
     {
-      throw std::invalid_argument("shm_open");
-    }
-    if (ftruncate(shm_fd, static_cast< off_t >(sizeof(WorkerShared))) < 0)
-    {
-      close(shm_fd);
-      shm_unlink(shm_name.c_str());
-      throw std::invalid_argument("ftruncate");
-    }
-    void *const addr = mmap(nullptr, sizeof(WorkerShared), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-    if (addr == MAP_FAILED)
-    {
-      close(shm_fd);
-      shm_unlink(shm_name.c_str());
-      throw std::invalid_argument("mmap");
-    }
-    WorkerShared *const sh = static_cast< WorkerShared * >(addr);
-
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-    pthread_mutex_init(&sh->mtx, &attr);
-    pthread_mutexattr_destroy(&attr);
-    sh->completed = 0;
-
-    int pps[2] = {};
-    if (pipe(pps) < 0)
-    {
-      pthread_mutex_destroy(&sh->mtx);
-      munmap(sh, sizeof(WorkerShared));
-      close(shm_fd);
-      shm_unlink(shm_name.c_str());
       throw std::invalid_argument("pipe");
     }
-    const int rd = pps[0];
-    const int wr = pps[1];
+    if (pipe(res) < 0)
+    {
+      close(req[0]);
+      close(req[1]);
+      throw std::invalid_argument("pipe");
+    }
+
+    const int flags = fcntl(res[0], F_GETFL, 0);
+    if (flags < 0 || fcntl(res[0], F_SETFL, flags | O_NONBLOCK) < 0)
+    {
+      close(req[0]);
+      close(req[1]);
+      close(res[0]);
+      close(res[1]);
+      throw std::invalid_argument("fcntl");
+    }
 
     const pid_t pid = fork();
     if (pid < 0)
     {
-      close(rd);
-      close(wr);
-      pthread_mutex_destroy(&sh->mtx);
-      munmap(sh, sizeof(WorkerShared));
-      close(shm_fd);
-      shm_unlink(shm_name.c_str());
+      close(req[0]);
+      close(req[1]);
+      close(res[0]);
+      close(res[1]);
       throw std::invalid_argument("fork");
     }
     if (pid == 0)
     {
-      close(wr);
-      runWorker(rd, seed, sh);
+      close(req[1]);
+      close(res[0]);
+      for (const auto &kv : data.workers)
+      {
+        if (kv.second.wr >= 0)
+        {
+          close(kv.second.wr);
+        }
+        if (kv.second.result_rd >= 0)
+        {
+          close(kv.second.result_rd);
+        }
+      }
+      runWorker(req[0], res[1], seed);
       _exit(0);
     }
-    close(rd);
 
+    close(req[0]);
+    close(res[1]);
     Worker w;
     w.pid = pid;
-    w.wr = wr;
-    w.shm_fd = shm_fd;
-    w.shm_name = shm_name;
-    w.sh = sh;
-    w.seen = 0;
+    w.wr = req[1];
+    w.result_rd = res[0];
     data.workers[name] = w;
   }
 

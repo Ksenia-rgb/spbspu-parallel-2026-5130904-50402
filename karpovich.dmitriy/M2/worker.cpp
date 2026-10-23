@@ -2,7 +2,6 @@
 #include <chrono>
 #include <cstddef>
 #include <memory>
-#include <pthread.h>
 #include <ratio>
 #include <unistd.h>
 #include <vector>
@@ -11,24 +10,8 @@
 
 namespace karpovich
 {
-
   namespace
   {
-    size_t take(int &err, int rd, void *buf, size_t k)
-    {
-      char *const p = static_cast< char * >(buf);
-      size_t r = 0;
-      while (r < k)
-      {
-        err = read(rd, p + r, k - r);
-        if (err <= 0)
-        {
-          break;
-        }
-        r += err;
-      }
-      return r;
-    }
 
     std::unique_ptr< karpovich::Shape > makeShape(const karpovich::ShapeData &d)
     {
@@ -39,9 +22,42 @@ namespace karpovich
       }
       return std::make_unique< Ellipse >(d.r1, d.r2, point_t{d.x, d.y});
     }
+
   }
 
-  void runWorker(int rd, size_t seed, WorkerShared *sh)
+  size_t take(int &err, int rd, void *buf, size_t k)
+  {
+    char *const p = static_cast< char * >(buf);
+    size_t r = 0;
+    while (r < k)
+    {
+      err = read(rd, p + r, k - r);
+      if (err <= 0)
+      {
+        break;
+      }
+      r += err;
+    }
+    return r;
+  }
+
+  size_t send(int &err, int wr, const void *buf, size_t k)
+  {
+    const char *const p = static_cast< const char * >(buf);
+    size_t r = 0;
+    while (r < k)
+    {
+      err = write(wr, p + r, k - r);
+      if (err <= 0)
+      {
+        break;
+      }
+      r += err;
+    }
+    return r;
+  }
+
+  void runWorker(int rd, int result_wr, size_t seed)
   {
     while (true)
     {
@@ -75,18 +91,13 @@ namespace karpovich
       const double area_val = area(shapes, hdr[2], hdr[3], seed + hdr[1]).second;
       const auto end = std::chrono::steady_clock::now();
       const double ms = std::chrono::duration< double, std::milli >(end - start).count();
-
-      pthread_mutex_lock(&sh->mtx);
-      const int idx = sh->completed;
-      if (idx < WORKER_MAX_SLOTS)
+      const ResultSlot result{hdr[1], ms, area_val};
+      err = 0;
+      send(err, result_wr, &result, sizeof result);
+      if (err <= 0)
       {
-        sh->slots[idx].calc_id = hdr[1];
-        sh->slots[idx].ms = ms;
-        sh->slots[idx].area = area_val;
-        sh->completed = idx + 1;
+        break;
       }
-      pthread_mutex_unlock(&sh->mtx);
     }
   }
-
 }

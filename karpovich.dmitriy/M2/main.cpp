@@ -1,11 +1,9 @@
 #include <iostream>
 #include <limits>
-#include <pthread.h>
 #include <signal.h>
 #include <stdexcept>
 #include <string>
 #include <sys/wait.h>
-#include <sys/mman.h>
 #include <unistd.h>
 #include <unordered_map>
 #include "commands.hpp"
@@ -61,22 +59,13 @@ int main()
     {
       close(w.wr);
     }
+    if (w.result_rd >= 0)
+    {
+      close(w.result_rd);
+    }
     if (w.pid > 0)
     {
       waitpid(w.pid, nullptr, 0);
-    }
-    if (w.sh)
-    {
-      pthread_mutex_destroy(&w.sh->mtx);
-      munmap(w.sh, sizeof(karpovich::WorkerShared));
-    }
-    if (w.shm_fd >= 0)
-    {
-      close(w.shm_fd);
-    }
-    if (!w.shm_name.empty())
-    {
-      shm_unlink(w.shm_name.c_str());
     }
   }
 }

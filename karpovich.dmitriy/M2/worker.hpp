@@ -1,14 +1,10 @@
 #ifndef WORKER_HPP
 #define WORKER_HPP
-
 #include <cstddef>
-#include <string>
-#include <bits/pthreadtypes.h>
 #include <sys/types.h>
 
 namespace karpovich
 {
-  constexpr int WORKER_MAX_SLOTS = 1024;
   constexpr size_t PROTO_HEADER_WORDS = 5;
 
   enum class ShapeType : unsigned char
@@ -33,24 +29,18 @@ namespace karpovich
     double area;
   };
 
-  struct WorkerShared
-  {
-    pthread_mutex_t mtx;
-    int completed;
-    ResultSlot slots[WORKER_MAX_SLOTS];
-  };
-
   struct Worker
   {
     pid_t pid = -1;
     int wr = -1;
-    int shm_fd = -1;
-    std::string shm_name;
-    WorkerShared *sh = nullptr;
-    int seen = 0;
+    int result_rd = -1;
   };
 
-  void runWorker(int rd, size_t seed, WorkerShared *sh);
+  void runWorker(int rd, int result_wr, size_t seed);
+
+  size_t take(int &err, int rd, void *buf, size_t k);
+  size_t send(int &err, int wr, const void *buf, size_t k);
+
 }
 
 #endif
