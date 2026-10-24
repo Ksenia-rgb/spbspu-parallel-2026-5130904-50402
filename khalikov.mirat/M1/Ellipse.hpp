@@ -6,7 +6,7 @@
 
 namespace khalikov
 {
-  struct Ellipse : khalikov::Shapes
+  struct Ellipse: khalikov::Shapes
   {
     khalikov::Point center;
     double a;
@@ -14,8 +14,8 @@ namespace khalikov
 
     bool isIn(const Point &pt) const override
     {
-      double dx = pt.x - center.x;
-      double dy = pt.y - center.y;
+      const double dx = pt.x - center.x;
+      const double dy = pt.y - center.y;
       return dx * dx / (a * a) + dy * dy / (b * b) <= 1.0;
     }
 
@@ -24,24 +24,20 @@ namespace khalikov
       return center.x - a;
     }
 
-
     double minY() const override
     {
       return center.y - b;
     }
-
 
     double maxX() const override
     {
       return center.x + a;
     }
 
-
     double maxY() const override
     {
       return center.y + b;
     }
-
   };
 }
 

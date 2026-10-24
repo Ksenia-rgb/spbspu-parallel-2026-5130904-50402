@@ -4,17 +4,17 @@
 #include <functional>
 #include <future>
 #include <iostream>
+#include <memory>
 #include <random>
 #include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
-#include <memory>
-
-#include "Point.hpp"
 #include "Circle.hpp"
-#include "Frame.hpp"
 #include "Ellipse.hpp"
+#include "Frame.hpp"
+#include "Point.hpp"
+#include "Shapes.hpp"
 
 namespace khalikov
 {
@@ -30,8 +30,7 @@ namespace khalikov
     frame.max_y = (*it)->maxY();
     it++;
 
-    for (; it != shapes.end(); it++)
-    {
+    for (; it != shapes.end(); it++) {
       frame.min_x = std::min(frame.min_x, (*it)->minX());
       frame.max_x = std::max(frame.max_x, (*it)->maxX());
       frame.min_y = std::min(frame.min_y, (*it)->minY());
@@ -52,10 +51,8 @@ namespace khalikov
 
   bool isInUnion(const shapes_t &shapes, const Point &pt)
   {
-    for (auto it = shapes.begin(); it != shapes.end(); it++)
-    {
-      if ((*it)->isIn(pt))
-      {
+    for (auto it = shapes.begin(); it != shapes.end(); it++) {
+      if ((*it)->isIn(pt)) {
         return true;
       }
     }
@@ -64,10 +61,8 @@ namespace khalikov
 
   bool isInIntersection(const shapes_t &shapes, const Point &pt)
   {
-    for (auto it = shapes.begin(); it != shapes.end(); it++)
-    {
-      if (!(*it)->isIn(pt))
-      {
+    for (auto it = shapes.begin(); it != shapes.end(); it++) {
+      if (!(*it)->isIn(pt)) {
         return false;
       }
     }
@@ -89,14 +84,12 @@ namespace khalikov
     return frame_area * intersection_hits / tries;
   }
 
-  std::pair< size_t, size_t > calculate(
-      const shapes_t &shapes, const khalikov::Frame &frame, size_t tries, size_t seed)
+  std::pair< size_t, size_t > calculate(const shapes_t &shapes, const khalikov::Frame &frame, size_t tries, size_t seed)
   {
     std::default_random_engine gen(seed);
     size_t union_hits = 0;
     size_t intersection_hits = 0;
-    for (size_t i = 0; i < tries; i++)
-    {
+    for (size_t i = 0; i < tries; i++) {
       const Point example = genPoint(frame, gen);
       intersection_hits += isInIntersection(shapes, example);
       union_hits += isInUnion(shapes, example);
@@ -107,8 +100,7 @@ namespace khalikov
 
 int main(int argc, char **argv)
 {
-  if (argc > 4 || argc < 3)
-  {
+  if (argc > 4 || argc < 3) {
     std::cerr << "Incorrect arguments\n";
     return 1;
   }
@@ -117,32 +109,25 @@ int main(int argc, char **argv)
   size_t tries = 0;
   size_t seed = 0;
 
-  for (int i = 1; i < argc; i++)
-  {
-    if (argv[i][0] == '-')
-    {
+  for (int i = 1; i < argc; i++) {
+    if (argv[i][0] == '-') {
       std::cerr << "Incorrect arguments\n";
       return 1;
     }
   }
 
-  try
-  {
+  try {
     threads = std::stoull(argv[1]);
     tries = std::stoull(argv[2]);
-    if (argc == 4)
-    {
+    if (argc == 4) {
       seed = std::stoull(argv[3]);
     }
-  }
-  catch (const std::exception &e)
-  {
+  } catch (const std::exception &e) {
     std::cerr << e.what() << "Incorrect arguments\n";
     return 2;
   }
 
-  if (tries == 0)
-  {
+  if (tries == 0) {
     std::cerr << "Incorrect arguments\n";
     return 2;
   }
@@ -152,8 +137,7 @@ int main(int argc, char **argv)
   khalikov::shapes_t shapes;
   std::string line;
 
-  while (std::getline(std::cin, line))
-  {
+  while (std::getline(std::cin, line)) {
     std::istringstream iss(line);
     int r = 0;
     int c = 0;
@@ -161,14 +145,12 @@ int main(int argc, char **argv)
     int y = 0;
     std::string extra;
 
-    if (!(iss >> r >> c >> x >> y) || (iss >> extra))
-    {
+    if (!(iss >> r >> c >> x >> y) || (iss >> extra)) {
       std::cerr << "Incorrect input\n";
       return 1;
     }
 
-    if (c == 0)
-    {
+    if (c == 0) {
       auto circle = std::make_unique< khalikov::Circle >();
       circle->center.x = x;
       circle->center.y = y;
@@ -176,8 +158,7 @@ int main(int argc, char **argv)
       shapes.push_back(std::move(circle));
     }
 
-    else
-    {
+    else {
       auto ellipse = std::make_unique< khalikov::Ellipse >();
       ellipse->center.x = x;
       ellipse->center.y = y;
@@ -187,14 +168,12 @@ int main(int argc, char **argv)
     }
   }
 
-  if (std::cin.fail() && !std::cin.eof())
-  {
+  if (std::cin.fail() && !std::cin.eof()) {
     std::cerr << "Incorrect input\n";
     return 1;
   }
 
-  if (shapes.empty())
-  {
+  if (shapes.empty()) {
     std::cout << "0 0\n";
     return 0;
   }
@@ -204,17 +183,15 @@ int main(int argc, char **argv)
   const size_t remainder = tries % threads;
   std::vector< std::future< std::pair< size_t, size_t > > > futures;
 
-  for (size_t i = 0; i < threads; i++)
-  {
+  for (size_t i = 0; i < threads; i++) {
     const size_t local_tries = base_tries + (i < remainder ? 1 : 0);
     const size_t local_seed = seed + i;
-    futures.push_back(std::async(
-        std::launch::async, khalikov::calculate, std::cref(shapes), std::cref(frame), local_tries, local_seed));
+    futures.push_back(std::async(std::launch::async, khalikov::calculate, std::cref(shapes), std::cref(frame),
+                                 local_tries, local_seed));
   }
   size_t union_hits = 0;
   size_t intersection_hits = 0;
-  for (size_t i = 0; i < futures.size(); i++)
-  {
+  for (size_t i = 0; i < futures.size(); i++) {
     auto result = futures[i].get();
     union_hits += result.first;
     intersection_hits += result.second;

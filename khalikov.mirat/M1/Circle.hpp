@@ -6,15 +6,15 @@
 
 namespace khalikov
 {
-  struct Circle : khalikov::Shapes
+  struct Circle: khalikov::Shapes
   {
     khalikov::Point center;
     double r;
 
     bool isIn(const Point &pt) const override
     {
-      double dx = pt.x - center.x;
-      double dy = pt.y - center.y;
+      const double dx = pt.x - center.x;
+      const double dy = pt.y - center.y;
       return dx * dx + dy * dy <= r * r;
     }
 
@@ -23,24 +23,20 @@ namespace khalikov
       return center.x - r;
     }
 
-
     double minY() const override
     {
       return center.y - r;
     }
-
 
     double maxX() const override
     {
       return center.x + r;
     }
 
-
     double maxY() const override
     {
       return center.y + r;
     }
-
   };
 }
 
