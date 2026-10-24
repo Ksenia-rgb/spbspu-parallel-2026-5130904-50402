@@ -10,34 +10,22 @@
 #include <utility>
 #include <vector>
 #include "Point.hpp"
+#include "Circle.hpp"
+#include "Frame.hpp"
 
 namespace khalikov
 {
-  struct Circle
-  {
-    khalikov::Point center;
-    double r;
-  };
-
-  struct Frame
-  {
-    double min_x;
-    double max_x;
-    double min_y;
-    double max_y;
-  };
-
-  bool isIn(const Circle &circle, const Point &pt)
+  bool isIn(const khalikov::Circle &circle, const Point &pt)
   {
     const double dx = pt.x - circle.center.x;
     const double dy = pt.y - circle.center.y;
     return dx * dx + dy * dy <= circle.r * circle.r;
   }
 
-  Frame findFrames(const std::vector< Circle > &circles)
+  khalikov::Frame findFrames(const std::vector< khalikov::Circle > &circles)
   {
     auto it = circles.begin();
-    Frame frame;
+    khalikov::Frame frame;
     frame.min_x = it->center.x - it->r;
     frame.max_x = it->center.x + it->r;
     frame.min_y = it->center.y - it->r;
@@ -54,7 +42,7 @@ namespace khalikov
     return frame;
   }
 
-  Point genPoint(const Frame &frame, std::default_random_engine &gen)
+  Point genPoint(const khalikov::Frame &frame, std::default_random_engine &gen)
   {
     std::uniform_real_distribution< double > dist_x(frame.min_x, frame.max_x);
     std::uniform_real_distribution< double > dist_y(frame.min_y, frame.max_y);
@@ -64,7 +52,7 @@ namespace khalikov
     return pt;
   }
 
-  bool isInUnion(const std::vector< Circle > &circles, const Point &pt)
+  bool isInUnion(const std::vector< khalikov::Circle > &circles, const Point &pt)
   {
     for (auto it = circles.begin(); it != circles.end(); it++)
     {
@@ -76,7 +64,7 @@ namespace khalikov
     return false;
   }
 
-  bool isInIntersection(const std::vector< Circle > &circles, const Point &pt)
+  bool isInIntersection(const std::vector< khalikov::Circle > &circles, const Point &pt)
   {
     for (auto it = circles.begin(); it != circles.end(); it++)
     {
@@ -88,7 +76,7 @@ namespace khalikov
     return true;
   }
 
-  double getFrameArea(const Frame &frame)
+  double getFrameArea(const khalikov::Frame &frame)
   {
     return (frame.max_x - frame.min_x) * (frame.max_y - frame.min_y);
   }
@@ -104,7 +92,7 @@ namespace khalikov
   }
 
   std::pair< size_t, size_t > calculate(
-      const std::vector< Circle > &circles, const Frame &frame, size_t tries, size_t seed)
+      const std::vector< khalikov::Circle > &circles, const khalikov::Frame &frame, size_t tries, size_t seed)
   {
     std::default_random_engine gen(seed);
     size_t union_hits = 0;
