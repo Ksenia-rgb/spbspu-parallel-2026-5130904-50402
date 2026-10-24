@@ -9,6 +9,12 @@ namespace karpovich
     double y;
   };
 
+  struct rectangle_t
+  {
+    point_t max;
+    point_t min;
+  };
+
   class Shape
   {
   public:
