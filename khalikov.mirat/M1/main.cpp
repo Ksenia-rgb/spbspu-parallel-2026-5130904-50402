@@ -9,35 +9,33 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <memory>
+
 #include "Point.hpp"
 #include "Circle.hpp"
 #include "Frame.hpp"
+#include "Ellipse.hpp"
 
 namespace khalikov
 {
-  bool isIn(const khalikov::Circle &circle, const Point &pt)
-  {
-    const double dx = pt.x - circle.center.x;
-    const double dy = pt.y - circle.center.y;
-    return dx * dx + dy * dy <= circle.r * circle.r;
-  }
+  using shapes_t = std::vector< std::unique_ptr< khalikov::Shapes > >;
 
-  khalikov::Frame findFrames(const std::vector< khalikov::Circle > &circles)
+  khalikov::Frame findFrames(const shapes_t &shapes)
   {
-    auto it = circles.begin();
+    auto it = shapes.begin();
     khalikov::Frame frame;
-    frame.min_x = it->center.x - it->r;
-    frame.max_x = it->center.x + it->r;
-    frame.min_y = it->center.y - it->r;
-    frame.max_y = it->center.y + it->r;
+    frame.min_x = (*it)->minX();
+    frame.max_x = (*it)->maxX();
+    frame.min_y = (*it)->minY();
+    frame.max_y = (*it)->maxY();
     it++;
 
-    for (; it != circles.end(); it++)
+    for (; it != shapes.end(); it++)
     {
-      frame.min_x = std::min(frame.min_x, it->center.x - it->r);
-      frame.max_x = std::max(frame.max_x, it->center.x + it->r);
-      frame.min_y = std::min(frame.min_y, it->center.y - it->r);
-      frame.max_y = std::max(frame.max_y, it->center.y + it->r);
+      frame.min_x = std::min(frame.min_x, (*it)->minX());
+      frame.max_x = std::max(frame.max_x, (*it)->maxX());
+      frame.min_y = std::min(frame.min_y, (*it)->minY());
+      frame.max_y = std::max(frame.max_y, (*it)->maxY());
     }
     return frame;
   }
@@ -52,11 +50,11 @@ namespace khalikov
     return pt;
   }
 
-  bool isInUnion(const std::vector< khalikov::Circle > &circles, const Point &pt)
+  bool isInUnion(const shapes_t &shapes, const Point &pt)
   {
-    for (auto it = circles.begin(); it != circles.end(); it++)
+    for (auto it = shapes.begin(); it != shapes.end(); it++)
     {
-      if (isIn(*it, pt))
+      if ((*it)->isIn(pt))
       {
         return true;
       }
@@ -64,11 +62,11 @@ namespace khalikov
     return false;
   }
 
-  bool isInIntersection(const std::vector< khalikov::Circle > &circles, const Point &pt)
+  bool isInIntersection(const shapes_t &shapes, const Point &pt)
   {
-    for (auto it = circles.begin(); it != circles.end(); it++)
+    for (auto it = shapes.begin(); it != shapes.end(); it++)
     {
-      if (!isIn(*it, pt))
+      if (!(*it)->isIn(pt))
       {
         return false;
       }
@@ -92,7 +90,7 @@ namespace khalikov
   }
 
   std::pair< size_t, size_t > calculate(
-      const std::vector< khalikov::Circle > &circles, const khalikov::Frame &frame, size_t tries, size_t seed)
+      const shapes_t &shapes, const khalikov::Frame &frame, size_t tries, size_t seed)
   {
     std::default_random_engine gen(seed);
     size_t union_hits = 0;
@@ -100,8 +98,8 @@ namespace khalikov
     for (size_t i = 0; i < tries; i++)
     {
       const Point example = genPoint(frame, gen);
-      intersection_hits += isInIntersection(circles, example);
-      union_hits += isInUnion(circles, example);
+      intersection_hits += isInIntersection(shapes, example);
+      union_hits += isInUnion(shapes, example);
     }
     return {union_hits, intersection_hits};
   }
@@ -151,7 +149,7 @@ int main(int argc, char **argv)
 
   threads = (threads == 0) ? 1 : threads;
 
-  std::vector< khalikov::Circle > circles;
+  khalikov::shapes_t shapes;
   std::string line;
 
   while (std::getline(std::cin, line))
@@ -169,11 +167,24 @@ int main(int argc, char **argv)
       return 1;
     }
 
-    khalikov::Circle circle;
-    circle.center.x = x;
-    circle.center.y = y;
-    circle.r = r;
-    circles.push_back(circle);
+    if (c == 0)
+    {
+      auto circle = std::make_unique< khalikov::Circle >();
+      circle->center.x = x;
+      circle->center.y = y;
+      circle->r = r;
+      shapes.push_back(std::move(circle));
+    }
+
+    else
+    {
+      auto ellipse = std::make_unique< khalikov::Ellipse >();
+      ellipse->center.x = x;
+      ellipse->center.y = y;
+      ellipse->a = r;
+      ellipse->b = c;
+      shapes.push_back(std::move(ellipse));
+    }
   }
 
   if (std::cin.fail() && !std::cin.eof())
@@ -182,13 +193,13 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  if (circles.empty())
+  if (shapes.empty())
   {
     std::cout << "0 0\n";
     return 0;
   }
 
-  const khalikov::Frame frame = khalikov::findFrames(circles);
+  const khalikov::Frame frame = khalikov::findFrames(shapes);
   const size_t base_tries = tries / threads;
   const size_t remainder = tries % threads;
   std::vector< std::future< std::pair< size_t, size_t > > > futures;
@@ -198,7 +209,7 @@ int main(int argc, char **argv)
     const size_t local_tries = base_tries + (i < remainder ? 1 : 0);
     const size_t local_seed = seed + i;
     futures.push_back(std::async(
-        std::launch::async, khalikov::calculate, std::cref(circles), std::cref(frame), local_tries, local_seed));
+        std::launch::async, khalikov::calculate, std::cref(shapes), std::cref(frame), local_tries, local_seed));
   }
   size_t union_hits = 0;
   size_t intersection_hits = 0;
