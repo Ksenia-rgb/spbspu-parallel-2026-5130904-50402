@@ -1,7 +1,6 @@
 #include "worker.hpp"
 #include <chrono>
 #include <cstddef>
-#include <memory>
 #include <ratio>
 #include <unistd.h>
 #include <vector>
@@ -10,20 +9,6 @@
 
 namespace karpovich
 {
-  namespace
-  {
-
-    std::unique_ptr< karpovich::Shape > makeShape(const karpovich::ShapeData &d)
-    {
-      using namespace karpovich;
-      if (d.type == ShapeType::Circle)
-      {
-        return std::make_unique< Circle >(d.r1, point_t{d.x, d.y});
-      }
-      return std::make_unique< Ellipse >(d.r1, d.r2, point_t{d.x, d.y});
-    }
-
-  }
 
   size_t take(int &err, int rd, void *buf, size_t k)
   {
@@ -84,7 +69,14 @@ namespace karpovich
       shapes.reserve(raw.size());
       for (const auto &d : raw)
       {
-        shapes.push_back(makeShape(d));
+        if (d.type == ShapeType::Circle)
+        {
+          shapes.push_back({shape_type::circle, d.r1, d.r1, point_t{d.x, d.y}});
+        }
+        else
+        {
+          shapes.push_back({shape_type::ellipse, d.r1, d.r2, point_t{d.x, d.y}});
+        }
       }
 
       const auto start = std::chrono::steady_clock::now();

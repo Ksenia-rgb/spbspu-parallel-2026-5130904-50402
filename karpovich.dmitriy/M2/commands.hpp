@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <iosfwd>
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
 #include "../common/shape.hpp"
@@ -31,7 +30,7 @@ namespace karpovich
 
   struct Data
   {
-    std::map< std::string, std::shared_ptr< Shape > > shapes;
+    std::map< std::string, shape_t > shapes;
     std::map< std::string, Set > sets;
     std::map< std::string, Worker > workers;
     std::map< std::string, Calc > calcs;

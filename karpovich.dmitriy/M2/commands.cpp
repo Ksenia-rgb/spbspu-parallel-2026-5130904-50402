@@ -9,7 +9,6 @@
 #include <cstddef>
 #include <cstdio>
 #include <fcntl.h>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <sys/types.h>
@@ -31,15 +30,15 @@ namespace karpovich
       return out << "(" << p.x << " " << p.y << ")";
     }
 
-    void printShape(std::ostream& out, const Shape& sh)
+    void printShape(std::ostream& out, const shape_t& sh)
     {
-      if (auto c = dynamic_cast< const Circle* >(&sh))
+      if (sh.type == shape_type::circle)
       {
-        out << c->getRadius() << " " << c->getCenter() << "\n";
+        out << sh.rx << " " << sh.center << "\n";
       }
-      else if (auto e = dynamic_cast< const Ellipse* >(&sh))
+      else
       {
-        out << e->getHorizontalRadius() << " " << e->getVerticalRadius() << " " << e->getCenter() << "\n";
+        out << sh.rx << " " << sh.ry << " " << sh.center << "\n";
       }
     }
 
@@ -185,7 +184,7 @@ namespace karpovich
       throw std::invalid_argument("invalid");
     }
 
-    data.shapes[name] = std::make_shared< Circle >(r, point_t{x, y});
+    data.shapes[name] = shape_t{shape_type::circle, r, r, point_t{x, y}};
   }
 
   void cmdSet(std::istream& in, std::ostream&, Data& data)
@@ -239,7 +238,7 @@ namespace karpovich
       throw std::invalid_argument("invalid");
     }
 
-    printShape(out, *it->second);
+    printShape(out, it->second);
   }
 
   void cmdShowSet(std::istream& in, std::ostream& out, Data& data)
@@ -255,7 +254,7 @@ namespace karpovich
 
     for (const auto& s : it->second)
     {
-      printShape(out, *data.shapes.at(s));
+      printShape(out, data.shapes.at(s));
     }
   }
 
@@ -270,8 +269,8 @@ namespace karpovich
       throw std::invalid_argument("invalid");
     }
 
-    const point_t mn = it->second->getMinCorner();
-    const point_t mx = it->second->getMaxCorner();
+    const point_t mn = getMinCorner(it->second);
+    const point_t mx = getMaxCorner(it->second);
 
     out << mn << " " << mx << "\n";
   }
@@ -287,14 +286,14 @@ namespace karpovich
       throw std::invalid_argument("invalid");
     }
 
-    point_t mn = data.shapes.at(it->second.front())->getMinCorner();
-    point_t mx = data.shapes.at(it->second.front())->getMaxCorner();
+    point_t mn = getMinCorner(data.shapes.at(it->second.front()));
+    point_t mx = getMaxCorner(data.shapes.at(it->second.front()));
 
-    for (const auto& s : it->second)
+    for (const auto& name : it->second)
     {
-      const Shape& sh = *data.shapes.at(s);
-      const point_t a = sh.getMinCorner();
-      const point_t b = sh.getMaxCorner();
+      const shape_t& shape = data.shapes.at(name);
+      const point_t a = getMinCorner(shape);
+      const point_t b = getMaxCorner(shape);
 
       mn.x = std::min(mn.x, a.x);
       mn.y = std::min(mn.y, a.y);
@@ -423,18 +422,17 @@ namespace karpovich
     std::vector< ShapeData > raw;
     raw.reserve(sit->second.size());
 
-    for (const auto& sname : sit->second)
+    for (const auto& name : sit->second)
     {
-      const Shape& sh = *data.shapes.at(sname);
+      const shape_t& shape = data.shapes.at(name);
 
-      if (auto c = dynamic_cast< const Circle* >(&sh))
+      if (shape.type == shape_type::circle)
       {
-        raw.push_back(ShapeData{ShapeType::Circle, c->getRadius(), 0.0, c->getCenter().x, c->getCenter().y});
+        raw.push_back({ShapeType::Circle, shape.rx, 0.0, shape.center.x, shape.center.y});
       }
-      else if (auto e = dynamic_cast< const Ellipse* >(&sh))
+      else
       {
-        raw.push_back(ShapeData{
-            ShapeType::Ellipse, e->getHorizontalRadius(), e->getVerticalRadius(), e->getCenter().x, e->getCenter().y});
+        raw.push_back({ShapeType::Ellipse, shape.rx, shape.ry, shape.center.x, shape.center.y});
       }
     }
 
