@@ -29,7 +29,7 @@ namespace karpovich
         const point_t p{dist_x(gen), dist_y(gen)};
         for (const auto &shp : shapes)
         {
-          if (shp->contains(p))
+          if (contains(shp, p))
           {
             is_inside_any = true;
           }
@@ -59,8 +59,9 @@ namespace karpovich
     point_t min{inf, inf};
     for (const auto &shape : shapes)
     {
-      const point_t shape_min = shape->getMinCorner();
-      const point_t shape_max = shape->getMaxCorner();
+      const point_t shape_min = getMinCorner(shape);
+      const point_t shape_max = getMaxCorner(shape);
+
       min.x = std::min(min.x, shape_min.x);
       min.y = std::min(min.y, shape_min.y);
       max.x = std::max(max.x, shape_max.x);
