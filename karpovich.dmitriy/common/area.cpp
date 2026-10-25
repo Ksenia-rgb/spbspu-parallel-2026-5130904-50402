@@ -18,33 +18,71 @@ namespace karpovich
     std::pair< size_t, size_t > calculate(const shapes_t &shapes, point_t max, point_t min, size_t tests, size_t seed)
     {
       std::default_random_engine gen(seed);
+
+      const bool one_circle = shapes.size() == 1 && shapes.front().type == shape_type::circle;
+
       std::uniform_real_distribution< double > dist_x(min.x, max.x);
       std::uniform_real_distribution< double > dist_y(min.y, max.y);
+
+      const double engine_min = static_cast< double >(gen.min());
+      const double engine_range = static_cast< double >(gen.max()) - engine_min;
+
+      const double kx = (max.x - min.x) / engine_range;
+      const double ky = (max.y - min.y) / engine_range;
+
       size_t hits_intersection = 0;
       size_t hits_cover = 0;
-      for (size_t i = 0; i < tests; i++)
+
+      for (size_t i = 0; i < tests; ++i)
       {
+        point_t point;
+
+        if (one_circle)
+        {
+          point.x = min.x + (static_cast< double >(gen()) - engine_min) * kx;
+          point.y = min.y + (static_cast< double >(gen()) - engine_min) * ky;
+        }
+        else
+        {
+          point.x = dist_x(gen);
+          point.y = dist_y(gen);
+        }
+
         bool is_inside_any = false;
         bool is_inside_all = true;
-        const point_t p{dist_x(gen), dist_y(gen)};
-        for (const auto &shp : shapes)
+
+        for (const auto &shape : shapes)
         {
-          if (contains(shp, p))
+          bool inside = false;
+
+          if (one_circle)
           {
-            is_inside_any = true;
+            const double dx = point.x - shape.center.x;
+            const double dy = point.y - shape.center.y;
+            const double radius2 = shape.rx * shape.rx;
+
+            inside = dx * dx + dy * dy <= radius2;
           }
           else
           {
-            is_inside_all = false;
+            inside = contains(shape, point);
+          }
+
+          is_inside_any = is_inside_any || inside;
+          is_inside_all = is_inside_all && inside;
+
+          if (is_inside_any && !is_inside_all)
+          {
+            break;
           }
         }
         if (is_inside_all)
         {
-          hits_intersection++;
+          ++hits_intersection;
         }
         if (is_inside_any)
         {
-          hits_cover++;
+          ++hits_cover;
         }
       }
       return {hits_intersection, hits_cover};
