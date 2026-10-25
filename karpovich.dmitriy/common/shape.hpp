@@ -15,47 +15,23 @@ namespace karpovich
     point_t min;
   };
 
-  class Shape
+  enum class shape_type
   {
-  public:
-    virtual ~Shape() = default;
-    virtual bool contains(point_t point) const noexcept = 0;
-    virtual point_t getMinCorner() const noexcept = 0;
-    virtual point_t getMaxCorner() const noexcept = 0;
+    circle,
+    ellipse
   };
 
-  class Circle final: public Shape
+  struct shape_t
   {
-  public:
-    Circle(double radius, point_t center) noexcept;
-    bool contains(point_t point) const noexcept override;
-    point_t getMinCorner() const noexcept override;
-    point_t getMaxCorner() const noexcept override;
-    double getRadius() const noexcept;
-    point_t getCenter() const noexcept;
-
-  private:
-    double radius_;
-    point_t center_;
+    shape_type type;
+    double rx;
+    double ry;
+    point_t center;
   };
 
-  class Ellipse final: public Shape
-  {
-  public:
-    Ellipse(double horizontal_radius, double vertical_radius, point_t center) noexcept;
-    bool contains(point_t point) const noexcept override;
-    point_t getMinCorner() const noexcept override;
-    point_t getMaxCorner() const noexcept override;
-    double getHorizontalRadius() const noexcept;
-    double getVerticalRadius() const noexcept;
-    point_t getCenter() const noexcept;
-
-  private:
-    double horizontal_radius_;
-    double vertical_radius_;
-    point_t center_;
-  };
-
+  bool contains(const shape_t &shape, point_t point) noexcept;
+  point_t getMinCorner(const shape_t &shape) noexcept;
+  point_t getMaxCorner(const shape_t &shape) noexcept;
 }
 
 #endif

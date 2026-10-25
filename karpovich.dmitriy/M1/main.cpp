@@ -1,10 +1,8 @@
 #include <cstddef>
 #include <iostream>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
 #include "../common/area.hpp"
 #include "../common/shape.hpp"
 
@@ -48,7 +46,7 @@ int main(int argc, char **argv)
     std::cerr << "Args overflow\n";
     return 1;
   }
-  std::vector< std::unique_ptr< Shape > > shapes;
+  shapes_t shapes;
   double radius = 0;
   double second_radius = 0;
   double x = 0;
@@ -57,11 +55,11 @@ int main(int argc, char **argv)
   {
     if (second_radius)
     {
-      shapes.push_back(std::unique_ptr< Shape >(new Ellipse(radius, second_radius, point_t{x, y})));
+      shapes.push_back({shape_type::ellipse, radius, second_radius, {x, y}});
     }
     else
     {
-      shapes.push_back(std::unique_ptr< Shape >(new Circle(radius, point_t{x, y})));
+      shapes.push_back({shape_type::circle, radius, radius, {x, y}});
     }
   }
   if (!std::cin.eof())
