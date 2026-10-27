@@ -1,52 +1,25 @@
+#include <algorithm>
 #include <cctype>
 #include <cerrno>
+#include <cstddef>
+#include <cstdlib>
+#include <functional>
 #include <future>
 #include <iomanip>
-#include <cstddef>
-#include <utility>
 #include <iostream>
 #include <limits>
 #include <random>
 #include <stdexcept>
+#include <utility>
 #include <vector>
-#include <algorithm>
-#include <cstdlib>
-#include <functional>
+#include "constants.hpp"
+#include "ellipse.hpp"
 
 namespace shirokov
 {
-  struct Ellipse;
-  using ellipse_list = std::vector< Ellipse >;
-
-  constexpr int status_ok = 0;
-  constexpr int status_error_invalid_args = 1;
-  constexpr int status_error_invalid_input = 2;
-
-  constexpr int count_of_args_without_seed = 3;
-  constexpr int count_of_args_with_seed = 4;
-
-  constexpr size_t threads_arg_pos = 1;
-  constexpr size_t tries_arg_pos = 2;
-  constexpr int seed_arg_pos = 3;
-
-  struct MinMaxes
-  {
-    double min_x, max_x;
-    double min_y, max_y;
-  };
-
-  struct Ellipse
-  {
-    double x, y, hr, vr;
-
-    Ellipse(double x, double y, double hr, double vr);
-    bool isInside(double px, double py) const noexcept;
-    MinMaxes getMinMaxes() const noexcept;
-  };
   size_t stringToSizeT(const char* line);
   std::pair< size_t, size_t > calc(const ellipse_list& ellipses, size_t tries, size_t seed, const MinMaxes& min_maxes);
   const std::pair< double, double > area(const ellipse_list& ellipses, size_t threads, size_t tries, size_t seed);
-  MinMaxes getAllMinMaxes(const ellipse_list& ellipses);
 }
 
 int main(int argc, const char* argv[])
@@ -140,15 +113,8 @@ size_t shirokov::stringToSizeT(const char* str)
   return static_cast< size_t >(res);
 }
 
-bool shirokov::Ellipse::isInside(double px, double py) const noexcept
-{
-  const double nx = (px - x) / hr;
-  const double ny = (py - y) / vr;
-  return nx * nx + ny * ny <= 1.0;
-}
-
-std::pair< size_t, size_t > shirokov::calc(
-    const ellipse_list& ellipses, size_t tries, size_t seed, const MinMaxes& min_maxes)
+std::pair< size_t, size_t > shirokov::calc(const ellipse_list& ellipses, size_t tries, size_t seed,
+                                           const MinMaxes& min_maxes)
 {
   std::default_random_engine engine(seed);
 
@@ -186,8 +152,8 @@ std::pair< size_t, size_t > shirokov::calc(
   return {count_of_total_coverage, count_of_intersection};
 }
 
-const std::pair< double, double > shirokov::area(
-    const ellipse_list& ellipses, size_t threads, size_t tries, size_t seed)
+const std::pair< double, double > shirokov::area(const ellipse_list& ellipses, size_t threads, size_t tries,
+                                                 size_t seed)
 {
   if (!threads)
   {
@@ -223,38 +189,10 @@ const std::pair< double, double > shirokov::area(
 
   const double box_area = (min_maxes.max_x - min_maxes.min_x) * (min_maxes.max_y - min_maxes.min_y);
 
-  const double total_coverage
-      = (static_cast< double >(count_of_total_coverage) / static_cast< double >(tries)) * box_area;
-  const double intersection_area
-      = (static_cast< double >(count_of_intersection) / static_cast< double >(tries)) * box_area;
+  const double total_coverage =
+      (static_cast< double >(count_of_total_coverage) / static_cast< double >(tries)) * box_area;
+  const double intersection_area =
+      (static_cast< double >(count_of_intersection) / static_cast< double >(tries)) * box_area;
 
   return {total_coverage, intersection_area};
-}
-
-shirokov::MinMaxes shirokov::getAllMinMaxes(const ellipse_list& ellipses)
-{
-  MinMaxes res_mm = ellipses[0].getMinMaxes();
-
-  for (const Ellipse& s : ellipses)
-  {
-    const MinMaxes curr_mm = s.getMinMaxes();
-    res_mm.max_x = std::max(res_mm.max_x, curr_mm.max_x);
-    res_mm.min_x = std::min(res_mm.min_x, curr_mm.min_x);
-    res_mm.max_y = std::max(res_mm.max_y, curr_mm.max_y);
-    res_mm.min_y = std::min(res_mm.min_y, curr_mm.min_y);
-  }
-
-  return res_mm;
-}
-
-shirokov::Ellipse::Ellipse(double x, double y, double hr, double vr):
-  x(x),
-  y(y),
-  hr(hr),
-  vr(vr)
-{}
-
-shirokov::MinMaxes shirokov::Ellipse::getMinMaxes() const noexcept
-{
-  return {x - hr, x + hr, y - vr, y + vr};
 }
