@@ -36,7 +36,7 @@ namespace vishnevskiy
   struct Maps
   {
     std::map<std::string, Circle> shapes;
-    std::map<std::string, std::vector<std::string>>
+    std::map<std::string, std::vector<std::string>> set;
   };
 
   void circle(std::istream &, std::ostream &, Maps &);
