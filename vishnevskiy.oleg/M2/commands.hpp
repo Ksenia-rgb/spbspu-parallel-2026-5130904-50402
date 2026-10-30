@@ -9,7 +9,7 @@ namespace vishnevskiy
 {
   struct Circle
   {
-    double r, x, y;
+    double r_, x_, y_;
   };
 
   struct CircleBoundaries
@@ -36,7 +36,7 @@ namespace vishnevskiy
   struct Maps
   {
     std::map<std::string, Circle> shapes;
-    std::map<std::string, std::vector<std::string>> set;
+    std::map<std::string, std::vector<Circle>> sets;
   };
 
   void circle(std::istream &, std::ostream &, Maps &);
