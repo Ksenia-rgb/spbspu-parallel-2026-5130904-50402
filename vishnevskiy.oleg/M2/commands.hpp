@@ -14,18 +14,18 @@ namespace vishnevskiy
 
   struct CircleBoundaries
   {
-    double minX;
-    double maxX;
-    double minY;
-    double maxY;
+    double minX_;
+    double maxX_;
+    double minY_;
+    double maxY_;
 
     double width()
     {
-      return maxX - minX;
+      return maxX_ - minX_;
     }
     double height()
     {
-      return maxY - minY;
+      return maxY_ - minY_;
     }
     double area()
     {
@@ -36,9 +36,11 @@ namespace vishnevskiy
   struct Maps
   {
     std::map<std::string, Circle> shapes;
-    std::map<std::string, std::vector<Circle>> sets;
+    std::map<std::string, &std::vector<Circle>> sets;
   };
 
+  CircleBoundaries getBoundaries(Circle c);
+  CircleBoundaries getSetBoundaries(std::vector<Circle> &circles);
   void circle(std::istream &, std::ostream &, Maps &);
   void set(std::istream &, std::ostream &, Maps &);
   void show(std::istream &, std::ostream &, Maps &);
