@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <thread>
 #include <vector>
-
 #include <cmath>
 #include <limits>
 

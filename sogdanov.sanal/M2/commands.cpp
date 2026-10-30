@@ -93,7 +93,7 @@ namespace sogdanov
 
       output << calculation.process_name << ' ';
 
-      if (calculation.done_)
+      if (calculation.done)
       {
         output << std::fixed << std::setprecision(3) << calculation.milliseconds << ' ' << calculation.area << '\n';
       }
@@ -150,7 +150,7 @@ namespace sogdanov
                 return entry.second.id == result.calculation_id;
               });
 
-          if ((found == data.calcs.end()) || found->second.done_)
+          if ((found == data.calcs.end()) || found->second.done)
           {
             throw std::runtime_error("Unexpected calculation result");
           }
@@ -159,7 +159,7 @@ namespace sogdanov
 
           calculation.milliseconds = result.milliseconds;
           calculation.area = result.area;
-          calculation.done_ = true;
+          calculation.done = true;
           worker.received = 0;
         }
         else if (count == 0)
@@ -509,7 +509,7 @@ void sogdanov::cmdWait(const Arguments& arguments, std::ostream& output, Data& d
 
   pumpAll(data);
 
-  while (!found->second.done_)
+  while (!found->second.done)
   {
     waitForEvents(data, false);
   }
@@ -590,7 +590,7 @@ void sogdanov::waitForAll(Data& data)
 
     for (const auto& entry : data.calcs)
     {
-      if (!entry.second.done_)
+      if (!entry.second.done)
       {
         completed = false;
         break;

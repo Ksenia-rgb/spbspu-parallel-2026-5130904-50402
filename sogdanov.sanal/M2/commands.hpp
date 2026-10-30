@@ -17,7 +17,7 @@ namespace sogdanov
   {
     size_t id;
     std::string process_name;
-    bool done_ = false;
+    bool done = false;
     double milliseconds = 0.0;
     double area = 0.0;
   };
