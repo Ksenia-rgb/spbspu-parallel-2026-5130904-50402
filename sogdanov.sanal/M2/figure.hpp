@@ -17,8 +17,7 @@ namespace sogdanov
   class Figure
   {
   public:
-    Figure(long long horizontal_radius, long long vertical_radius,
-        long long center_x, long long center_y);
+    Figure(long long horizontal_radius, long long vertical_radius, long long center_x, long long center_y);
 
     bool contains(long double x, long double y) const;
     Bounds getBounds() const;

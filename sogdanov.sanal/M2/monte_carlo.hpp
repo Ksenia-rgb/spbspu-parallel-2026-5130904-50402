@@ -16,8 +16,7 @@ namespace sogdanov
 
   Bounds findGeneralBounds(const std::vector< Figure >& figures);
 
-  Areas estimateAreas(const std::vector< Figure >& figures,
-      size_t thread_count, size_t tries, size_t seed);
+  Areas estimateAreas(const std::vector< Figure >& figures, size_t thread_count, size_t tries, size_t seed);
 }
 
 #endif

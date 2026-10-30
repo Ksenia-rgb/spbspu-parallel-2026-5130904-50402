@@ -16,14 +16,12 @@ namespace sogdanov
       size_t intersection = 0;
     };
 
-    static HitCount countHits(const std::vector< Figure >& figures,
-        const Bounds& bounds, const size_t tries, const size_t seed)
+    static HitCount countHits(
+        const std::vector< Figure >& figures, const Bounds& bounds, const size_t tries, const size_t seed)
     {
       std::mt19937_64 generator(seed);
-      std::uniform_real_distribution< long double > coordinate_x(
-          bounds.min_x, bounds.max_x);
-      std::uniform_real_distribution< long double > coordinate_y(
-          bounds.min_y, bounds.max_y);
+      std::uniform_real_distribution< long double > coordinate_x(bounds.min_x, bounds.max_x);
+      std::uniform_real_distribution< long double > coordinate_y(bounds.min_y, bounds.max_y);
       HitCount hits{};
 
       for (size_t index = 0; index < tries; ++index)
@@ -33,7 +31,7 @@ namespace sogdanov
         bool in_coverage = false;
         bool in_intersection = true;
 
-        for (const Figure& figure: figures)
+        for (const Figure& figure : figures)
         {
           const bool inside = figure.contains(x, y);
 
@@ -50,7 +48,7 @@ namespace sogdanov
 
     static void joinThreads(std::vector< std::thread >& threads)
     {
-      for (std::thread& thread: threads)
+      for (std::thread& thread : threads)
       {
         if (thread.joinable())
         {
@@ -61,8 +59,7 @@ namespace sogdanov
   }
 }
 
-sogdanov::Bounds sogdanov::findGeneralBounds(
-    const std::vector< Figure >& figures)
+sogdanov::Bounds sogdanov::findGeneralBounds(const std::vector< Figure >& figures)
 {
   if (figures.empty())
   {
@@ -71,7 +68,7 @@ sogdanov::Bounds sogdanov::findGeneralBounds(
 
   Bounds bounds = figures.front().getBounds();
 
-  for (const Figure& figure: figures)
+  for (const Figure& figure : figures)
   {
     const Bounds current = figure.getBounds();
 
@@ -84,8 +81,8 @@ sogdanov::Bounds sogdanov::findGeneralBounds(
   return bounds;
 }
 
-sogdanov::Areas sogdanov::estimateAreas(const std::vector< Figure >& figures,
-    size_t thread_count, const size_t tries, const size_t seed)
+sogdanov::Areas sogdanov::estimateAreas(
+    const std::vector< Figure >& figures, size_t thread_count, const size_t tries, const size_t seed)
 {
   if (tries == 0)
   {
@@ -117,11 +114,11 @@ sogdanov::Areas sogdanov::estimateAreas(const std::vector< Figure >& figures,
       const size_t local_tries = base_tries + ((index < remainder) ? 1 : 0);
       const size_t local_seed = seed + index;
 
-      workers.emplace_back([&figures, &bounds, &results,
-          index, local_tries, local_seed]()
-      {
-        results[index] = countHits(figures, bounds, local_tries, local_seed);
-      });
+      workers.emplace_back(
+          [&figures, &bounds, &results, index, local_tries, local_seed]()
+          {
+            results[index] = countHits(figures, bounds, local_tries, local_seed);
+          });
     }
   }
   catch (...)
@@ -134,7 +131,7 @@ sogdanov::Areas sogdanov::estimateAreas(const std::vector< Figure >& figures,
 
   HitCount total{};
 
-  for (const HitCount& result: results)
+  for (const HitCount& result : results)
   {
     total.coverage += result.coverage;
     total.intersection += result.intersection;
@@ -143,13 +140,8 @@ sogdanov::Areas sogdanov::estimateAreas(const std::vector< Figure >& figures,
   const long double width = bounds.max_x - bounds.min_x;
   const long double height = bounds.max_y - bounds.min_y;
   const long double rectangle_area = width * height;
-  const long double coverage_ratio =
-      static_cast< long double >(total.coverage) / tries;
-  const long double intersection_ratio =
-      static_cast< long double >(total.intersection) / tries;
+  const long double coverage_ratio = static_cast< long double >(total.coverage) / tries;
+  const long double intersection_ratio = static_cast< long double >(total.intersection) / tries;
 
-  return {
-    rectangle_area * coverage_ratio,
-    rectangle_area * intersection_ratio
-  };
+  return {rectangle_area * coverage_ratio, rectangle_area * intersection_ratio};
 }

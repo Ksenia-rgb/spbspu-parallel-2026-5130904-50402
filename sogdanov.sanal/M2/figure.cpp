@@ -4,8 +4,7 @@
 #include <stdexcept>
 #include <vector>
 
-sogdanov::Figure::Figure(const long long horizontal_radius,
-    const long long vertical_radius, const long long center_x,
+sogdanov::Figure::Figure(const long long horizontal_radius, const long long vertical_radius, const long long center_x,
     const long long center_y):
   horizontal_radius_(horizontal_radius),
   vertical_radius_(vertical_radius),
@@ -35,12 +34,8 @@ sogdanov::Bounds sogdanov::Figure::getBounds() const
   const long double center_x = center_x_;
   const long double center_y = center_y_;
 
-  return {
-    center_x - horizontal_radius,
-    center_x + horizontal_radius,
-    center_y - vertical_radius,
-    center_y + vertical_radius
-  };
+  return {center_x - horizontal_radius, center_x + horizontal_radius, center_y - vertical_radius,
+      center_y + vertical_radius};
 }
 
 long long sogdanov::Figure::getHorizontalRadius() const
