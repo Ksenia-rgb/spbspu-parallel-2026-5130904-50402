@@ -154,10 +154,10 @@ void sogdanov::runWorker(const int input, const int output, const size_t seed)
 
     unsigned char message[sizeof(size_t) + 2 * sizeof(double)] = {};
 
-    std::memcpy(message, &result.calculation_id_, sizeof(result.calculation_id_));
-    std::memcpy(message + sizeof(result.calculation_id_), &result.milliseconds_, sizeof(result.milliseconds_));
+    std::memcpy(message, &result.calculation_id, sizeof(result.calculation_id));
+    std::memcpy(message + sizeof(result.calculation_id), &result.milliseconds, sizeof(result.milliseconds));
     std::memcpy(
-        message + sizeof(result.calculation_id_) + sizeof(result.milliseconds_), &result.area_, sizeof(result.area_));
+        message + sizeof(result.calculation_id) + sizeof(result.milliseconds), &result.area, sizeof(result.area));
 
     writeAll(output, message, sizeof(message));
   }

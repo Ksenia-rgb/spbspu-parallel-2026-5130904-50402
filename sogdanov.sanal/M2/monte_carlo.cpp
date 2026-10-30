@@ -6,6 +6,9 @@
 #include <thread>
 #include <vector>
 
+#include <cmath>
+#include <limits>
+
 namespace sogdanov
 {
   namespace
@@ -17,26 +20,70 @@ namespace sogdanov
     };
 
     static HitCount countHits(
-        const std::vector< Figure >& figures, const Bounds& bounds, const size_t tries, const size_t seed)
+        const std::vector< Figure > &figures, const Bounds &bounds, const size_t tries, const size_t seed)
     {
-      std::mt19937_64 generator(seed);
-      std::uniform_real_distribution< long double > coordinate_x(bounds.min_x, bounds.max_x);
-      std::uniform_real_distribution< long double > coordinate_y(bounds.min_y, bounds.max_y);
+      struct prepared_figure_t
+      {
+        double center_x;
+        double center_y;
+        double inverse_radius_x;
+        double inverse_radius_y;
+      };
+
       HitCount hits{};
+
+      if (tries == 0)
+      {
+        return hits;
+      }
+
+      const long double width = bounds.max_x - bounds.min_x;
+      const long double height = bounds.max_y - bounds.min_y;
+      std::vector< prepared_figure_t > prepared;
+
+      prepared.reserve(figures.size());
+
+      for (const Figure &figure : figures)
+      {
+        const long double center_x = figure.getCenterX();
+        const long double center_y = figure.getCenterY();
+
+        prepared.push_back({static_cast< double >((center_x - bounds.min_x) / width),
+            static_cast< double >((center_y - bounds.min_y) / height),
+            static_cast< double >(width / figure.getHorizontalRadius()),
+            static_cast< double >(height / figure.getVerticalRadius())});
+      }
+
+      std::mt19937_64 generator(seed);
+
+      const int precision = std::numeric_limits< double >::digits;
+      const size_t shift = std::mt19937_64::word_size - static_cast< size_t >(precision);
+      const double scale = std::ldexp(1.0, -precision);
+
+      const prepared_figure_t *const begin = prepared.data();
+      const prepared_figure_t *const end = begin + prepared.size();
 
       for (size_t index = 0; index < tries; ++index)
       {
-        const long double x = coordinate_x(generator);
-        const long double y = coordinate_y(generator);
+        const double x = static_cast< double >(generator() >> shift) * scale;
+        const double y = static_cast< double >(generator() >> shift) * scale;
+
         bool in_coverage = false;
         bool in_intersection = true;
 
-        for (const Figure& figure : figures)
+        for (const prepared_figure_t *figure = begin; figure != end; ++figure)
         {
-          const bool inside = figure.contains(x, y);
+          const double horizontal = (x - figure->center_x) * figure->inverse_radius_x;
+          const double vertical = (y - figure->center_y) * figure->inverse_radius_y;
+          const bool inside = (horizontal * horizontal + vertical * vertical) <= 1.0;
 
           in_coverage = in_coverage || inside;
           in_intersection = in_intersection && inside;
+
+          if (in_coverage && !in_intersection)
+          {
+            break;
+          }
         }
 
         hits.coverage += static_cast< size_t >(in_coverage);
@@ -46,9 +93,9 @@ namespace sogdanov
       return hits;
     }
 
-    static void joinThreads(std::vector< std::thread >& threads)
+    static void joinThreads(std::vector< std::thread > &threads)
     {
-      for (std::thread& thread : threads)
+      for (std::thread &thread : threads)
       {
         if (thread.joinable())
         {
@@ -59,7 +106,7 @@ namespace sogdanov
   }
 }
 
-sogdanov::Bounds sogdanov::findGeneralBounds(const std::vector< Figure >& figures)
+sogdanov::Bounds sogdanov::findGeneralBounds(const std::vector< Figure > &figures)
 {
   if (figures.empty())
   {
@@ -68,7 +115,7 @@ sogdanov::Bounds sogdanov::findGeneralBounds(const std::vector< Figure >& figure
 
   Bounds bounds = figures.front().getBounds();
 
-  for (const Figure& figure : figures)
+  for (const Figure &figure : figures)
   {
     const Bounds current = figure.getBounds();
 
@@ -82,7 +129,7 @@ sogdanov::Bounds sogdanov::findGeneralBounds(const std::vector< Figure >& figure
 }
 
 sogdanov::Areas sogdanov::estimateAreas(
-    const std::vector< Figure >& figures, size_t thread_count, const size_t tries, const size_t seed)
+    const std::vector< Figure > &figures, size_t thread_count, const size_t tries, const size_t seed)
 {
   if (tries == 0)
   {
@@ -131,7 +178,7 @@ sogdanov::Areas sogdanov::estimateAreas(
 
   HitCount total{};
 
-  for (const HitCount& result : results)
+  for (const HitCount &result : results)
   {
     total.coverage += result.coverage;
     total.intersection += result.intersection;

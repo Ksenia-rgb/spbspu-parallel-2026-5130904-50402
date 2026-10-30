@@ -13,20 +13,20 @@ namespace sogdanov
 {
   struct Worker
   {
-    pid_t pid_ = -1;
-    int wr_ = -1;
-    int result_rd_ = -1;
-    std::deque< std::vector< unsigned char > > outgoing_;
-    size_t sent_ = 0;
-    size_t received_ = 0;
-    unsigned char reply_[sizeof(size_t) + 2 * sizeof(double)] = {};
+    pid_t pid = -1;
+    int wr = -1;
+    int result_rd = -1;
+    std::deque< std::vector< unsigned char > > outgoing;
+    size_t sent = 0;
+    size_t received = 0;
+    unsigned char reply[sizeof(size_t) + 2 * sizeof(double)] = {};
   };
 
   struct ResultSlot
   {
-    size_t calculation_id_;
-    double milliseconds_;
-    double area_;
+    size_t calculation_id;
+    double milliseconds;
+    double area;
   };
 
   std::vector< unsigned char > makeRequest(

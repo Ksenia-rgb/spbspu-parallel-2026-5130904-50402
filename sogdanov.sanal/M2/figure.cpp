@@ -23,8 +23,8 @@ bool sogdanov::Figure::contains(const long double x, const long double y) const
   const long double center_y = center_y_;
   const long double normalized_x = (x - center_x) / horizontal_radius_;
   const long double normalized_y = (y - center_y) / vertical_radius_;
-
-  return (normalized_x * normalized_x + normalized_y * normalized_y) <= 1.0L;
+  const long double unit_radius_squared = 1.0L;
+  return (normalized_x * normalized_x + normalized_y * normalized_y) <= unit_radius_squared;
 }
 
 sogdanov::Bounds sogdanov::Figure::getBounds() const

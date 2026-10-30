@@ -91,11 +91,11 @@ namespace sogdanov
       const auto flags = output.flags();
       const auto precision = output.precision();
 
-      output << calculation.process_name_ << ' ';
+      output << calculation.process_name << ' ';
 
       if (calculation.done_)
       {
-        output << std::fixed << std::setprecision(3) << calculation.milliseconds_ << ' ' << calculation.area_ << '\n';
+        output << std::fixed << std::setprecision(3) << calculation.milliseconds << ' ' << calculation.area << '\n';
       }
       else
       {
@@ -125,43 +125,42 @@ namespace sogdanov
     {
       while (true)
       {
-        const size_t remaining = sizeof(worker.reply_) - worker.received_;
-        const ssize_t count = ::read(worker.result_rd_, worker.reply_ + worker.received_, remaining);
+        const size_t remaining = sizeof(worker.reply) - worker.received;
+        const ssize_t count = ::read(worker.result_rd, worker.reply + worker.received, remaining);
 
         if (count > 0)
         {
-          worker.received_ += static_cast< size_t >(count);
+          worker.received += static_cast< size_t >(count);
 
-          if (worker.received_ != sizeof(worker.reply_))
+          if (worker.received != sizeof(worker.reply))
           {
             continue;
           }
 
           ResultSlot result = {};
 
-          std::memcpy(&result.calculation_id_, worker.reply_, sizeof(result.calculation_id_));
-          std::memcpy(
-              &result.milliseconds_, worker.reply_ + sizeof(result.calculation_id_), sizeof(result.milliseconds_));
-          std::memcpy(&result.area_, worker.reply_ + sizeof(result.calculation_id_) + sizeof(result.milliseconds_),
-              sizeof(result.area_));
+          std::memcpy(&result.calculation_id, worker.reply, sizeof(result.calculation_id));
+          std::memcpy(&result.milliseconds, worker.reply + sizeof(result.calculation_id), sizeof(result.milliseconds));
+          std::memcpy(&result.area, worker.reply + sizeof(result.calculation_id) + sizeof(result.milliseconds),
+              sizeof(result.area));
 
-          const auto found = std::find_if(data.calcs_.begin(), data.calcs_.end(),
+          const auto found = std::find_if(data.calcs.begin(), data.calcs.end(),
               [&result](const auto& entry)
               {
-                return entry.second.id_ == result.calculation_id_;
+                return entry.second.id == result.calculation_id;
               });
 
-          if ((found == data.calcs_.end()) || found->second.done_)
+          if ((found == data.calcs.end()) || found->second.done_)
           {
             throw std::runtime_error("Unexpected calculation result");
           }
 
           Calc& calculation = found->second;
 
-          calculation.milliseconds_ = result.milliseconds_;
-          calculation.area_ = result.area_;
+          calculation.milliseconds = result.milliseconds;
+          calculation.area = result.area;
           calculation.done_ = true;
-          worker.received_ = 0;
+          worker.received = 0;
         }
         else if (count == 0)
         {
@@ -184,20 +183,20 @@ namespace sogdanov
 
     static void sendRequests(Worker& worker)
     {
-      while (!worker.outgoing_.empty())
+      while (!worker.outgoing.empty())
       {
-        const std::vector< unsigned char >& message = worker.outgoing_.front();
-        const size_t remaining = message.size() - worker.sent_;
-        const ssize_t count = ::write(worker.wr_, message.data() + worker.sent_, remaining);
+        const std::vector< unsigned char >& message = worker.outgoing.front();
+        const size_t remaining = message.size() - worker.sent;
+        const ssize_t count = ::write(worker.wr, message.data() + worker.sent, remaining);
 
         if (count > 0)
         {
-          worker.sent_ += static_cast< size_t >(count);
+          worker.sent += static_cast< size_t >(count);
 
-          if (worker.sent_ == message.size())
+          if (worker.sent == message.size())
           {
-            worker.outgoing_.pop_front();
-            worker.sent_ = 0;
+            worker.outgoing.pop_front();
+            worker.sent = 0;
           }
         }
         else if ((count < 0) && (errno == EINTR))
@@ -217,7 +216,7 @@ namespace sogdanov
 
     static void pumpAll(Data& data)
     {
-      for (auto& entry : data.workers_)
+      for (auto& entry : data.workers)
       {
         receiveResults(data, entry.second);
         sendRequests(entry.second);
@@ -272,9 +271,9 @@ void sogdanov::cmdCircle(const Arguments& arguments, std::ostream&, Data& data)
 
   require(validName(name));
   require(radius > 0);
-  require(data.figures_.find(name) == data.figures_.end());
+  require(data.figures.find(name) == data.figures.end());
 
-  data.figures_.emplace(name, Figure(radius, radius, x, y));
+  data.figures.emplace(name, Figure(radius, radius, x, y));
 }
 
 void sogdanov::cmdSet(const Arguments& arguments, std::ostream&, Data& data)
@@ -287,7 +286,7 @@ void sogdanov::cmdSet(const Arguments& arguments, std::ostream&, Data& data)
   require(validName(name));
   require(count > 0);
   require(count == arguments.size() - 2);
-  require(data.sets_.find(name) == data.sets_.end());
+  require(data.sets.find(name) == data.sets.end());
 
   std::vector< Figure > figures;
 
@@ -295,22 +294,22 @@ void sogdanov::cmdSet(const Arguments& arguments, std::ostream&, Data& data)
 
   for (size_t index = 0; index < count; ++index)
   {
-    const auto found = data.figures_.find(arguments[index + 2]);
+    const auto found = data.figures.find(arguments[index + 2]);
 
-    require(found != data.figures_.end());
+    require(found != data.figures.end());
     figures.push_back(found->second);
   }
 
-  data.sets_.emplace(name, std::move(figures));
+  data.sets.emplace(name, std::move(figures));
 }
 
 void sogdanov::cmdShow(const Arguments& arguments, std::ostream& output, Data& data)
 {
   require(arguments.size() == 1);
 
-  const auto found = data.figures_.find(arguments[0]);
+  const auto found = data.figures.find(arguments[0]);
 
-  require(found != data.figures_.end());
+  require(found != data.figures.end());
   printFigure(output, found->second);
 }
 
@@ -318,9 +317,9 @@ void sogdanov::cmdShowSet(const Arguments& arguments, std::ostream& output, Data
 {
   require(arguments.size() == 1);
 
-  const auto found = data.sets_.find(arguments[0]);
+  const auto found = data.sets.find(arguments[0]);
 
-  require(found != data.sets_.end());
+  require(found != data.sets.end());
 
   for (const Figure& figure : found->second)
   {
@@ -332,9 +331,9 @@ void sogdanov::cmdFrame(const Arguments& arguments, std::ostream& output, Data& 
 {
   require(arguments.size() == 1);
 
-  const auto found = data.figures_.find(arguments[0]);
+  const auto found = data.figures.find(arguments[0]);
 
-  require(found != data.figures_.end());
+  require(found != data.figures.end());
   printBounds(output, found->second.getBounds());
 }
 
@@ -342,9 +341,9 @@ void sogdanov::cmdFrameSet(const Arguments& arguments, std::ostream& output, Dat
 {
   require(arguments.size() == 1);
 
-  const auto found = data.sets_.find(arguments[0]);
+  const auto found = data.sets.find(arguments[0]);
 
-  require(found != data.sets_.end());
+  require(found != data.sets.end());
   printBounds(output, findGeneralBounds(found->second));
 }
 
@@ -356,9 +355,9 @@ void sogdanov::cmdSpawn(const Arguments& arguments, std::ostream&, Data& data)
   const size_t seed = parseSize(arguments[1]);
 
   require(validName(name));
-  require(data.workers_.find(name) == data.workers_.end());
+  require(data.workers.find(name) == data.workers.end());
 
-  const auto inserted = data.workers_.emplace(name, Worker{});
+  const auto inserted = data.workers.emplace(name, Worker{});
   Worker& worker = inserted.first->second;
   int request_pipe[2] = {-1, -1};
   int result_pipe[2] = {-1, -1};
@@ -385,16 +384,16 @@ void sogdanov::cmdSpawn(const Arguments& arguments, std::ostream&, Data& data)
       ::close(request_pipe[1]);
       ::close(result_pipe[0]);
 
-      for (const auto& entry : data.workers_)
+      for (const auto& entry : data.workers)
       {
-        if (entry.second.wr_ != -1)
+        if (entry.second.wr != -1)
         {
-          ::close(entry.second.wr_);
+          ::close(entry.second.wr);
         }
 
-        if (entry.second.result_rd_ != -1)
+        if (entry.second.result_rd != -1)
         {
-          ::close(entry.second.result_rd_);
+          ::close(entry.second.result_rd);
         }
       }
 
@@ -414,9 +413,9 @@ void sogdanov::cmdSpawn(const Arguments& arguments, std::ostream&, Data& data)
       ::_exit(exit_code);
     }
 
-    worker.pid_ = pid;
-    worker.wr_ = request_pipe[1];
-    worker.result_rd_ = result_pipe[0];
+    worker.pid = pid;
+    worker.wr = request_pipe[1];
+    worker.result_rd = result_pipe[0];
 
     ::close(request_pipe[0]);
     ::close(result_pipe[1]);
@@ -439,14 +438,15 @@ void sogdanov::cmdSpawn(const Arguments& arguments, std::ostream&, Data& data)
       }
     }
 
-    data.workers_.erase(inserted.first);
+    data.workers.erase(inserted.first);
     throw;
   }
 }
 
 void sogdanov::cmdAreaOn(const Arguments& arguments, std::ostream&, Data& data)
 {
-  require(arguments.size() == 5);
+  const size_t argument_count = 5;
+  require(arguments.size() == argument_count);
 
   const std::string& process_name = arguments[0];
   const std::string& calculation_name = arguments[1];
@@ -456,44 +456,44 @@ void sogdanov::cmdAreaOn(const Arguments& arguments, std::ostream&, Data& data)
 
   require(validName(calculation_name));
   require(tries > 0);
-  require(data.calcs_.find(calculation_name) == data.calcs_.end());
+  require(data.calcs.find(calculation_name) == data.calcs.end());
 
-  const auto process = data.workers_.find(process_name);
-  const auto set = data.sets_.find(set_name);
+  const auto process = data.workers.find(process_name);
+  const auto set = data.sets.find(set_name);
 
-  require(process != data.workers_.end());
-  require(set != data.sets_.end());
+  require(process != data.workers.end());
+  require(set != data.sets.end());
 
-  if (data.next_calculation_id_ == std::numeric_limits< size_t >::max())
+  if (data.next_calculation_id == std::numeric_limits< size_t >::max())
   {
     throw std::overflow_error("Too many calculations");
   }
 
-  const size_t id = data.next_calculation_id_;
+  const size_t id = data.next_calculation_id;
   std::vector< unsigned char > request = makeRequest(id, set->second, threads, tries);
   const Calc calculation = {id, process_name, false, 0.0, 0.0};
-  const auto inserted = data.calcs_.emplace(calculation_name, calculation);
+  const auto inserted = data.calcs.emplace(calculation_name, calculation);
 
   try
   {
-    process->second.outgoing_.push_back(std::move(request));
+    process->second.outgoing.push_back(std::move(request));
   }
   catch (...)
   {
-    data.calcs_.erase(inserted.first);
+    data.calcs.erase(inserted.first);
     throw;
   }
 
-  ++data.next_calculation_id_;
+  ++data.next_calculation_id;
 }
 
 void sogdanov::cmdStatus(const Arguments& arguments, std::ostream& output, Data& data)
 {
   require(arguments.size() == 1);
 
-  const auto found = data.calcs_.find(arguments[0]);
+  const auto found = data.calcs.find(arguments[0]);
 
-  require(found != data.calcs_.end());
+  require(found != data.calcs.end());
 
   pumpAll(data);
   printStatus(output, found->second);
@@ -503,9 +503,9 @@ void sogdanov::cmdWait(const Arguments& arguments, std::ostream& output, Data& d
 {
   require(arguments.size() == 1);
 
-  const auto found = data.calcs_.find(arguments[0]);
+  const auto found = data.calcs.find(arguments[0]);
 
-  require(found != data.calcs_.end());
+  require(found != data.calcs.end());
 
   pumpAll(data);
 
@@ -519,25 +519,25 @@ void sogdanov::cmdWait(const Arguments& arguments, std::ostream& output, Data& d
 
 sogdanov::Data::~Data()
 {
-  for (auto& entry : workers_)
+  for (const auto& entry : workers)
   {
-    Worker& worker = entry.second;
+    const Worker& worker = entry.second;
 
-    if (worker.wr_ != -1)
+    if (worker.wr != -1)
     {
-      ::close(worker.wr_);
+      ::close(worker.wr);
     }
 
-    if (worker.result_rd_ != -1)
+    if (worker.result_rd != -1)
     {
-      ::close(worker.result_rd_);
+      ::close(worker.result_rd);
     }
 
-    if (worker.pid_ > 0)
+    if (worker.pid > 0)
     {
-      ::kill(worker.pid_, SIGTERM);
+      ::kill(worker.pid, SIGTERM);
 
-      while ((::waitpid(worker.pid_, nullptr, 0) == -1) && (errno == EINTR))
+      while ((::waitpid(worker.pid, nullptr, 0) == -1) && (errno == EINTR))
       {
       }
     }
@@ -550,15 +550,15 @@ bool sogdanov::waitForEvents(Data& data, const bool read_input)
 
   descriptors.push_back(pollfd{read_input ? STDIN_FILENO : -1, POLLIN, 0});
 
-  for (const auto& entry : data.workers_)
+  for (const auto& entry : data.workers)
   {
     const Worker& worker = entry.second;
 
-    descriptors.push_back(pollfd{worker.result_rd_, POLLIN, 0});
+    descriptors.push_back(pollfd{worker.result_rd, POLLIN, 0});
 
-    if (!worker.outgoing_.empty())
+    if (!worker.outgoing.empty())
     {
-      descriptors.push_back(pollfd{worker.wr_, POLLOUT, 0});
+      descriptors.push_back(pollfd{worker.wr, POLLOUT, 0});
     }
   }
 
@@ -588,7 +588,7 @@ void sogdanov::waitForAll(Data& data)
   {
     bool completed = true;
 
-    for (const auto& entry : data.calcs_)
+    for (const auto& entry : data.calcs)
     {
       if (!entry.second.done_)
       {

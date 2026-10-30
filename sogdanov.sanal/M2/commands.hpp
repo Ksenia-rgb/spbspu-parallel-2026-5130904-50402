@@ -15,20 +15,20 @@ namespace sogdanov
 
   struct Calc
   {
-    size_t id_;
-    std::string process_name_;
+    size_t id;
+    std::string process_name;
     bool done_ = false;
-    double milliseconds_ = 0.0;
-    double area_ = 0.0;
+    double milliseconds = 0.0;
+    double area = 0.0;
   };
 
   struct Data
   {
-    std::map< std::string, Figure > figures_;
-    std::map< std::string, std::vector< Figure > > sets_;
-    std::map< std::string, Worker > workers_;
-    std::map< std::string, Calc > calcs_;
-    size_t next_calculation_id_ = 0;
+    std::map< std::string, Figure > figures;
+    std::map< std::string, std::vector< Figure > > sets;
+    std::map< std::string, Worker > workers;
+    std::map< std::string, Calc > calcs;
+    size_t next_calculation_id = 0;
 
     Data() = default;
     Data(const Data&) = delete;
