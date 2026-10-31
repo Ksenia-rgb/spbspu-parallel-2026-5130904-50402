@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <memory>
 #include <string>
+#include <vector>
 #include <circle.hpp>
 #include "process.hpp"
 

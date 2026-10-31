@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 #include <circle.hpp>
 #include "commands.hpp"
 
@@ -25,10 +26,10 @@ int main()
   cmds["showset"] = lavrentev::showset;
   cmds["frame"] = lavrentev::frame;
   cmds["frameset"] = lavrentev::frameset;
-  cmds["spawn"] = lavrentev::spawn;
-  cmds["area-on"] = lavrentev::area_on;
-  cmds["status"] = lavrentev::status;
-  cmds["wait"] = lavrentev::wait;
+  //cmds["spawn"] = lavrentev::spawn;
+  //cmds["area-on"] = lavrentev::area_on;
+  //cmds["status"] = lavrentev::status;
+  //cmds["wait"] = lavrentev::wait;
 
   std::string cmd;
   while (std::cin >> cmd)
@@ -44,8 +45,6 @@ int main()
     } catch (const std::logic_error &)
     {
       std::cout << "<INVALID COMMAND>\n";
-      auto toignore = std::numeric_limits<std::streamsize>::max();
-      std::cin.ignore(toignore, '\n');
     }
   }
 
