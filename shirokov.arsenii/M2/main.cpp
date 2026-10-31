@@ -28,7 +28,7 @@ int main()
   {
     try
     {
-      auto func = cmds.at(cmd);
+      const auto func = cmds.at(cmd);
       func(std::cin, std::cout, data);
     }
     catch (const std::out_of_range& e)
@@ -40,8 +40,6 @@ int main()
     catch (...)
     {
       std::cout << "<INVALID COMMAND>\n";
-      const auto to_ignore = std::numeric_limits< std::streamsize >::max();
-      std::cin.ignore(to_ignore, '\n');
     }
   }
   if (!std::cin.eof())
