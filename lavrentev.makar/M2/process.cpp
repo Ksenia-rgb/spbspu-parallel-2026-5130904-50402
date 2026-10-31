@@ -8,3 +8,8 @@ double lavrentev::Process::get_result() const
 {
   return result_;
 }
+
+void lavrentev::Process::set_seed(int seed)
+{
+  seed_ = seed;
+}

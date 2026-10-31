@@ -11,9 +11,11 @@ namespace lavrentev
     Process(std::string process_name);
 
     double get_result() const;
+    void set_seed(int seed);
 
   private:
     std::string process_name_, calc_name_;
+    int seed_;
     double result_;
   };
 }

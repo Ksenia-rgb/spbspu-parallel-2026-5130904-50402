@@ -7,7 +7,8 @@ namespace lavrentev
   using cmd_t = void (*)(
     std::istream &, std::ostream &,
     set_map &,
-    circle_data &
+    circle_data &,
+    process_map &
   );
 }
 
@@ -16,6 +17,7 @@ int main()
   lavrentev::set_map sets;
   lavrentev::circle_data all_circles;
   std::unordered_map<std::string, lavrentev::cmd_t> cmds;
+  lavrentev::process_map pm;
 
   cmds["circle"] = lavrentev::circle;
   cmds["set"] = lavrentev::set;
@@ -33,13 +35,13 @@ int main()
   {
     try
     {
-      cmds.at(cmd)(std::cin, std::cout, sets, all_circles);
+      cmds.at(cmd)(std::cin, std::cout, sets, all_circles, pm);
     } catch (const std::out_of_range &)
     {
       std::cout << "<UNKNOWN COMMAND>\n";
       auto toignore = std::numeric_limits<std::streamsize>::max();
       std::cin.ignore(toignore, '\n');
-    } catch (const std::logic_error &e)
+    } catch (const std::logic_error &)
     {
       std::cout << "<INVALID COMMAND>\n";
       auto toignore = std::numeric_limits<std::streamsize>::max();

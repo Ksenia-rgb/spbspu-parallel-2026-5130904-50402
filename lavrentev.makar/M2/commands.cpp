@@ -1,32 +1,93 @@
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <circle.hpp>
 #include "commands.hpp"
 
-void circle(std::istream &in, std::ostream &, lavrentev::set_map &, lavrentev::circle_data &ac)
+namespace
 {
+  std::vector< std::string > split(const std::string& str)
+  {
+    std::vector< std::string > res;
+    std::string elem;
+    for (const char& symbol : str)
+    {
+      if (symbol == ' ' && !elem.empty())
+      {
+        res.push_back(elem);
+        elem.clear();
+      }
+      else
+      {
+        elem += symbol;
+      }
+    }
+    if (!elem.empty())
+    {
+      res.push_back(elem);
+    }
+    return res;
+  }
+}
+
+void lavrentev::circle(std::istream &in, std::ostream &, set_map &, circle_data &ac, process_map &)
+{
+  std::string line;
+  in >> line;
+  std::vector< std::string > data = split(line);
   std::string name;
   int radius, x, y;
-  in >> name >> radius >> x >> y;
+  name = data[0];
+  try
+  {
+    radius = std::stoi(data[1]);
+    x = std::stoi(data[2]);
+    y = std::stoi(data[3]);
+  }
+  catch (const std::out_of_range &e)
+  {
+    throw std::logic_error(e.what());
+  }
   lavrentev::Circle circle(name, radius, x, y);
   auto circle_ptr = std::make_shared<lavrentev::Circle>(circle);
   ac[name] = circle_ptr;
 }
 
-void set(std::istream &in, std::ostream &, lavrentev::set_map &sets, lavrentev::circle_data &ac)
+void lavrentev::set(std::istream &in, std::ostream &, set_map &sets, circle_data &ac, process_map &)
 {
+  std::string line;
+  in >> line;
+  std::vector< std::string > data = split(line);
   std::string name;
-  in >> name;
+  name = data[0];
   if (sets.find(name) != sets.end())
   {
     throw std::logic_error("Set already exists");
   }
+
   size_t set_size;
-  in >> set_size;
+  try
+  {
+    set_size = std::stoi(data[1]);
+  }
+  catch (const std::out_of_range &e)
+  {
+    throw std::logic_error(e.what());
+  }
+
   for (size_t i = 0; i < set_size; ++i)
   {
     std::string shape_name;
-    in >> shape_name;
+
+    try
+    {
+      shape_name = std::stoi(data[i + 2]);
+    }
+    catch (const std::out_of_range &e)
+    {
+      throw std::logic_error(e.what());
+    }
+
     if (ac.find(shape_name) == ac.end())
     {
       throw std::logic_error("Circle does not exist");
@@ -35,10 +96,22 @@ void set(std::istream &in, std::ostream &, lavrentev::set_map &sets, lavrentev::
   }
 }
 
-void show(std::istream &in, std::ostream &out, lavrentev::set_map &, lavrentev::circle_data &ac)
+void lavrentev::show(std::istream &in, std::ostream &out, set_map &, circle_data &ac, process_map &)
 {
+  std::string line;
+  std::getline(in, line);
+  std::vector< std::string > data = split(line);
+
   std::string shape_name;
-  in >> shape_name;
+  try
+  {
+    shape_name = data.at(0);
+  }
+  catch (const std::out_of_range &e)
+  {
+    throw std::logic_error(e.what());
+  }
+
   if (ac.find(shape_name) == ac.end())
   {
     throw std::logic_error("Circle does not exist");
@@ -46,10 +119,22 @@ void show(std::istream &in, std::ostream &out, lavrentev::set_map &, lavrentev::
   out << ac[shape_name]->getRadius() << " (" << ac[shape_name]->getX() << " " << ac[shape_name]->getY() << ")\n";
 }
 
-void showset(std::istream &in, std::ostream &out, lavrentev::set_map &sets, lavrentev::circle_data &ac)
+void lavrentev::showset(std::istream &in, std::ostream &out, set_map &sets, circle_data &ac, process_map &)
 {
+  std::string line;
+  std::getline(in, line);
+  std::vector< std::string > data = split(line);
+
   std::string set_name;
-  in >> set_name;
+  try
+  {
+    set_name = data.at(0);
+  }
+  catch (const std::out_of_range &e)
+  {
+    throw std::logic_error(e.what());
+  }
+
   if (sets.find(set_name) == sets.end())
   {
     throw std::logic_error("Set does not exist");
@@ -60,10 +145,22 @@ void showset(std::istream &in, std::ostream &out, lavrentev::set_map &sets, lavr
   }
 }
 
-void frame(std::istream &in, std::ostream &out, lavrentev::set_map &sets, lavrentev::circle_data &ac)
+void lavrentev::frame(std::istream &in, std::ostream &out, set_map &sets, circle_data &ac, process_map &)
 {
+  std::string line;
+  std::getline(in, line);
+  std::vector< std::string > data = split(line);
+
   std::string shape_name;
-  in >> shape_name;
+  try
+  {
+    shape_name = data.at(0);
+  }
+  catch (const std::out_of_range &e)
+  {
+    throw std::logic_error(e.what());
+  }
+
   if (ac.find(shape_name) == ac.end())
   {
     throw std::logic_error("Circle does not exist");
@@ -78,10 +175,22 @@ void frame(std::istream &in, std::ostream &out, lavrentev::set_map &sets, lavren
   out << "(" << min_x << " " << min_y << ") (" << max_x << " " << max_y << ")\n";
 }
 
-void frameset(std::istream &in, std::ostream &out, lavrentev::set_map &sets, lavrentev::circle_data &ac)
+void lavrentev::frameset(std::istream &in, std::ostream &out, set_map &sets, circle_data &ac, process_map &)
 {
+  std::string line;
+  std::getline(in, line);
+  std::vector< std::string > data = split(line);
+
   std::string set_name;
-  in >> set_name;
+  try
+  {
+    set_name = data.at(0);
+  }
+  catch (const std::out_of_range &e)
+  {
+    throw std::logic_error(e.what());
+  }
+
   if (sets.find(set_name) == sets.end())
   {
     throw std::logic_error("Set does not exist");
@@ -105,9 +214,31 @@ void frameset(std::istream &in, std::ostream &out, lavrentev::set_map &sets, lav
   out << "(" << min_x << " " << min_y << ") (" << max_x << " " << max_y << ")\n";
 }
 
-void spawn(std::istream &in, std::ostream &, lavrentev::set_map &sets, lavrentev::circle_data &ac)
+void lavrentev::spawn(std::istream &in, std::ostream &, set_map &sets, circle_data &ac, process_map &pm)
 {
+  std::string line;
+  std::getline(in, line);
+  std::vector< std::string > data = split(line);
+
   std::string process_name;
-  in >> process_name;
+  try
+  {
+    process_name = data.at(0);
+  }
+  catch (const std::out_of_range &e)
+  {
+    throw std::logic_error(e.what());
+  }
+
+  if (pm.find(process_name) != pm.end())
+  {
+    throw std::logic_error("Process already exists");
+  }
+
+  Process prc = Process(process_name);
+  int seed;
+  in >> seed;
+  prc.set_seed(seed);
+
   
 }
