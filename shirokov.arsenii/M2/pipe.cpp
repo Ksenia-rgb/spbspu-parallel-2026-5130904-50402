@@ -44,4 +44,7 @@ shirokov::Pipe::Pipe()
   {
     throw std::system_error(errno, std::generic_category(), "pipe error");
   }
+
+  read = UniqueFd(pps[0]);
+  write = UniqueFd(pps[1]);
 }
