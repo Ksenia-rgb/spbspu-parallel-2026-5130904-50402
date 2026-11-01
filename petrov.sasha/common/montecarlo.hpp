@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <vector>
 
-#include <shape.hpp>
+#include "shape.hpp"
 
 namespace petrov {
 
