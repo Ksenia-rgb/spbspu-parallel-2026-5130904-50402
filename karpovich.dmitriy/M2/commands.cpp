@@ -32,13 +32,13 @@ namespace karpovich
 
     void printShape(std::ostream& out, const shape_t& sh)
     {
-      if (sh.type == shape_type::circle)
+      if (sh.type == ShapeType::Circle)
       {
-        out << sh.rx << " " << sh.center << "\n";
+        out << sh.r1<< " " << sh.center << "\n";
       }
       else
       {
-        out << sh.rx << " " << sh.ry << " " << sh.center << "\n";
+        out << sh.r1 << " " << sh.r2 << " " << sh.center << "\n";
       }
     }
 
@@ -184,7 +184,7 @@ namespace karpovich
       throw std::invalid_argument("invalid");
     }
 
-    data.shapes[name] = shape_t{shape_type::circle, r, r, point_t{x, y}};
+    data.shapes[name] = shape_t{ShapeType::Circle, r, r, point_t{x, y}};
   }
 
   void cmdSet(std::istream& in, std::ostream&, Data& data)
@@ -419,20 +419,20 @@ namespace karpovich
       throw std::invalid_argument("invalid");
     }
 
-    std::vector< ShapeData > raw;
+    std::vector< shape_t > raw;
     raw.reserve(sit->second.size());
 
     for (const auto& name : sit->second)
     {
       const shape_t& shape = data.shapes.at(name);
 
-      if (shape.type == shape_type::circle)
+      if (shape.type == ShapeType::Circle)
       {
-        raw.push_back({ShapeType::Circle, shape.rx, 0.0, shape.center.x, shape.center.y});
+        raw.push_back({ShapeType::Circle, shape.r1, 0.0, shape.center.x, shape.center.y});
       }
       else
       {
-        raw.push_back({ShapeType::Ellipse, shape.rx, shape.ry, shape.center.x, shape.center.y});
+        raw.push_back({ShapeType::Ellipse, shape.r1, shape.r2, shape.center.x, shape.center.y});
       }
     }
 
@@ -449,7 +449,7 @@ namespace karpovich
 
     if (!raw.empty())
     {
-      send(err, wit->second.wr, raw.data(), raw.size() * sizeof(ShapeData));
+      send(err, wit->second.wr, raw.data(), raw.size() * sizeof(shape_t));
 
       if (err <= 0)
       {

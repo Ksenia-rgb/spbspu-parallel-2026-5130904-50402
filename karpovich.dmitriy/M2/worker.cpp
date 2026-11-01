@@ -54,11 +54,11 @@ namespace karpovich
         break;
       }
 
-      std::vector< ShapeData > raw(hdr[4]);
+      std::vector< shape_t > raw(hdr[4]);
       if (!raw.empty())
       {
         err = 0;
-        take(err, rd, raw.data(), raw.size() * sizeof(ShapeData));
+        take(err, rd, raw.data(), raw.size() * sizeof(shape_t));
         if (err <= 0)
         {
           break;
@@ -71,11 +71,11 @@ namespace karpovich
       {
         if (d.type == ShapeType::Circle)
         {
-          shapes.push_back({shape_type::circle, d.r1, d.r1, point_t{d.x, d.y}});
+          shapes.push_back({ShapeType::Circle, d.r1, d.r1, point_t{d.center.x, d.center.y}});
         }
         else
         {
-          shapes.push_back({shape_type::ellipse, d.r1, d.r2, point_t{d.x, d.y}});
+          shapes.push_back({ShapeType::Ellipse, d.r1, d.r2, point_t{d.center.x, d.center.y}});
         }
       }
 

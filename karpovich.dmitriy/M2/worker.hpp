@@ -7,21 +7,6 @@ namespace karpovich
 {
   constexpr size_t PROTO_HEADER_WORDS = 5;
 
-  enum class ShapeType : unsigned char
-  {
-    Circle = 0,
-    Ellipse = 1,
-  };
-
-  struct ShapeData
-  {
-    ShapeType type;
-    double r1;
-    double r2;
-    double x;
-    double y;
-  };
-
   struct ResultSlot
   {
     size_t calc_id;
