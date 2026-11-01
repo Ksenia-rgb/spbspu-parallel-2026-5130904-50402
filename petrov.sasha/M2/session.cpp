@@ -76,7 +76,8 @@ namespace petrov {
               {"set", &Session::createSet},
               {"show", &Session::showShape},
               {"showset", &Session::showSet},
-              {"frame", &Session::showFrame}
+              {"frame", &Session::showFrame},
+              {"frameset", &Session::showSetFrame}
             }
   {}
 
@@ -227,6 +228,19 @@ namespace petrov {
       return false;
     }
     output_ << findFrame(*shape) << '\n';
+    return true;
+  }
+
+  bool Session::showSetFrame(const std::vector< std::string >& tokens)
+  {
+    if (tokens.size() != name_token_count) {
+      return false;
+    }
+    std::vector< shape_t > shapes;
+    if (!collectShapes(tokens[argument_index], shapes)) {
+      return false;
+    }
+    output_ << findFrame(shapes) << '\n';
     return true;
   }
 
