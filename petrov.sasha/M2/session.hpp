@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "process.hpp"
 #include <shape.hpp>
 
 namespace petrov {
@@ -15,6 +16,7 @@ namespace petrov {
     Session(std::istream& input, std::ostream& output);
     Session(const Session& other) = delete;
     Session& operator=(const Session& other) = delete;
+    ~Session();
 
     void runCommands();
 
@@ -23,6 +25,7 @@ namespace petrov {
 
     const shape_t* findShape(const std::string& name) const;
     const std::vector< std::string >* findSet(const std::string& name) const;
+    process_t* findProcess(const std::string& name);
     bool collectShapes(const std::string& name, std::vector< shape_t >& shapes) const;
 
     void executeLine(const std::string& line);
@@ -32,11 +35,15 @@ namespace petrov {
     bool showSet(const std::vector< std::string >& tokens);
     bool showFrame(const std::vector< std::string >& tokens);
     bool showSetFrame(const std::vector< std::string >& tokens);
+    bool spawnProcess(const std::vector< std::string >& tokens);
+
+    void closeProcesses();
 
     std::istream& input_;
     std::ostream& output_;
     std::map< std::string, shape_t > shapes_;
     std::map< std::string, std::vector< std::string > > sets_;
+    std::vector< process_t > processes_;
     const std::map< std::string, command_handler_t > commands_;
   };
 

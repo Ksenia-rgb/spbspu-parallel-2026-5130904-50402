@@ -17,9 +17,11 @@ namespace petrov {
     constexpr std::size_t circle_x_index = 3;
     constexpr std::size_t circle_y_index = 4;
     constexpr std::size_t set_size_index = 2;
+    constexpr std::size_t spawn_seed_index = 2;
 
     constexpr std::size_t name_token_count = 2;
     constexpr std::size_t set_token_count = 3;
+    constexpr std::size_t spawn_token_count = 3;
     constexpr std::size_t circle_token_count = 5;
 
     constexpr char invalid_command_message[] = "<INVALID COMMAND>";
@@ -45,6 +47,22 @@ namespace petrov {
         return false;
       }
       return parsed_length == text.size();
+    }
+
+    bool parseSize(const std::string& text, std::size_t& value)
+    {
+      std::size_t parsed_length = 0;
+      long long parsed = 0;
+      try {
+        parsed = std::stoll(text, &parsed_length);
+      } catch (const std::exception&) {
+        return false;
+      }
+      if ((parsed_length != text.size()) || (parsed < 0)) {
+        return false;
+      }
+      value = static_cast< std::size_t >(parsed);
+      return true;
     }
 
     std::vector< std::string > splitTokens(const std::string& line)
@@ -77,7 +95,8 @@ namespace petrov {
               {"show", &Session::showShape},
               {"showset", &Session::showSet},
               {"frame", &Session::showFrame},
-              {"frameset", &Session::showSetFrame}
+              {"frameset", &Session::showSetFrame},
+              {"spawn", &Session::spawnProcess}
             }
   {}
 
@@ -87,6 +106,11 @@ namespace petrov {
     while (std::getline(input_, line)) {
       executeLine(line);
     }
+  }
+
+  Session::~Session()
+  {
+    closeProcesses();
   }
 
   const shape_t* Session::findShape(const std::string& name) const
@@ -105,6 +129,16 @@ namespace petrov {
       return nullptr;
     }
     return &set->second;
+  }
+
+  process_t* Session::findProcess(const std::string& name)
+  {
+    for (process_t& process : processes_) {
+      if (process.name == name) {
+        return &process;
+      }
+    }
+    return nullptr;
   }
 
   bool Session::collectShapes(const std::string& name, std::vector< shape_t >& shapes) const
@@ -242,6 +276,38 @@ namespace petrov {
     }
     output_ << findFrame(shapes) << '\n';
     return true;
+  }
+
+  bool Session::spawnProcess(const std::vector< std::string >& tokens)
+  {
+    if (tokens.size() != spawn_token_count) {
+      return false;
+    }
+    if (!isName(tokens[argument_index]) || (findProcess(tokens[argument_index]) != nullptr)) {
+      return false;
+    }
+    std::size_t seed = 0;
+    if (!parseSize(tokens[spawn_seed_index], seed)) {
+      return false;
+    }
+    std::vector< int > inherited;
+    for (const process_t& process : processes_) {
+      inherited.push_back(process.request_descriptor);
+      inherited.push_back(process.result_descriptor);
+    }
+    try {
+      processes_.push_back(createProcess(tokens[argument_index], seed, inherited));
+    } catch (const std::exception&) {
+      return false;
+    }
+    return true;
+  }
+
+  void Session::closeProcesses()
+  {
+    for (process_t& process : processes_) {
+      closeProcess(process);
+    }
   }
 
 }
