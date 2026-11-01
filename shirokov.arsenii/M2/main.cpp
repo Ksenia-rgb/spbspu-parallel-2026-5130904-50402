@@ -23,6 +23,7 @@ int main()
   cmds["frame"] = shirokov::frame;
   cmds["frameset"] = shirokov::frameset;
   cmds["spawn"] = shirokov::spawn;
+  cmds["area-on"] = shirokov::areaOn;
 
   std::string cmd;
   while (std::cin >> cmd)

@@ -87,8 +87,8 @@ void shirokov::circle(std::istream& in, std::ostream&, Data& data)
 {
   std::string args;
   std::getline(in, args);
-
   std::vector< std::string > tokens = split(args, ' ');
+
   std::string name;
   double r = 0.0;
   double x = 0.0;
@@ -128,7 +128,6 @@ void shirokov::ellipse(std::istream& in, std::ostream&, Data& data)
 {
   std::string args;
   std::getline(in, args);
-
   std::vector< std::string > tokens = split(args, ' ');
 
   std::string name;
@@ -172,7 +171,6 @@ void shirokov::set(std::istream& in, std::ostream&, Data& data)
 {
   std::string args;
   std::getline(in, args);
-
   std::vector< std::string > tokens = split(args, ' ');
 
   std::string set_name;
@@ -214,7 +212,7 @@ void shirokov::set(std::istream& in, std::ostream&, Data& data)
       figure_name = tokens.at(i + 2);
       if (ellipses.find(figure_name) == ellipses.end())
       {
-        throw std::invalid_argument("figure with this name does't exist: " + figure_name);
+        throw std::invalid_argument("figure with this name doesn't exist: " + figure_name);
       }
       s.push_back(ellipses[figure_name]);
     }
@@ -231,7 +229,6 @@ void shirokov::show(std::istream& in, std::ostream& out, Data& data)
 {
   std::string args;
   std::getline(in, args);
-
   std::vector< std::string > tokens = split(args, ' ');
 
   std::string name;
@@ -249,7 +246,7 @@ void shirokov::show(std::istream& in, std::ostream& out, Data& data)
 
   if (ellipses.find(name) == ellipses.end())
   {
-    throw std::invalid_argument("figure with this name does't exist");
+    throw std::invalid_argument("figure with this name doesn't exist");
   }
 
   const Ellipse& e = ellipses[name];
@@ -260,7 +257,6 @@ void shirokov::showset(std::istream& in, std::ostream& out, Data& data)
 {
   std::string args;
   std::getline(in, args);
-
   std::vector< std::string > tokens = split(args, ' ');
 
   std::string name;
@@ -278,7 +274,7 @@ void shirokov::showset(std::istream& in, std::ostream& out, Data& data)
 
   if (sets.find(name) == sets.end())
   {
-    throw std::invalid_argument("set with this name does't exist");
+    throw std::invalid_argument("set with this name doesn't exist");
   }
 
   const std::vector< Ellipse >& s = sets[name];
@@ -292,7 +288,6 @@ void shirokov::frame(std::istream& in, std::ostream& out, Data& data)
 {
   std::string args;
   std::getline(in, args);
-
   std::vector< std::string > tokens = split(args, ' ');
 
   std::string name;
@@ -310,7 +305,7 @@ void shirokov::frame(std::istream& in, std::ostream& out, Data& data)
 
   if (ellipses.find(name) == ellipses.end())
   {
-    throw std::invalid_argument("figure with this name does't exist");
+    throw std::invalid_argument("figure with this name doesn't exist");
   }
 
   const MinMaxes min_maxes = ellipses[name].getMinMaxes();
@@ -322,7 +317,6 @@ void shirokov::frameset(std::istream& in, std::ostream& out, Data& data)
 {
   std::string args;
   std::getline(in, args);
-
   std::vector< std::string > tokens = split(args, ' ');
 
   std::string name;
@@ -340,7 +334,7 @@ void shirokov::frameset(std::istream& in, std::ostream& out, Data& data)
 
   if (sets.find(name) == sets.end())
   {
-    throw std::invalid_argument("set with this name does't exist");
+    throw std::invalid_argument("set with this name doesn't exist");
   }
 
   const MinMaxes min_maxes = getAllMinMaxes(sets[name]);
@@ -352,7 +346,6 @@ void shirokov::spawn(std::istream& in, std::ostream&, Data& data)
 {
   std::string args;
   std::getline(in, args);
-
   std::vector< std::string > tokens = split(args, ' ');
 
   std::string name;
@@ -368,8 +361,12 @@ void shirokov::spawn(std::istream& in, std::ostream&, Data& data)
     throw std::range_error(e.what());
   }
 
-  PipeBridge bridge{};
+  if (data.channels.find(name) != data.channels.end())
+  {
+    throw std::invalid_argument("process with this name already exist");
+  }
 
+  PipeBridge bridge{};
   pid_t pid = fork();
 
   if (pid == -1)
@@ -380,12 +377,57 @@ void shirokov::spawn(std::istream& in, std::ostream&, Data& data)
   if (!pid)
   {
     DuplexChannel channel = std::move(bridge).as_child();
-
     child_process(std::move(channel), seed);
-
     return;
   }
 
   DuplexChannel channel = std::move(bridge).as_parent();
   data.channels.insert({name, std::move(channel)});
 }
+
+void shirokov::areaOn(std::istream& in, std::ostream&, Data& data)
+{
+  std::string args;
+  std::getline(in, args);
+  std::vector< std::string > tokens = split(args, ' ');
+
+  std::string process_name, calc_name, set_name;
+  size_t threads = 0, tries = 0;
+
+  try
+  {
+    process_name = tokens.at(0);
+    calc_name = tokens.at(1);
+    set_name = tokens.at(2);
+    threads = parseSizeT(tokens.at(3));
+    tries = parseSizeT(tokens.at(4));
+  }
+  catch (const std::out_of_range& e)
+  {
+    throw std::range_error(e.what());
+  }
+
+  if (data.channels.find(process_name) == data.channels.end())
+  {
+    throw std::invalid_argument("process with this name doesn't exist");
+  }
+  if (data.calcs.find(calc_name) != data.calcs.end())
+  {
+    throw std::invalid_argument("calc with this name already exist");
+  }
+  if (data.sets.find(set_name) == data.sets.end())
+  {
+    throw std::invalid_argument("set with this name doesn't exist");
+  }
+
+  const ellipse_list& ellipses = data.sets[set_name];
+  DuplexChannel& channel = data.channels.at(process_name);
+
+  size_t size = ellipses.size();
+  channel.write(&size, sizeof(size));
+  channel.write(ellipses.data(), static_cast< ssize_t >(size * sizeof(Ellipse)));
+  channel.write(&threads, sizeof(threads));
+  channel.write(&tries, sizeof(tries));
+}
+
+
