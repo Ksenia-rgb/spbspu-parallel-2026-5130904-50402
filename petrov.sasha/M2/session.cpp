@@ -1,6 +1,8 @@
 #include "session.hpp"
 
 #include <cctype>
+#include <cstddef>
+#include <exception>
 #include <istream>
 #include <ostream>
 #include <string>
@@ -10,8 +12,36 @@ namespace petrov {
 
   namespace {
 
+    constexpr std::size_t argument_index = 1;
+    constexpr std::size_t circle_radius_index = 2;
+    constexpr std::size_t circle_x_index = 3;
+    constexpr std::size_t circle_y_index = 4;
+    constexpr std::size_t circle_token_count = 5;
+
     constexpr char invalid_command_message[] = "<INVALID COMMAND>";
     constexpr char unknown_command_message[] = "<UNKNOWN COMMAND>";
+
+    bool isName(const std::string& text)
+    {
+      if (text.empty()) {
+        return false;
+      }
+      const char first = text[0];
+      const bool is_lower_letter = ('a' <= first) && (first <= 'z');
+      const bool is_upper_letter = ('A' <= first) && (first <= 'Z');
+      return is_lower_letter || is_upper_letter;
+    }
+
+    bool parseInteger(const std::string& text, int& value)
+    {
+      std::size_t parsed_length = 0;
+      try {
+        value = std::stoi(text, &parsed_length);
+      } catch (const std::exception&) {
+        return false;
+      }
+      return parsed_length == text.size();
+    }
 
     std::vector< std::string > splitTokens(const std::string& line)
     {
@@ -55,7 +85,40 @@ namespace petrov {
       output_ << invalid_command_message << '\n';
       return;
     }
-    output_ << unknown_command_message << '\n';
+    const std::string& command = tokens[0];
+    bool is_executed = false;
+    if (command == "circle") {
+      is_executed = createCircle(tokens);
+    } else {
+      output_ << unknown_command_message << '\n';
+      return;
+    }
+    if (!is_executed) {
+      output_ << invalid_command_message << '\n';
+    }
+  }
+
+  bool Session::createCircle(const std::vector< std::string >& tokens)
+  {
+    if (tokens.size() != circle_token_count) {
+      return false;
+    }
+    if (!isName(tokens[argument_index])) {
+      return false;
+    }
+    int radius = 0;
+    int x = 0;
+    int y = 0;
+    const bool is_parsed = parseInteger(tokens[circle_radius_index], radius) && parseInteger(tokens[circle_x_index], x)
+        && parseInteger(tokens[circle_y_index], y);
+    if (!is_parsed || (radius <= 0)) {
+      return false;
+    }
+    shape_t shape = {};
+    shape.radius = static_cast< double >(radius);
+    shape.center.x = static_cast< double >(x);
+    shape.center.y = static_cast< double >(y);
+    return shapes_.emplace(tokens[argument_index], shape).second;
   }
 
 }

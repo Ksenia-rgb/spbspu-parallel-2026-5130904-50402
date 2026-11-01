@@ -2,7 +2,11 @@
 #define SESSION_HPP
 
 #include <iosfwd>
+#include <map>
 #include <string>
+#include <vector>
+
+#include <shape.hpp>
 
 namespace petrov {
 
@@ -16,9 +20,11 @@ namespace petrov {
 
   private:
     void executeLine(const std::string& line);
+    bool createCircle(const std::vector< std::string >& tokens);
 
     std::istream& input_;
     std::ostream& output_;
+    std::map< std::string, shape_t > shapes_;
   };
 
 }
