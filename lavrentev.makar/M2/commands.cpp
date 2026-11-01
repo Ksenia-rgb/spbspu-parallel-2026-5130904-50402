@@ -1,26 +1,38 @@
+#include "commands.hpp"
+
+#include <algorithm>
+#include <climits>
+#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <climits>
 #include <vector>
-#include <iomanip>
-#include <algorithm>
+
 #include <circle.hpp>
-#include "commands.hpp"
-#include "setmap.hpp"
+
+#include "calcmap.hpp"
 #include "circledata.hpp"
 #include "processmap.hpp"
+#include "setmap.hpp"
 
 namespace
 {
-  std::vector< std::string > split(const std::string& str)
+  const std::size_t CIRCLE_ARGS = 4;
+  const std::size_t SET_MIN_ARGS = 2;
+  const std::size_t SPAWN_ARGS = 2;
+  const std::size_t AREA_ON_ARGS = 5;
+  const std::size_t STATUS_ARGS = 1;
+  const std::size_t WAIT_ARGS = 1;
+  const int PRECISION = 3;
+
+  std::vector< std::string > split(const std::string &str)
   {
     std::vector< std::string > res;
     std::string elem;
-    for (const char& symbol : str)
+    for (const char symbol : str)
     {
-      if (symbol == ' ' && !elem.empty())
+      if ((symbol == ' ') && (!elem.empty()))
       {
         res.push_back(elem);
         elem.clear();
@@ -34,19 +46,18 @@ namespace
     {
       res.push_back(elem);
     }
-
     return res;
   }
 
-  bool isValidName(const std::string& name)
+  bool isValidName(const std::string &name)
   {
-    if (name.empty() || (!std::isalpha(name[0]) && name[0] != '_'))
+    if (name.empty() || ((!std::isalpha(name[0])) && (name[0] != '_')))
     {
       return false;
     }
-    for (char c : name)
+    for (const char c : name)
     {
-      if (!std::isalnum(c) && c != '_')
+      if ((!std::isalnum(c)) && (c != '_'))
       {
         return false;
       }
@@ -63,24 +74,25 @@ void lavrentev::circle(std::istream &in, std::ostream &, Data &data)
     throw std::logic_error("Empty line");
   }
 
-  std::vector< std::string > dt = split(line);
-  
-  if (dt.size() != 4)
+  const std::vector< std::string > dt = split(line);
+  if (dt.size() != CIRCLE_ARGS)
   {
     throw std::logic_error("Invalid arguments count for circle");
   }
 
-  std::string name = dt[0];
+  const std::string name = dt[0];
   if (!isValidName(name))
   {
-    throw std::logic_error("Unkorrect name");
+    throw std::logic_error("Incorrect name");
   }
   if (data.ac.find(name) != data.ac.end())
   {
     throw std::logic_error("Circle already exists");
   }
 
-  int radius = 0, x = 0, y = 0;
+  int radius = 0;
+  int x = 0;
+  int y = 0;
   try
   {
     radius = std::stoi(dt[1]);
@@ -97,7 +109,7 @@ void lavrentev::circle(std::istream &in, std::ostream &, Data &data)
     throw std::logic_error("Radius must be positive");
   }
 
-  data.ac[name] = std::make_shared<lavrentev::Circle>(name, radius, x, y);
+  data.ac[name] = std::make_shared< lavrentev::Circle >(name, radius, x, y);
 }
 
 void lavrentev::set(std::istream &in, std::ostream &, Data &data)
@@ -108,13 +120,13 @@ void lavrentev::set(std::istream &in, std::ostream &, Data &data)
     throw std::logic_error("Empty line");
   }
 
-  std::vector< std::string > dt = split(line);
-  if (dt.size() < 2)
+  const std::vector< std::string > dt = split(line);
+  if (dt.size() < SET_MIN_ARGS)
   {
     throw std::logic_error("Not enough arguments");
   }
 
-  std::string name = dt[0];
+  const std::string name = dt[0];
   if (data.sets.find(name) != data.sets.end())
   {
     throw std::logic_error("Set already exists");
@@ -130,17 +142,15 @@ void lavrentev::set(std::istream &in, std::ostream &, Data &data)
     throw std::logic_error("Invalid set size");
   }
 
-  if (raw_size < 0 || dt.size() != 2 + static_cast< size_t >(raw_size))
+  if ((raw_size < 0) || (dt.size() != (SET_MIN_ARGS + static_cast< std::size_t >(raw_size))))
   {
     throw std::logic_error("Arguments count mismatch");
   }
 
-  size_t set_size = static_cast< size_t >(raw_size);
-
-  for (size_t i = 0; i < set_size; ++i)
+  const std::size_t set_size = static_cast< std::size_t >(raw_size);
+  for (std::size_t i = 0; i < set_size; ++i)
   {
-    std::string shape_name = dt[i + 2];
-
+    const std::string shape_name = dt[i + SET_MIN_ARGS];
     if (data.ac.find(shape_name) == data.ac.end())
     {
       throw std::logic_error("Circle does not exist");
@@ -153,7 +163,7 @@ void lavrentev::show(std::istream &in, std::ostream &out, Data &data)
 {
   std::string line;
   std::getline(in, line);
-  std::vector< std::string > dt = split(line);
+  const std::vector< std::string > dt = split(line);
 
   std::string shape_name;
   try
@@ -169,14 +179,16 @@ void lavrentev::show(std::istream &in, std::ostream &out, Data &data)
   {
     throw std::logic_error("Circle does not exist");
   }
-  out << data.ac[shape_name]->getRadius() << " (" << data.ac[shape_name]->getX() << " " << data.ac[shape_name]->getY() << ")\n";
+
+  out << data.ac[shape_name]->getRadius() << " (";
+  out << data.ac[shape_name]->getX() << " " << data.ac[shape_name]->getY() << ")\n";
 }
 
 void lavrentev::showset(std::istream &in, std::ostream &out, Data &data)
 {
   std::string line;
   std::getline(in, line);
-  std::vector< std::string > dt = split(line);
+  const std::vector< std::string > dt = split(line);
 
   std::string set_name;
   try
@@ -192,9 +204,11 @@ void lavrentev::showset(std::istream &in, std::ostream &out, Data &data)
   {
     throw std::logic_error("Set does not exist");
   }
+
   for (const auto &circle_ptr : data.sets[set_name])
   {
-    out << circle_ptr->getRadius() << " (" << circle_ptr->getX() << " " << circle_ptr->getY() << ")\n";
+    out << circle_ptr->getRadius() << " (";
+    out << circle_ptr->getX() << " " << circle_ptr->getY() << ")\n";
   }
 }
 
@@ -202,7 +216,7 @@ void lavrentev::frame(std::istream &in, std::ostream &out, Data &data)
 {
   std::string line;
   std::getline(in, line);
-  std::vector< std::string > dt = split(line);
+  const std::vector< std::string > dt = split(line);
 
   std::string shape_name;
   try
@@ -219,11 +233,14 @@ void lavrentev::frame(std::istream &in, std::ostream &out, Data &data)
     throw std::logic_error("Circle does not exist");
   }
 
-  int min_x, min_y, max_x, max_y;
-  min_x = data.ac[shape_name]->getX() - data.ac[shape_name]->getRadius();
-  min_y = data.ac[shape_name]->getY() - data.ac[shape_name]->getRadius();
-  max_x = data.ac[shape_name]->getX() + data.ac[shape_name]->getRadius();
-  max_y = data.ac[shape_name]->getY() + data.ac[shape_name]->getRadius();
+  const int r = data.ac[shape_name]->getRadius();
+  const int x = data.ac[shape_name]->getX();
+  const int y = data.ac[shape_name]->getY();
+
+  const int min_x = x - r;
+  const int min_y = y - r;
+  const int max_x = x + r;
+  const int max_y = y + r;
 
   out << "(" << min_x << " " << min_y << ") (" << max_x << " " << max_y << ")\n";
 }
@@ -232,7 +249,7 @@ void lavrentev::frameset(std::istream &in, std::ostream &out, Data &data)
 {
   std::string line;
   std::getline(in, line);
-  std::vector< std::string > dt = split(line);
+  const std::vector< std::string > dt = split(line);
 
   std::string set_name;
   try
@@ -249,14 +266,21 @@ void lavrentev::frameset(std::istream &in, std::ostream &out, Data &data)
     throw std::logic_error("Set does not exist");
   }
 
-  int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
+  int min_x = INT_MAX;
+  int min_y = INT_MAX;
+  int max_x = INT_MIN;
+  int max_y = INT_MIN;
 
   for (const auto &circle_ptr : data.sets[set_name])
   {
-    int circle_min_x = circle_ptr->getX() - circle_ptr->getRadius();
-    int circle_min_y = circle_ptr->getY() - circle_ptr->getRadius();
-    int circle_max_x = circle_ptr->getX() + circle_ptr->getRadius();
-    int circle_max_y = circle_ptr->getY() + circle_ptr->getRadius();
+    const int r = circle_ptr->getRadius();
+    const int x = circle_ptr->getX();
+    const int y = circle_ptr->getY();
+
+    const int circle_min_x = x - r;
+    const int circle_min_y = y - r;
+    const int circle_max_x = x + r;
+    const int circle_max_y = y + r;
 
     min_x = std::min(min_x, circle_min_x);
     min_y = std::min(min_y, circle_min_y);
@@ -271,13 +295,14 @@ void lavrentev::spawn(std::istream &in, std::ostream &, Data &data)
 {
   std::string line;
   std::getline(in, line);
-  std::vector< std::string > dt = split(line);
+  const std::vector< std::string > dt = split(line);
 
-  if (dt.size() != 2)
+  if (dt.size() != SPAWN_ARGS)
   {
     throw std::logic_error("Invalid amount of arguments for spawn");
   }
-  std::string process_name = dt[0];
+
+  const std::string process_name = dt[0];
   if (!isValidName(process_name))
   {
     throw std::logic_error("Invalid process name");
@@ -287,7 +312,7 @@ void lavrentev::spawn(std::istream &in, std::ostream &, Data &data)
     throw std::logic_error("Process already exists");
   }
 
-  int seed;
+  int seed = 0;
   try
   {
     seed = std::stoi(dt[1]);
@@ -297,8 +322,8 @@ void lavrentev::spawn(std::istream &in, std::ostream &, Data &data)
     throw std::logic_error("Invalid seed");
   }
 
-  std::unique_ptr<Process> prc = std::make_unique<Process>(process_name);
-  prc->set_seed(seed);
+  std::unique_ptr< Process > prc = std::make_unique< Process >(process_name);
+  prc->setSeed(seed);
   data.pm.emplace(process_name, std::move(prc));
 }
 
@@ -306,20 +331,20 @@ void lavrentev::area_on(std::istream &in, std::ostream &, Data &data)
 {
   std::string line;
   std::getline(in, line);
-  std::vector< std::string > dt = split(line);
+  const std::vector< std::string > dt = split(line);
 
-  if (dt.size() != 5)
+  if (dt.size() != AREA_ON_ARGS)
   {
     throw std::logic_error("Invalid amount of arguments for area-on");
   }
 
-  std::string process_name = dt[0];
+  const std::string process_name = dt[0];
   if (data.pm.find(process_name) == data.pm.end())
   {
     throw std::logic_error("Process does not exist");
   }
 
-  std::string calc_name = dt[1];
+  const std::string calc_name = dt[1];
   if (!isValidName(calc_name))
   {
     throw std::logic_error("Invalid calculation name");
@@ -329,7 +354,7 @@ void lavrentev::area_on(std::istream &in, std::ostream &, Data &data)
     throw std::logic_error("Calculation already exists");
   }
 
-  std::string set_name = dt[2];
+  const std::string set_name = dt[2];
   if (data.sets.find(set_name) == data.sets.end())
   {
     throw std::logic_error("Set does not exist");
@@ -348,7 +373,7 @@ void lavrentev::area_on(std::istream &in, std::ostream &, Data &data)
   {
     throw std::logic_error("Threads must be positive");
   }
-  size_t threads = static_cast< size_t >(raw_threads);
+  const std::size_t threads = static_cast< std::size_t >(raw_threads);
 
   int raw_tries = 0;
   try
@@ -363,7 +388,7 @@ void lavrentev::area_on(std::istream &in, std::ostream &, Data &data)
   {
     throw std::logic_error("Tries must be positive");
   }
-  size_t tries = static_cast< size_t >(raw_tries);
+  const std::size_t tries = static_cast< std::size_t >(raw_tries);
 
   data.pm[process_name]->start(data.sets[set_name], calc_name, threads, tries);
   data.cm[calc_name] = CalcRes{process_name, 0.0, 0.0};
@@ -373,23 +398,23 @@ void lavrentev::status(std::istream &in, std::ostream &out, Data &data)
 {
   std::string line;
   std::getline(in, line);
-  std::vector< std::string > dt = split(line);
+  const std::vector< std::string > dt = split(line);
 
-  if (dt.size() != 1)
+  if (dt.size() != STATUS_ARGS)
   {
     throw std::logic_error("Invalid amount of arguments for status");
   }
 
-  std::string calc_name = dt[0];
+  const std::string calc_name = dt[0];
   if (data.cm.find(calc_name) == data.cm.end())
   {
     throw std::logic_error("Calculation does not exist");
   }
 
-  std::string process_name = data.cm[calc_name].process_name;
+  const std::string process_name = data.cm[calc_name].process_name;
   if (data.pm.find(process_name) != data.pm.end())
   {
-    data.pm[process_name]->poll_results(data.cm);
+    data.pm[process_name]->pollResults(data.cm);
   }
 
   out << process_name << " ";
@@ -400,7 +425,7 @@ void lavrentev::status(std::istream &in, std::ostream &out, Data &data)
   else
   {
     out << static_cast< long >(data.cm[calc_name].time) << " ";
-    out << std::fixed << std::setprecision(3) << data.cm[calc_name].result << "\n";
+    out << std::fixed << std::setprecision(PRECISION) << data.cm[calc_name].result << "\n";
     out << std::defaultfloat;
   }
 }
@@ -409,19 +434,20 @@ void lavrentev::wait(std::istream &in, std::ostream &out, Data &data)
 {
   std::string line;
   std::getline(in, line);
-  std::vector< std::string > dt = split(line);
-  if (dt.size() != 1)
+  const std::vector< std::string > dt = split(line);
+
+  if (dt.size() != WAIT_ARGS)
   {
     throw std::logic_error("Invalid amount of arguments for wait");
   }
 
-  std::string calc_name = dt[0];
+  const std::string calc_name = dt[0];
   if (data.cm.find(calc_name) == data.cm.end())
   {
     throw std::logic_error("Calculation does not exist");
   }
 
-  std::string process_name = data.cm[calc_name].process_name;
+  const std::string process_name = data.cm[calc_name].process_name;
   if (data.pm.find(process_name) == data.pm.end())
   {
     throw std::logic_error("Process does not exist");
@@ -429,11 +455,11 @@ void lavrentev::wait(std::istream &in, std::ostream &out, Data &data)
 
   if (data.cm[calc_name].time == 0.0)
   {
-    data.pm[process_name]->wait_for(calc_name, data.cm);
+    data.pm[process_name]->waitFor(calc_name, data.cm);
   }
 
   out << process_name << " ";
   out << static_cast< long >(data.cm[calc_name].time) << " ";
-  out << std::fixed << std::setprecision(3) << data.cm[calc_name].result << "\n";
+  out << std::fixed << std::setprecision(PRECISION) << data.cm[calc_name].result << "\n";
   out << std::defaultfloat;
 }

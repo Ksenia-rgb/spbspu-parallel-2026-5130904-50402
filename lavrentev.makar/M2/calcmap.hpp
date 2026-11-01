@@ -1,8 +1,8 @@
 #ifndef CALCMAP_HPP
 #define CALCMAP_HPP
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 namespace lavrentev
 {
@@ -12,6 +12,7 @@ namespace lavrentev
     double result;
     double time;
   };
+
   using calc_map = std::unordered_map< std::string, CalcRes >;
 }
 

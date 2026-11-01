@@ -1,47 +1,22 @@
 #include "process.hpp"
-#include <unistd.h>
-#include <sys/wait.h>
+
 #include <poll.h>
-#include <stdexcept>
-#include <utility>
-#include <string>
-#include <vector>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
 #include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "child.hpp"
 
 namespace
 {
-  bool write_all(int fd, const void* data, size_t size)
-  {
-    const char* ptr = static_cast<const char*>(data);
-    while (size > 0)
-    {
-      ssize_t written = write(fd, ptr, size);
-      if (written <= 0)
-      {
-        return false;
-      }
-      ptr += written;
-      size -= written;
-    }
-    return true;
-  }
-
-  bool read_all(int fd, void* data, size_t size)
-  {
-    char* ptr = static_cast<char*>(data);
-    while (size > 0)
-    {
-      ssize_t res = read(fd, ptr, size);
-      if (res <= 0)
-      {
-        return false;
-      }
-      ptr += res;
-      size -= res;
-    }
-    return true;
-  }
+  const int FIRST_USER_FD = 3;
+  const int MAX_FD_TO_CLOSE = 1024;
 
   struct CircleData
   {
@@ -49,19 +24,52 @@ namespace
     int x;
     int y;
   };
+
+  bool writeAll(int fd, const void *data, std::size_t size)
+  {
+    const char *ptr = static_cast< const char * >(data);
+    while (size > 0)
+    {
+      const ssize_t written = write(fd, ptr, size);
+      if (written <= 0)
+      {
+        return false;
+      }
+      ptr += written;
+      size -= static_cast< std::size_t >(written);
+    }
+    return true;
+  }
+
+  bool readAll(int fd, void *data, std::size_t size)
+  {
+    char *ptr = static_cast< char * >(data);
+    while (size > 0)
+    {
+      const ssize_t res = read(fd, ptr, size);
+      if (res <= 0)
+      {
+        return false;
+      }
+      ptr += res;
+      size -= static_cast< std::size_t >(res);
+    }
+    return true;
+  }
 }
 
-lavrentev::Process::Process(std::string process_name):
-  process_name_(std::move(process_name)),
+lavrentev::Process::Process(const std::string &process_name):
+  process_name_(process_name),
   pending_calcs_(),
   seed_(0),
   calc_results_(),
   pid_(-1),
   in_fd_(-1),
   out_fd_(-1)
-{}
+{
+}
 
-lavrentev::Process::Process(Process&& other) noexcept:
+lavrentev::Process::Process(Process &&other) noexcept:
   process_name_(std::move(other.process_name_)),
   pending_calcs_(std::move(other.pending_calcs_)),
   seed_(other.seed_),
@@ -69,9 +77,10 @@ lavrentev::Process::Process(Process&& other) noexcept:
   pid_(std::exchange(other.pid_, -1)),
   in_fd_(std::exchange(other.in_fd_, -1)),
   out_fd_(std::exchange(other.out_fd_, -1))
-{}
+{
+}
 
-lavrentev::Process& lavrentev::Process::operator=(Process&& other) noexcept
+lavrentev::Process &lavrentev::Process::operator=(Process &&other) noexcept
 {
   if (this != &other)
   {
@@ -92,9 +101,9 @@ lavrentev::Process::~Process()
   cleanup();
 }
 
-double lavrentev::Process::get_result()
+double lavrentev::Process::getResult()
 {
-  if (out_fd_ == -1 || pending_calcs_.empty())
+  if ((out_fd_ == -1) || pending_calcs_.empty())
   {
     return 0.0;
   }
@@ -102,10 +111,10 @@ double lavrentev::Process::get_result()
   double val = 0.0;
   double time = 0.0;
 
-  std::string finished_calc = pending_calcs_.front();
+  const std::string finished_calc = pending_calcs_.front();
   pending_calcs_.pop();
 
-  if (read_all(out_fd_, &val, sizeof(val)) && read_all(out_fd_, &time, sizeof(time)))
+  if (readAll(out_fd_, &val, sizeof(val)) && readAll(out_fd_, &time, sizeof(time)))
   {
     calc_results_[finished_calc] = CalcRes{process_name_, val, time};
   }
@@ -113,12 +122,12 @@ double lavrentev::Process::get_result()
   return val;
 }
 
-void lavrentev::Process::wait_for(const std::string& calc_name, calc_map& global_cm)
+void lavrentev::Process::waitFor(const std::string &calc_name, calc_map &global_cm)
 {
-  while (!pending_calcs_.empty() && calc_results_[calc_name].time == 0.0)
+  while (!pending_calcs_.empty() && (calc_results_[calc_name].time == 0.0))
   {
-    std::string next_calc = pending_calcs_.front();
-    get_result();
+    const std::string next_calc = pending_calcs_.front();
+    getResult();
     global_cm[next_calc] = calc_results_[next_calc];
     if (next_calc == calc_name)
     {
@@ -127,41 +136,42 @@ void lavrentev::Process::wait_for(const std::string& calc_name, calc_map& global
   }
 }
 
-void lavrentev::Process::poll_results(calc_map& global_cm)
+void lavrentev::Process::pollResults(calc_map &global_cm)
 {
   if (out_fd_ == -1)
   {
     return;
   }
 
-  struct pollfd pfd{};
+  pollfd pfd{};
   pfd.fd = out_fd_;
   pfd.events = POLLIN;
 
-  while (!pending_calcs_.empty() && poll(&pfd, 1, 0) > 0 && (pfd.revents & POLLIN))
+  const int timeout_ms = 0;
+  while (!pending_calcs_.empty() && (poll(&pfd, 1, timeout_ms) > 0) && ((pfd.revents & POLLIN) != 0))
   {
-    std::string next_calc = pending_calcs_.front();
-    get_result();
+    const std::string next_calc = pending_calcs_.front();
+    getResult();
     global_cm[next_calc] = calc_results_[next_calc];
   }
 }
 
-void lavrentev::Process::set_seed(int seed)
+void lavrentev::Process::setSeed(int seed)
 {
   seed_ = seed;
 }
 
-bool lavrentev::Process::is_alive() const
+bool lavrentev::Process::isAlive() const
 {
-  return pid_ > 0 && in_fd_ != -1;
+  return (pid_ > 0) && (in_fd_ != -1);
 }
 
-bool lavrentev::Process::at(const std::string& calc_name) const
+bool lavrentev::Process::at(const std::string &calc_name) const
 {
   return calc_results_.find(calc_name) != calc_results_.end();
 }
 
-const lavrentev::CalcRes& lavrentev::Process::get_calc(const std::string& calc_name) const
+const lavrentev::CalcRes &lavrentev::Process::getCalc(const std::string &calc_name) const
 {
   return calc_results_.at(calc_name);
 }
@@ -187,12 +197,17 @@ void lavrentev::Process::cleanup()
   }
 }
 
-void lavrentev::Process::start(std::vector<std::shared_ptr<Circle>> &circles, std::string calc_name, size_t threads, size_t tries)
+void lavrentev::Process::start(
+  std::vector< std::shared_ptr< Circle > > &circles,
+  const std::string &calc_name,
+  std::size_t threads,
+  std::size_t tries
+)
 {
   pending_calcs_.push(calc_name);
   calc_results_[calc_name] = CalcRes{process_name_, 0.0, 0.0};
 
-  if (!is_alive())
+  if (!isAlive())
   {
     int p_in[2] = {};
     int p_out[2] = {};
@@ -223,15 +238,15 @@ void lavrentev::Process::start(std::vector<std::shared_ptr<Circle>> &circles, st
       close(p_in[1]);
       close(p_out[0]);
 
-      for (int fd = 3; fd < 1024; ++fd)
+      for (int fd = FIRST_USER_FD; fd < MAX_FD_TO_CLOSE; ++fd)
       {
-        if (fd != p_in[0] && fd != p_out[1])
+        if ((fd != p_in[0]) && (fd != p_out[1]))
         {
           close(fd);
         }
       }
 
-      int exit_code = run_child(p_in[0], p_out[1]);
+      const int exit_code = runChild(p_in[0], p_out[1]);
       _exit(exit_code);
     }
 
@@ -241,31 +256,31 @@ void lavrentev::Process::start(std::vector<std::shared_ptr<Circle>> &circles, st
     out_fd_ = p_out[0];
   }
 
-  size_t str_len = calc_name.size();
-  write_all(in_fd_, &str_len, sizeof(str_len));
+  const std::size_t str_len = calc_name.size();
+  writeAll(in_fd_, &str_len, sizeof(str_len));
   if (str_len > 0)
   {
-    write_all(in_fd_, calc_name.data(), str_len);
+    writeAll(in_fd_, calc_name.data(), str_len);
   }
 
-  write_all(in_fd_, &threads, sizeof(threads));
-  write_all(in_fd_, &tries, sizeof(tries));
-  write_all(in_fd_, &seed_, sizeof(seed_));
+  writeAll(in_fd_, &threads, sizeof(threads));
+  writeAll(in_fd_, &tries, sizeof(tries));
+  writeAll(in_fd_, &seed_, sizeof(seed_));
 
-  size_t circles_count = circles.size();
-  write_all(in_fd_, &circles_count, sizeof(circles_count));
+  const std::size_t circles_count = circles.size();
+  writeAll(in_fd_, &circles_count, sizeof(circles_count));
 
   if (circles_count > 0)
   {
-    std::vector<CircleData> raw_data;
+    std::vector< CircleData > raw_data;
     raw_data.reserve(circles_count);
-    for (const auto& c : circles)
+    for (const auto &c : circles)
     {
       if (c)
       {
         raw_data.push_back({c->getRadius(), c->getX(), c->getY()});
       }
     }
-    write_all(in_fd_, raw_data.data(), raw_data.size() * sizeof(CircleData));
+    writeAll(in_fd_, raw_data.data(), raw_data.size() * sizeof(CircleData));
   }
 }

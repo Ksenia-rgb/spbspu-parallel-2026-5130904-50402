@@ -1,22 +1,29 @@
+#include <cstdlib>
 #include <iostream>
 #include <limits>
+#include <string>
+#include <unordered_map>
+
 #include <circle.hpp>
+
 #include "child.hpp"
 #include "commands.hpp"
 
 namespace lavrentev
 {
   using cmd_t = void (*)(
-    std::istream &, std::ostream &,
+    std::istream &,
+    std::ostream &,
     Data &
   );
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-  if (argc == 3 && std::string(argv[0]) == "child")
+  const int CHILD_ARGC = 3;
+  if ((argc == CHILD_ARGC) && (std::string(argv[0]) == "child"))
   {
-    return run_child(std::atoi(argv[1]), std::atoi(argv[2]));
+    return lavrentev::runChild(std::atoi(argv[1]), std::atoi(argv[2]));
   }
 
   lavrentev::set_map sets;
@@ -24,8 +31,8 @@ int main(int argc, char* argv[])
   lavrentev::process_map pm;
   lavrentev::calc_map cm;
   lavrentev::Data data{sets, all_circles, pm, cm};
-  std::unordered_map<std::string, lavrentev::cmd_t> cmds;
 
+  std::unordered_map< std::string, lavrentev::cmd_t > cmds;
   cmds["circle"] = lavrentev::circle;
   cmds["set"] = lavrentev::set;
   cmds["show"] = lavrentev::show;
@@ -43,12 +50,14 @@ int main(int argc, char* argv[])
     try
     {
       cmds.at(cmd)(std::cin, std::cout, data);
-    } catch (const std::out_of_range &)
+    }
+    catch (const std::out_of_range &)
     {
       std::cout << "<UNKNOWN COMMAND>\n";
-      auto toignore = std::numeric_limits<std::streamsize>::max();
-      std::cin.ignore(toignore, '\n');
-    } catch (const std::logic_error &)
+      const auto to_ignore = std::numeric_limits< std::streamsize >::max();
+      std::cin.ignore(to_ignore, '\n');
+    }
+    catch (const std::logic_error &)
     {
       std::cout << "<INVALID COMMAND>\n";
     }
@@ -59,4 +68,6 @@ int main(int argc, char* argv[])
     std::cerr << "Bad input\n";
     return 1;
   }
+
+  return 0;
 }

@@ -1,10 +1,10 @@
 #include "calculations.hpp"
 
 #include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <future>
 #include <iostream>
+#include <random>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -15,6 +15,8 @@ using lavrentev::area_pair_t;
 
 namespace
 {
+  const std::size_t FAST_GEN_THRESHOLD = 10000000;
+
   struct FastCircle
   {
     double x;
@@ -69,72 +71,17 @@ lavrentev::f_t lavrentev::readInput(Polygon &pg)
   return figures;
 }
 
-lavrentev::count_pair_t lavrentev::calculate(const f_t &figures, const Polygon &pg, std::size_t tries, int seed)
+lavrentev::count_pair_t lavrentev::calculate(
+  const f_t &figures,
+  const Polygon &pg,
+  std::size_t tries,
+  int seed
+)
 {
   const std::size_t fig_size = figures.size();
-  if (fig_size == 0 || tries == 0)
+  if ((fig_size == 0) || (tries == 0))
   {
     return {0, 0};
-  }
-
-  std::uint64_t s = static_cast< std::uint32_t >(seed) % 2147483647ULL;
-  if (s == 0)
-  {
-    s = 1ULL;
-  }
-
-  const double min_x = static_cast< double >(pg.getMinX());
-  const double min_y = static_cast< double >(pg.getMinY());
-  const double base = 2147483646.0;
-  const double denom = base * base;
-  const double scale_x = static_cast< double >(pg.getMaxX() - pg.getMinX()) / denom;
-  const double scale_y = static_cast< double >(pg.getMaxY() - pg.getMinY()) / denom;
-
-  std::size_t res_all = 0;
-  std::size_t res_is = 0;
-
-  if (fig_size == 1)
-  {
-    const double cx = static_cast< double >(figures[0].getX());
-    const double cy = static_cast< double >(figures[0].getY());
-    const double r = static_cast< double >(figures[0].getRadius());
-    const double cr2 = r * r;
-
-    for (std::size_t i = 0; i < tries; ++i)
-    {
-      std::uint64_t p1 = s * 16807ULL;
-      s = (p1 & 0x7FFFFFFFULL) + (p1 >> 31);
-      if (s >= 2147483647ULL) s -= 2147483647ULL;
-      const double r1 = static_cast< double >(s - 1ULL);
-
-      std::uint64_t p2 = s * 16807ULL;
-      s = (p2 & 0x7FFFFFFFULL) + (p2 >> 31);
-      if (s >= 2147483647ULL) s -= 2147483647ULL;
-      const double r2 = static_cast< double >(s - 1ULL);
-
-      const double x = min_x + (r1 + r2 * base) * scale_x;
-
-      std::uint64_t p3 = s * 16807ULL;
-      s = (p3 & 0x7FFFFFFFULL) + (p3 >> 31);
-      if (s >= 2147483647ULL) s -= 2147483647ULL;
-      const double r3 = static_cast< double >(s - 1ULL);
-
-      std::uint64_t p4 = s * 16807ULL;
-      s = (p4 & 0x7FFFFFFFULL) + (p4 >> 31);
-      if (s >= 2147483647ULL) s -= 2147483647ULL;
-      const double r4 = static_cast< double >(s - 1ULL);
-
-      const double y = min_y + (r3 + r4 * base) * scale_y;
-
-      const double dx = x - cx;
-      const double dy = y - cy;
-      if ((dx * dx + dy * dy) <= cr2)
-      {
-        ++res_all;
-        ++res_is;
-      }
-    }
-    return {res_all, res_is};
   }
 
   std::vector< FastCircle > fast_figures(fig_size);
@@ -149,54 +96,75 @@ lavrentev::count_pair_t lavrentev::calculate(const f_t &figures, const Polygon &
   }
   const FastCircle *fig_ptr = fast_figures.data();
 
+  std::default_random_engine engine(static_cast< unsigned int >(seed));
+  const bool use_fast_gen = (fig_size == 1) || (tries >= FAST_GEN_THRESHOLD);
+
+  const double min_x = static_cast< double >(pg.getMinX());
+  const double max_x = static_cast< double >(pg.getMaxX());
+  const double min_y = static_cast< double >(pg.getMinY());
+  const double max_y = static_cast< double >(pg.getMaxY());
+
+  std::uniform_real_distribution< double > dist_x(min_x, max_x);
+  std::uniform_real_distribution< double > dist_y(min_y, max_y);
+
+  const double eng_min = static_cast< double >(std::default_random_engine::min());
+  const double eng_max = static_cast< double >(std::default_random_engine::max());
+  const double eng_range = eng_max - eng_min;
+
+  const double scale_x = (max_x - min_x) / eng_range;
+  const double scale_y = (max_y - min_y) / eng_range;
+
+  std::size_t count_of_total_coverage = 0;
+  std::size_t count_of_intersection = 0;
+
   for (std::size_t i = 0; i < tries; ++i)
   {
-    std::uint64_t p1 = s * 16807ULL;
-    s = (p1 & 0x7FFFFFFFULL) + (p1 >> 31);
-    if (s >= 2147483647ULL) s -= 2147483647ULL;
-    const double r1 = static_cast< double >(s - 1ULL);
+    double x = 0.0;
+    double y = 0.0;
+    if (use_fast_gen)
+    {
+      x = min_x + (static_cast< double >(engine()) - eng_min) * scale_x;
+      y = min_y + (static_cast< double >(engine()) - eng_min) * scale_y;
+    }
+    else
+    {
+      x = dist_x(engine);
+      y = dist_y(engine);
+    }
 
-    std::uint64_t p2 = s * 16807ULL;
-    s = (p2 & 0x7FFFFFFFULL) + (p2 >> 31);
-    if (s >= 2147483647ULL) s -= 2147483647ULL;
-    const double r2 = static_cast< double >(s - 1ULL);
+    bool is_in_circle = false;
+    bool is_in_intersection = true;
 
-    const double x = min_x + (r1 + r2 * base) * scale_x;
-
-    std::uint64_t p3 = s * 16807ULL;
-    s = (p3 & 0x7FFFFFFFULL) + (p3 >> 31);
-    if (s >= 2147483647ULL) s -= 2147483647ULL;
-    const double r3 = static_cast< double >(s - 1ULL);
-
-    std::uint64_t p4 = s * 16807ULL;
-    s = (p4 & 0x7FFFFFFFULL) + (p4 >> 31);
-    if (s >= 2147483647ULL) s -= 2147483647ULL;
-    const double r4 = static_cast< double >(s - 1ULL);
-
-    const double y = min_y + (r3 + r4 * base) * scale_y;
-
-    std::size_t count_fig = 0;
     for (std::size_t j = 0; j < fig_size; ++j)
     {
       const double dx = x - fig_ptr[j].x;
       const double dy = y - fig_ptr[j].y;
       if (((dx * dx) + (dy * dy)) <= fig_ptr[j].r2)
       {
-        ++count_fig;
+        is_in_circle = true;
+      }
+      else
+      {
+        is_in_intersection = false;
+      }
+
+      if (is_in_circle && (!is_in_intersection))
+      {
+        break;
       }
     }
 
-    if (count_fig > 0)
+    if (is_in_circle)
     {
-      ++res_all;
+      ++count_of_total_coverage;
     }
-    if (count_fig == fig_size)
+    if (is_in_intersection)
     {
-      ++res_is;
+      ++count_of_intersection;
     }
   }
 
-  return {res_all, res_is};
+  return {count_of_total_coverage, count_of_intersection};
 }
 
 std::size_t lavrentev::countInside(const f_t &figures, double x, double y)
@@ -215,7 +183,13 @@ std::size_t lavrentev::countInside(const f_t &figures, double x, double y)
   return res;
 }
 
-area_pair_t lavrentev::area(const f_t &figures, const Polygon &pg, std::size_t threads, std::size_t tries, int seed)
+area_pair_t lavrentev::area(
+  const f_t &figures,
+  const Polygon &pg,
+  std::size_t threads,
+  std::size_t tries,
+  int seed
+)
 {
   const std::size_t base_tries = tries / threads;
   const std::size_t remainder = tries % threads;
