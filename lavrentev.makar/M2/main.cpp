@@ -26,7 +26,7 @@ int main()
   cmds["showset"] = lavrentev::showset;
   cmds["frame"] = lavrentev::frame;
   cmds["frameset"] = lavrentev::frameset;
-  //cmds["spawn"] = lavrentev::spawn;
+  cmds["spawn"] = lavrentev::spawn;
   //cmds["area-on"] = lavrentev::area_on;
   //cmds["status"] = lavrentev::status;
   //cmds["wait"] = lavrentev::wait;

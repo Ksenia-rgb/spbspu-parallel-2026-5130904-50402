@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <climits>
@@ -273,31 +274,37 @@ void lavrentev::frameset(std::istream &in, std::ostream &out, set_map &sets, cir
   out << "(" << min_x << " " << min_y << ") (" << max_x << " " << max_y << ")\n";
 }
 
-// void lavrentev::spawn(std::istream &in, std::ostream &, set_map &sets, circle_data &ac, process_map &pm)
-// {
-//   std::string line;
-//   std::getline(in, line);
-//   std::vector< std::string > data = split(line);
+void lavrentev::spawn(std::istream &in, std::ostream &, set_map &, circle_data &, process_map &pm)
+{
+  std::string line;
+  std::getline(in, line);
+  std::vector< std::string > data = split(line);
 
-//   std::string process_name;
-//   try
-//   {
-//     process_name = data.at(0);
-//   }
-//   catch (const std::out_of_range &e)
-//   {
-//     throw std::logic_error(e.what());
-//   }
+  if (data.size() != 2)
+  {
+    throw std::logic_error("Invalid amount of arguments for spawn");
+  }
+  std::string process_name = data[0];
+  if (!isValidName(process_name))
+  {
+    throw std::logic_error("Invalid process name");
+  }
+  if (pm.find(process_name) != pm.end())
+  {
+    throw std::logic_error("Process already exists");
+  }
 
-//   if (pm.find(process_name) != pm.end())
-//   {
-//     throw std::logic_error("Process already exists");
-//   }
+  int seed;
+  try
+  {
+    seed = std::stoi(data[1]);
+  }
+  catch (const std::exception &)
+  {
+    throw std::logic_error("Invalid seed");
+  }
 
-//   Process prc = Process(process_name);
-//   int seed;
-//   in >> seed;
-//   prc.set_seed(seed);
-
-  
-// }
+  std::unique_ptr<Process> prc = std::make_unique<Process>(process_name);
+  prc->set_seed(seed);
+  pm.emplace(process_name, std::move(prc));
+}

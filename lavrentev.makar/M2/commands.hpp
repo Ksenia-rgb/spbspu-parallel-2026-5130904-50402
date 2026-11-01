@@ -12,7 +12,7 @@ namespace lavrentev
 {
   using set_map = std::unordered_map<std::string, std::vector<std::shared_ptr<Circle>>>;
   using circle_data = std::unordered_map<std::string, std::shared_ptr<Circle>>;
-  using process_map = std::unordered_map<std::string, std::shared_ptr<Process>>;
+  using process_map = std::unordered_map<std::string, std::unique_ptr<Process>>;
 
   void circle(std::istream &in, std::ostream &, set_map &, circle_data &ac, process_map &pm);
   void set(std::istream &in, std::ostream &, set_map &sets, circle_data &ac, process_map &pm);
