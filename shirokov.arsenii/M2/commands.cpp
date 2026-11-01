@@ -1,14 +1,14 @@
 #include "commands.hpp"
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 #include <istream>
 #include <limits>
 #include <stdexcept>
 #include <string>
-#include <thread>
+#include <poll.h>
 #include <unistd.h>
 #include "../common/ellipse.hpp"
-#include "ThreadRAII.hpp"
 #include "child.hpp"
 #include "pipe.hpp"
 
@@ -84,15 +84,44 @@ namespace
     return true;
   }
 
-  void listen_channel(const std::string calc_name, shirokov::Data& data)
+  void printCalcResult(std::ostream& out, const shirokov::CalcRes& res)
   {
-    const std::string& process_name = data.calcs[calc_name].process_name;
-    shirokov::DuplexChannel& channel = data.channels.at(process_name);
+    const auto old_flags = out.flags();
+    const auto old_prec = out.precision();
+    out << res.process_name << ' ' << res.time << ' ' << std::fixed << std::setprecision(3) << res.result << '\n';
+    out.flags(old_flags);
+    out.precision(old_prec);
+  }
 
-    double res = 0;
-    channel.read(&res, sizeof(res));
-    data.calcs[calc_name].result = res;
-    data.calcs[calc_name].time = 1;
+  void updateProcess(const std::string& proc_name, shirokov::Data& data)
+  {
+    auto& queue = data.proc_queues[proc_name];
+    auto& channel = data.channels.at(proc_name);
+
+    while (!queue.empty())
+    {
+      pollfd pfd{};
+      pfd.fd = channel.getReadFd();
+      pfd.events = POLLIN;
+      const int ret = ::poll(&pfd, 1, 0);
+      if (ret > 0 && (pfd.revents & POLLIN))
+      {
+        double res = 0.0;
+        double time = 0.0;
+        channel.read(&res, sizeof(res));
+        channel.read(&time, sizeof(time));
+
+        const std::string finished_calc = queue.front();
+        queue.pop();
+
+        data.calcs[finished_calc].result = res;
+        data.calcs[finished_calc].time = (time > 0.0) ? time : 1.0;
+      }
+      else
+      {
+        break;
+      }
+    }
   }
 }
 
@@ -380,7 +409,7 @@ void shirokov::spawn(std::istream& in, std::ostream&, Data& data)
   }
 
   PipeBridge bridge{};
-  pid_t pid = fork();
+  const pid_t pid = fork();
 
   if (pid == -1)
   {
@@ -389,12 +418,12 @@ void shirokov::spawn(std::istream& in, std::ostream&, Data& data)
 
   if (!pid)
   {
-    DuplexChannel channel = std::move(bridge).as_child();
-    child_process(std::move(channel), seed);
+    DuplexChannel channel = std::move(bridge).asChild();
+    childProcess(std::move(channel), seed);
     _exit(0);
   }
 
-  DuplexChannel channel = std::move(bridge).as_parent();
+  DuplexChannel channel = std::move(bridge).asParent();
   data.channels.insert({name, std::move(channel)});
 }
 
@@ -443,8 +472,7 @@ void shirokov::areaOn(std::istream& in, std::ostream&, Data& data)
   channel.write(&tries, sizeof(tries));
 
   data.calcs.insert({calc_name, {process_name, -1.0, -1.0}});
-
-  data.threads.insert({calc_name, ThreadRAII(std::thread(listen_channel, calc_name, std::ref(data)))});
+  data.proc_queues[process_name].push(calc_name);
 }
 
 void shirokov::status(std::istream& in, std::ostream& out, Data& data)
@@ -452,9 +480,7 @@ void shirokov::status(std::istream& in, std::ostream& out, Data& data)
   std::string args;
   std::getline(in, args);
   std::vector< std::string > tokens = split(args, ' ');
-
   std::string name;
-
   try
   {
     name = tokens.at(0);
@@ -463,21 +489,22 @@ void shirokov::status(std::istream& in, std::ostream& out, Data& data)
   {
     throw std::range_error(e.what());
   }
-
   if (data.calcs.find(name) == data.calcs.end())
   {
     throw std::invalid_argument("calc with this name doesn't exist");
   }
 
+  const std::string& process_name = data.calcs[name].process_name;
+  updateProcess(process_name, data);
+
   const CalcRes& res = data.calcs[name];
-  out << res.process_name << ' ';
-  if (res.time >= 0 && res.result >= 0)
+  if (res.time >= 0.0 && res.result >= 0.0)
   {
-    out << res.time << ' ' << res.result << '\n';
+    printCalcResult(out, res);
   }
   else
   {
-    out << "<IN PROGRESS>" << '\n';
+    out << res.process_name << " <IN PROGRESS>\n";
   }
 }
 
@@ -486,9 +513,7 @@ void shirokov::wait(std::istream& in, std::ostream& out, Data& data)
   std::string args;
   std::getline(in, args);
   std::vector< std::string > tokens = split(args, ' ');
-
   std::string name;
-
   try
   {
     name = tokens.at(0);
@@ -497,14 +522,29 @@ void shirokov::wait(std::istream& in, std::ostream& out, Data& data)
   {
     throw std::range_error(e.what());
   }
-
   if (data.calcs.find(name) == data.calcs.end())
   {
     throw std::invalid_argument("calc with this name doesn't exist");
   }
 
-  ThreadRAII& thr = data.threads.at(name);
-  thr.th.join();
+  const std::string& process_name = data.calcs[name].process_name;
+  DuplexChannel& channel = data.channels.at(process_name);
+  auto& queue = data.proc_queues[process_name];
+
+  while (data.calcs[name].time < 0.0 && !queue.empty())
+  {
+    double res = 0.0;
+    double time = 0.0;
+    channel.read(&res, sizeof(res));
+    channel.read(&time, sizeof(time));
+
+    const std::string finished_calc = queue.front();
+    queue.pop();
+
+    data.calcs[finished_calc].result = res;
+    data.calcs[finished_calc].time = (time > 0.0) ? time : 1.0;
+  }
+
   const CalcRes& res = data.calcs[name];
-  out << res.process_name << ' ' << res.time << ' ' << res.result << '\n';
+  printCalcResult(out, res);
 }

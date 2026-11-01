@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include "../common/ellipse.hpp"
-#include "ThreadRAII.hpp"
+#include <queue>
 #include "pipe.hpp"
 
 namespace shirokov
@@ -16,7 +16,7 @@ namespace shirokov
   using set_map = std::unordered_map< std::string, ellipse_list >;
   using channel_map = std::unordered_map< std::string, DuplexChannel >;
   using calc_map = std::unordered_map< std::string, CalcRes >;
-  using threads_map = std::unordered_map< std::string, ThreadRAII >;
+  using proc_queue_map = std::unordered_map< std::string, std::queue< std::string > >;
 
   struct Data
   {
@@ -24,7 +24,7 @@ namespace shirokov
     set_map sets;
     channel_map channels;
     calc_map calcs;
-    threads_map threads;
+    proc_queue_map proc_queues;
   };
 
   struct CalcRes

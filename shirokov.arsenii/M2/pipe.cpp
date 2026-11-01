@@ -66,10 +66,10 @@ shirokov::DuplexChannel::DuplexChannel(UniqueFd read, UniqueFd write) noexcept:
 ssize_t shirokov::DuplexChannel::write(const void* b, ssize_t k)
 {
   ssize_t r = 0;
-  const char* bytes = static_cast< const char* >(b);
+  const char* const bytes = static_cast< const char* >(b);
   while (r < k)
   {
-    ssize_t err = ::write(write_fd_.get(), bytes + r, static_cast< size_t >(k - r));
+    const ssize_t err = ::write(write_fd_.get(), bytes + r, static_cast< size_t >(k - r));
     if (err <= 0)
     {
       throw std::system_error(errno, std::generic_category(), "pip write error");
@@ -82,10 +82,10 @@ ssize_t shirokov::DuplexChannel::write(const void* b, ssize_t k)
 ssize_t shirokov::DuplexChannel::read(void* b, ssize_t k)
 {
   ssize_t r = 0;
-  char* bytes = static_cast< char* >(b);
+  char* const bytes = static_cast< char* >(b);
   while (r < k)
   {
-    ssize_t err = ::read(read_fd_.get(), bytes + r, static_cast< size_t >(k - r));
+    const ssize_t err = ::read(read_fd_.get(), bytes + r, static_cast< size_t >(k - r));
     if (err <= 0)
     {
       throw std::system_error(errno, std::generic_category(), "pip read error");
@@ -93,6 +93,11 @@ ssize_t shirokov::DuplexChannel::read(void* b, ssize_t k)
     r += err;
   }
   return r;
+}
+
+int shirokov::DuplexChannel::getReadFd() const noexcept
+{
+  return read_fd_.get();
 }
 
 shirokov::PipeBridge::PipeBridge()
@@ -105,14 +110,14 @@ shirokov::PipeBridge::PipeBridge()
   c2p_write_ = std::move(c2p.write);
 }
 
-shirokov::DuplexChannel shirokov::PipeBridge::as_parent() &&
+shirokov::DuplexChannel shirokov::PipeBridge::asParent() &&
 {
   p2c_read_.reset();
   c2p_write_.reset();
   return DuplexChannel(std::move(c2p_read_), std::move(p2c_write_));
 }
 
-shirokov::DuplexChannel shirokov::PipeBridge::as_child() &&
+shirokov::DuplexChannel shirokov::PipeBridge::asChild() &&
 {
   p2c_write_.reset();
   c2p_read_.reset();

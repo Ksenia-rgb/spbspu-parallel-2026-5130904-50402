@@ -3,9 +3,11 @@
 
 bool shirokov::Ellipse::isInside(double px, double py) const noexcept
 {
-  const double nx = (px - x) / hr;
-  const double ny = (py - y) / vr;
-  return nx * nx + ny * ny <= 1.0;
+  const double dx = px - x;
+  const double dy = py - y;
+  const double hr2 = hr * hr;
+  const double vr2 = vr * vr;
+  return (dx * dx) * vr2 + (dy * dy) * hr2 <= hr2 * vr2;
 }
 
 shirokov::Ellipse::Ellipse(double x, double y, double hr, double vr):

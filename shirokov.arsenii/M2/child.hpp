@@ -6,7 +6,7 @@
 
 namespace shirokov
 {
-  void child_process(DuplexChannel channel, size_t seed);
+  void childProcess(DuplexChannel channel, size_t seed);
 }
 
 #endif
