@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 #include "constants.hpp"
-#include "area.hpp"
+#include "../common/area.hpp"
 
 namespace shirokov
 {
