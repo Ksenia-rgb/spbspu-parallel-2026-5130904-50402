@@ -23,11 +23,13 @@ namespace petrov {
 
     void executeLine(const std::string& line);
     bool createCircle(const std::vector< std::string >& tokens);
+    bool createSet(const std::vector< std::string >& tokens);
     bool showShape(const std::vector< std::string >& tokens);
 
     std::istream& input_;
     std::ostream& output_;
     std::map< std::string, shape_t > shapes_;
+    std::map< std::string, std::vector< std::string > > sets_;
   };
 
 }

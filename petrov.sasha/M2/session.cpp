@@ -16,8 +16,10 @@ namespace petrov {
     constexpr std::size_t circle_radius_index = 2;
     constexpr std::size_t circle_x_index = 3;
     constexpr std::size_t circle_y_index = 4;
+    constexpr std::size_t set_size_index = 2;
 
     constexpr std::size_t name_token_count = 2;
+    constexpr std::size_t set_token_count = 3;
     constexpr std::size_t circle_token_count = 5;
 
     constexpr char invalid_command_message[] = "<INVALID COMMAND>";
@@ -100,6 +102,8 @@ namespace petrov {
     bool is_executed = false;
     if (command == "circle") {
       is_executed = createCircle(tokens);
+    } else if (command == "set") {
+      is_executed = createSet(tokens);
     } else if (command == "show") {
       is_executed = showShape(tokens);
     } else {
@@ -132,6 +136,31 @@ namespace petrov {
     shape.center.x = static_cast< double >(x);
     shape.center.y = static_cast< double >(y);
     return shapes_.emplace(tokens[argument_index], shape).second;
+  }
+
+  bool Session::createSet(const std::vector< std::string >& tokens)
+  {
+    if (tokens.size() < set_token_count) {
+      return false;
+    }
+    if (!isName(tokens[argument_index])) {
+      return false;
+    }
+    int size = 0;
+    if (!parseInteger(tokens[set_size_index], size)) {
+      return false;
+    }
+    if ((size <= 0) || (static_cast< std::size_t >(size) != (tokens.size() - set_token_count))) {
+      return false;
+    }
+    std::vector< std::string > members;
+    for (std::size_t index = set_token_count; index < tokens.size(); ++index) {
+      if (!isName(tokens[index]) || (findShape(tokens[index]) == nullptr)) {
+        return false;
+      }
+      members.push_back(tokens[index]);
+    }
+    return sets_.emplace(tokens[argument_index], members).second;
   }
 
   bool Session::showShape(const std::vector< std::string >& tokens)
