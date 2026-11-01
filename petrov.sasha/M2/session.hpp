@@ -19,8 +19,11 @@ namespace petrov {
     void runCommands();
 
   private:
+    const shape_t* findShape(const std::string& name) const;
+
     void executeLine(const std::string& line);
     bool createCircle(const std::vector< std::string >& tokens);
+    bool showShape(const std::vector< std::string >& tokens);
 
     std::istream& input_;
     std::ostream& output_;

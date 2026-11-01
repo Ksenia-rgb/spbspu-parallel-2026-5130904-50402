@@ -16,6 +16,8 @@ namespace petrov {
     constexpr std::size_t circle_radius_index = 2;
     constexpr std::size_t circle_x_index = 3;
     constexpr std::size_t circle_y_index = 4;
+
+    constexpr std::size_t name_token_count = 2;
     constexpr std::size_t circle_token_count = 5;
 
     constexpr char invalid_command_message[] = "<INVALID COMMAND>";
@@ -78,6 +80,15 @@ namespace petrov {
     }
   }
 
+  const shape_t* Session::findShape(const std::string& name) const
+  {
+    const auto shape = shapes_.find(name);
+    if (shape == shapes_.end()) {
+      return nullptr;
+    }
+    return &shape->second;
+  }
+
   void Session::executeLine(const std::string& line)
   {
     const std::vector< std::string > tokens = splitTokens(line);
@@ -89,6 +100,8 @@ namespace petrov {
     bool is_executed = false;
     if (command == "circle") {
       is_executed = createCircle(tokens);
+    } else if (command == "show") {
+      is_executed = showShape(tokens);
     } else {
       output_ << unknown_command_message << '\n';
       return;
@@ -119,6 +132,19 @@ namespace petrov {
     shape.center.x = static_cast< double >(x);
     shape.center.y = static_cast< double >(y);
     return shapes_.emplace(tokens[argument_index], shape).second;
+  }
+
+  bool Session::showShape(const std::vector< std::string >& tokens)
+  {
+    if (tokens.size() != name_token_count) {
+      return false;
+    }
+    const shape_t* const shape = findShape(tokens[argument_index]);
+    if (shape == nullptr) {
+      return false;
+    }
+    output_ << *shape << '\n';
+    return true;
   }
 
 }
