@@ -2,7 +2,6 @@
 #define PROCESS_HPP
 
 #include <cstddef>
-#include <cstdint>
 #include <string>
 #include <vector>
 
