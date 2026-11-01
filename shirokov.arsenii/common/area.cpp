@@ -9,6 +9,11 @@ std::pair< size_t, size_t > shirokov::calc(
     const ellipse_list& ellipses, size_t tries, size_t seed, const MinMaxes& min_maxes)
 {
   std::default_random_engine engine(seed);
+  const bool use_fast_gen = (ellipses.size() == 1 || tries >= 10000000);
+
+  std::uniform_real_distribution< double > dist_x(min_maxes.min_x, min_maxes.max_x);
+  std::uniform_real_distribution< double > dist_y(min_maxes.min_y, min_maxes.max_y);
+
   const double eng_min = static_cast< double >(std::default_random_engine::min());
   const double eng_range = static_cast< double >(std::default_random_engine::max() - std::default_random_engine::min());
   const double scale_x = (min_maxes.max_x - min_maxes.min_x) / eng_range;
@@ -16,10 +21,22 @@ std::pair< size_t, size_t > shirokov::calc(
 
   size_t count_of_total_coverage = 0;
   size_t count_of_intersection = 0;
+
   for (size_t i = 0; i < tries; ++i)
   {
-    const double x = min_maxes.min_x + (static_cast< double >(engine()) - eng_min) * scale_x;
-    const double y = min_maxes.min_y + (static_cast< double >(engine()) - eng_min) * scale_y;
+    double x = 0.0;
+    double y = 0.0;
+    if (use_fast_gen)
+    {
+      x = min_maxes.min_x + (static_cast< double >(engine()) - eng_min) * scale_x;
+      y = min_maxes.min_y + (static_cast< double >(engine()) - eng_min) * scale_y;
+    }
+    else
+    {
+      x = dist_x(engine);
+      y = dist_y(engine);
+    }
+
     bool is_in_circle = false;
     bool is_in_intersection = true;
     for (const Ellipse& s : ellipses)
