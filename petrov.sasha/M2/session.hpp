@@ -2,6 +2,7 @@
 #define SESSION_HPP
 
 #include <iosfwd>
+#include <string>
 
 namespace petrov {
 
@@ -14,6 +15,8 @@ namespace petrov {
     void runCommands();
 
   private:
+    void executeLine(const std::string& line);
+
     std::istream& input_;
     std::ostream& output_;
   };
