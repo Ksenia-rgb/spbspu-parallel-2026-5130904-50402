@@ -34,7 +34,7 @@ namespace karpovich
     {
       if (sh.type == ShapeType::Circle)
       {
-        out << sh.r1<< " " << sh.center << "\n";
+        out << sh.r1 << " " << sh.center << "\n";
       }
       else
       {
@@ -424,39 +424,28 @@ namespace karpovich
 
     for (const auto& name : sit->second)
     {
-      const shape_t& shape = data.shapes.at(name);
-
-      if (shape.type == ShapeType::Circle)
-      {
-        raw.push_back({ShapeType::Circle, shape.r1, 0.0, shape.center.x, shape.center.y});
-      }
-      else
-      {
-        raw.push_back({ShapeType::Ellipse, shape.r1, shape.r2, shape.center.x, shape.center.y});
-      }
+      raw.push_back(data.shapes.at(name));
     }
 
     const size_t calc_id = data.next_calc_id++;
-    size_t hdr[PROTO_HEADER_WORDS] = {1, calc_id, threads, tries, raw.size()};
 
+    size_t hdr[4] = {calc_id, threads, tries, raw.size()};
     int err = 0;
-    send(err, wit->second.wr, hdr, sizeof hdr);
 
-    if (err <= 0)
+    if (send(err, wit->second.wr, hdr, sizeof(hdr)) != sizeof(hdr))
     {
       throw std::invalid_argument("write");
     }
 
     if (!raw.empty())
     {
-      send(err, wit->second.wr, raw.data(), raw.size() * sizeof(shape_t));
+      const size_t bytes = raw.size() * sizeof(shape_t);
 
-      if (err <= 0)
+      if (send(err, wit->second.wr, raw.data(), bytes) != bytes)
       {
         throw std::invalid_argument("write");
       }
     }
-
     Calc c;
     c.proc = proc;
     c.calc_id = calc_id;

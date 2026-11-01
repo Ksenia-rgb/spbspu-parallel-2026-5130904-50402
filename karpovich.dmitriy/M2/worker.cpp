@@ -3,7 +3,6 @@
 #include <cstddef>
 #include <ratio>
 #include <unistd.h>
-#include <vector>
 #include "../common/area.hpp"
 #include "../common/shape.hpp"
 
@@ -46,47 +45,32 @@ namespace karpovich
   {
     while (true)
     {
-      size_t hdr[PROTO_HEADER_WORDS] = {};
+      size_t hdr[4] = {};
       int err = 0;
-      take(err, rd, hdr, sizeof hdr);
-      if (err <= 0)
+      if (take(err, rd, hdr, sizeof(hdr)) != sizeof(hdr))
       {
         break;
       }
 
-      std::vector< shape_t > raw(hdr[4]);
-      if (!raw.empty())
+      shapes_t shapes(hdr[3]);
+
+      if (!shapes.empty())
       {
-        err = 0;
-        take(err, rd, raw.data(), raw.size() * sizeof(shape_t));
-        if (err <= 0)
+        const size_t bytes = shapes.size() * sizeof(shape_t);
+
+        if (take(err, rd, shapes.data(), bytes) != bytes)
         {
           break;
         }
       }
 
-      shapes_t shapes;
-      shapes.reserve(raw.size());
-      for (const auto &d : raw)
-      {
-        if (d.type == ShapeType::Circle)
-        {
-          shapes.push_back({ShapeType::Circle, d.r1, d.r1, point_t{d.center.x, d.center.y}});
-        }
-        else
-        {
-          shapes.push_back({ShapeType::Ellipse, d.r1, d.r2, point_t{d.center.x, d.center.y}});
-        }
-      }
-
       const auto start = std::chrono::steady_clock::now();
-      const double area_val = area(shapes, hdr[2], hdr[3], seed + hdr[1]).second;
+      const double area_val = area(shapes, hdr[1], hdr[2], seed + hdr[0]).second;
       const auto end = std::chrono::steady_clock::now();
       const double ms = std::chrono::duration< double, std::milli >(end - start).count();
-      const ResultSlot result{hdr[1], ms, area_val};
-      err = 0;
-      send(err, result_wr, &result, sizeof result);
-      if (err <= 0)
+      const ResultSlot result{hdr[0], ms, area_val};
+
+      if (send(err, result_wr, &result, sizeof(result)) != sizeof(result))
       {
         break;
       }

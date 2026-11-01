@@ -5,7 +5,6 @@
 
 namespace karpovich
 {
-  constexpr size_t PROTO_HEADER_WORDS = 5;
 
   struct ResultSlot
   {
