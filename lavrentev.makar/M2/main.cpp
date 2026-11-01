@@ -1,16 +1,14 @@
 #include <iostream>
 #include <limits>
 #include <circle.hpp>
-#include "commands.hpp"
 #include "child.hpp"
+#include "commands.hpp"
 
 namespace lavrentev
 {
   using cmd_t = void (*)(
     std::istream &, std::ostream &,
-    set_map &,
-    circle_data &,
-    process_map &
+    Data &
   );
 }
 
@@ -23,8 +21,10 @@ int main(int argc, char* argv[])
 
   lavrentev::set_map sets;
   lavrentev::circle_data all_circles;
-  std::unordered_map<std::string, lavrentev::cmd_t> cmds;
   lavrentev::process_map pm;
+  lavrentev::calc_map cm;
+  lavrentev::Data data{sets, all_circles, pm, cm};
+  std::unordered_map<std::string, lavrentev::cmd_t> cmds;
 
   cmds["circle"] = lavrentev::circle;
   cmds["set"] = lavrentev::set;
@@ -33,16 +33,16 @@ int main(int argc, char* argv[])
   cmds["frame"] = lavrentev::frame;
   cmds["frameset"] = lavrentev::frameset;
   cmds["spawn"] = lavrentev::spawn;
-  //cmds["area-on"] = lavrentev::area_on;
-  //cmds["status"] = lavrentev::status;
-  //cmds["wait"] = lavrentev::wait;
+  cmds["area-on"] = lavrentev::area_on;
+  cmds["status"] = lavrentev::status;
+  cmds["wait"] = lavrentev::wait;
 
   std::string cmd;
   while (std::cin >> cmd)
   {
     try
     {
-      cmds.at(cmd)(std::cin, std::cout, sets, all_circles, pm);
+      cmds.at(cmd)(std::cin, std::cout, data);
     } catch (const std::out_of_range &)
     {
       std::cout << "<UNKNOWN COMMAND>\n";

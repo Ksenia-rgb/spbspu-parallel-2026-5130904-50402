@@ -6,9 +6,9 @@
 #include <utility>
 #include <vector>
 
-#include "calculations.hpp"
+#include <calculations.hpp>
 #include <circle.hpp>
-#include "polygon.hpp"
+#include <polygon.hpp>
 
 int main(int argc, char *argv[])
 {
