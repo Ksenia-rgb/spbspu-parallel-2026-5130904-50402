@@ -30,6 +30,7 @@ namespace petrov {
     bool createSet(const std::vector< std::string >& tokens);
     bool showShape(const std::vector< std::string >& tokens);
     bool showSet(const std::vector< std::string >& tokens);
+    bool showFrame(const std::vector< std::string >& tokens);
 
     std::istream& input_;
     std::ostream& output_;
