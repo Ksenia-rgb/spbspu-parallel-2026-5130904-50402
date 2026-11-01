@@ -71,7 +71,12 @@ namespace petrov {
 
   Session::Session(std::istream& input, std::ostream& output):
     input_(input),
-    output_(output)
+    output_(output),
+    commands_{{"circle", &Session::createCircle},
+              {"set", &Session::createSet},
+              {"show", &Session::showShape},
+              {"showset", &Session::showSet}
+            }
   {}
 
   void Session::runCommands()
@@ -91,6 +96,32 @@ namespace petrov {
     return &shape->second;
   }
 
+  const std::vector< std::string >* Session::findSet(const std::string& name) const
+  {
+    const auto set = sets_.find(name);
+    if (set == sets_.end()) {
+      return nullptr;
+    }
+    return &set->second;
+  }
+
+  bool Session::collectShapes(const std::string& name, std::vector< shape_t >& shapes) const
+  {
+    const std::vector< std::string >* const members = findSet(name);
+    if (members == nullptr) {
+      return false;
+    }
+    shapes.clear();
+    for (const std::string& member : *members) {
+      const shape_t* const shape = findShape(member);
+      if (shape == nullptr) {
+        return false;
+      }
+      shapes.push_back(*shape);
+    }
+    return true;
+  }
+
   void Session::executeLine(const std::string& line)
   {
     const std::vector< std::string > tokens = splitTokens(line);
@@ -98,19 +129,13 @@ namespace petrov {
       output_ << invalid_command_message << '\n';
       return;
     }
-    const std::string& command = tokens[0];
-    bool is_executed = false;
-    if (command == "circle") {
-      is_executed = createCircle(tokens);
-    } else if (command == "set") {
-      is_executed = createSet(tokens);
-    } else if (command == "show") {
-      is_executed = showShape(tokens);
-    } else {
+    const auto handler = commands_.find(tokens[0]);
+    if (handler == commands_.end()) {
       output_ << unknown_command_message << '\n';
       return;
     }
-    if (!is_executed) {
+    const command_handler_t command = handler->second;
+    if (!(this->*command)(tokens)) {
       output_ << invalid_command_message << '\n';
     }
   }
@@ -173,6 +198,21 @@ namespace petrov {
       return false;
     }
     output_ << *shape << '\n';
+    return true;
+  }
+
+  bool Session::showSet(const std::vector< std::string >& tokens)
+  {
+    if (tokens.size() != name_token_count) {
+      return false;
+    }
+    std::vector< shape_t > shapes;
+    if (!collectShapes(tokens[argument_index], shapes)) {
+      return false;
+    }
+    for (const shape_t& shape : shapes) {
+      output_ << shape << '\n';
+    }
     return true;
   }
 

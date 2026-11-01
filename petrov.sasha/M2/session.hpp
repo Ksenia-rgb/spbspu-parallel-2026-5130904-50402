@@ -19,17 +19,23 @@ namespace petrov {
     void runCommands();
 
   private:
+    using command_handler_t = bool (Session::*)(const std::vector< std::string >&);
+
     const shape_t* findShape(const std::string& name) const;
+    const std::vector< std::string >* findSet(const std::string& name) const;
+    bool collectShapes(const std::string& name, std::vector< shape_t >& shapes) const;
 
     void executeLine(const std::string& line);
     bool createCircle(const std::vector< std::string >& tokens);
     bool createSet(const std::vector< std::string >& tokens);
     bool showShape(const std::vector< std::string >& tokens);
+    bool showSet(const std::vector< std::string >& tokens);
 
     std::istream& input_;
     std::ostream& output_;
     std::map< std::string, shape_t > shapes_;
     std::map< std::string, std::vector< std::string > > sets_;
+    const std::map< std::string, command_handler_t > commands_;
   };
 
 }
