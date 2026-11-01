@@ -26,8 +26,8 @@ lavrentev::Process::Process(std::string process_name):
     throw std::runtime_error("Parent: failed to create out-pipe");
   }
 
-  pid_t pid = fork();
-  if (pid == -1)
+  pid_t pid_ = fork();
+  if (pid_ == -1)
   {
     perror("Parent: fork error");
     close(p_in[0]);
@@ -46,7 +46,7 @@ lavrentev::Process::Process(std::string process_name):
     char out_arg[16];
     snprintf(in_arg, sizeof(in_arg), "%d", p_in[0]);
     snprintf(out_arg, sizeof(out_arg), "%d", p_out[1]);
-    execl(process_name_.c_str(), process_name_.c_str(), in_arg, out_arg, nullptr);
+    execl("./child", "child", in_arg, out_arg, nullptr);
 
     close(p_in[0]);
     close(p_out[1]);
@@ -55,8 +55,8 @@ lavrentev::Process::Process(std::string process_name):
 
   close(p_in[0]);
   close(p_out[1]);
-  out_fd_ = p_in[1];
-  in_fd_ = p_out[0];
+  in_fd_ = p_in[1];
+  out_fd_ = p_out[0];
 }
 
 lavrentev::Process::Process(Process&& other) noexcept:
@@ -139,4 +139,9 @@ void lavrentev::Process::cleanup()
     waitpid(pid_, nullptr, 0);
     pid_ = -1;
   }
+}
+
+void lavrentev::Process::set_calc_name(const std::string& calc_name)
+{
+  calc_name_ = calc_name;
 }

@@ -2,6 +2,7 @@
 #include <limits>
 #include <circle.hpp>
 #include "commands.hpp"
+#include "child.hpp"
 
 namespace lavrentev
 {
@@ -13,8 +14,13 @@ namespace lavrentev
   );
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+  if (argc == 3 && std::string(argv[0]) == "child")
+  {
+    return run_child(std::atoi(argv[1]), std::atoi(argv[2]));
+  }
+
   lavrentev::set_map sets;
   lavrentev::circle_data all_circles;
   std::unordered_map<std::string, lavrentev::cmd_t> cmds;

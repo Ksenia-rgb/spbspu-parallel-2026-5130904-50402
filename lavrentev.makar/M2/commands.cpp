@@ -308,3 +308,22 @@ void lavrentev::spawn(std::istream &in, std::ostream &, set_map &, circle_data &
   prc->set_seed(seed);
   pm.emplace(process_name, std::move(prc));
 }
+
+void lavrentev::area_on(std::istream &in, std::ostream &, set_map &sets, circle_data &ac, process_map &pm)
+{
+  std::string line;
+  std::getline(in, line);
+  std::vector< std::string > data = split(line);
+  if (data.size() != 5)
+  {
+    throw std::logic_error("Invalid amount of arguments for spawn");
+  }
+
+  std::string process_name = data[0];
+  if (pm.find(process_name) == pm.end())
+  {
+    throw std::logic_error("Process does not exist");
+  }
+
+  std::string calc_name = data[1];
+}

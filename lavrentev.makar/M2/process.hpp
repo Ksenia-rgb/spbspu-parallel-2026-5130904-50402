@@ -20,6 +20,7 @@ namespace lavrentev
     double get_result();
     void set_seed(int seed);
     bool is_alive() const;
+    void set_calc_name(const std::string& calc_name);
 
   private:
     void cleanup();
