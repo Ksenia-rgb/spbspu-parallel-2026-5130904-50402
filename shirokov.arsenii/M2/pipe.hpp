@@ -1,6 +1,7 @@
 #ifndef PIPE_HPP
 #define PIPE_HPP
 
+#include <sys/types.h>
 namespace shirokov
 {
   struct UniqueFd
@@ -18,6 +19,7 @@ namespace shirokov
     ~UniqueFd();
 
     int get() const noexcept;
+    void reset() noexcept;
   private:
     int fd_ = -1;
   };
@@ -28,6 +30,30 @@ namespace shirokov
     UniqueFd write;
 
     Pipe();
+  };
+
+  struct DuplexChannel
+  {
+  public:
+    DuplexChannel(UniqueFd read, UniqueFd write) noexcept;
+    ssize_t write(const void* b, ssize_t k);
+    ssize_t read(void* b, ssize_t k);
+
+  private:
+    UniqueFd read_fd_, write_fd_;
+  };
+
+  struct PipeBridge
+  {
+  public:
+    PipeBridge();
+    DuplexChannel as_parent() &&;
+    DuplexChannel as_child() &&;
+  private:
+    UniqueFd p2c_read_;
+    UniqueFd p2c_write_;
+    UniqueFd c2p_read_;
+    UniqueFd c2p_write_;
   };
 }
 

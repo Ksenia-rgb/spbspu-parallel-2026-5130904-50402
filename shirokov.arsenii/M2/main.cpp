@@ -22,6 +22,7 @@ int main()
   cmds["showset"] = shirokov::showset;
   cmds["frame"] = shirokov::frame;
   cmds["frameset"] = shirokov::frameset;
+  cmds["spawn"] = shirokov::spawn;
 
   std::string cmd;
   while (std::cin >> cmd)

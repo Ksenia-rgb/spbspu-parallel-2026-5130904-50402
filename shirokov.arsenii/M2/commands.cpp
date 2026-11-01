@@ -5,7 +5,10 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <unistd.h>
 #include "../common/ellipse.hpp"
+#include "child.hpp"
+#include "pipe.hpp"
 
 namespace
 {
@@ -343,4 +346,46 @@ void shirokov::frameset(std::istream& in, std::ostream& out, Data& data)
   const MinMaxes min_maxes = getAllMinMaxes(sets[name]);
   out << '(' << min_maxes.min_x << ' ' << min_maxes.min_y << ')' << ' ';
   out << '(' << min_maxes.max_x << ' ' << min_maxes.max_y << ')' << '\n';
+}
+
+void shirokov::spawn(std::istream& in, std::ostream&, Data& data)
+{
+  std::string args;
+  std::getline(in, args);
+
+  std::vector< std::string > tokens = split(args, ' ');
+
+  std::string name;
+  size_t seed = 0;
+
+  try
+  {
+    name = tokens.at(0);
+    seed = parseSizeT(tokens.at(1));
+  }
+  catch (const std::out_of_range& e)
+  {
+    throw std::range_error(e.what());
+  }
+
+  PipeBridge bridge{};
+
+  pid_t pid = fork();
+
+  if (pid == -1)
+  {
+    throw std::system_error(errno, std::generic_category(), "fork error");
+  }
+
+  if (!pid)
+  {
+    DuplexChannel channel = std::move(bridge).as_child();
+
+    child_process(std::move(channel), seed);
+
+    return;
+  }
+
+  DuplexChannel channel = std::move(bridge).as_parent();
+  data.channels.insert({name, std::move(channel)});
 }
