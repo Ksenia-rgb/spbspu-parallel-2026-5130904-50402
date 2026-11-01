@@ -1,10 +1,10 @@
 #include "calculations.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <future>
 #include <iostream>
-#include <random>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -77,43 +77,110 @@ lavrentev::count_pair_t lavrentev::calculate(const f_t &figures, const Polygon &
     return {0, 0};
   }
 
-  // Кэшируем параметры кругов до старта цикла
-  struct FastCircle {
-    double x;
-    double y;
-    double r2;
-  };
-  std::vector<FastCircle> fast_figs(fig_size);
-  for (std::size_t j = 0; j < fig_size; ++j)
+  std::uint64_t s = static_cast< std::uint32_t >(seed) % 2147483647ULL;
+  if (s == 0)
   {
-    double r = figures[j].getRadius();
-    fast_figs[j] = {
-      static_cast<double>(figures[j].getX()),
-      static_cast<double>(figures[j].getY()),
-      r * r
-    };
+    s = 1ULL;
   }
-  const FastCircle* figs_ptr = fast_figs.data();
 
-  // Стандартный генератор, создаваемый ОДИН раз на поток
-  std::default_random_engine engine(seed);
-  std::uniform_real_distribution<double> dist_x(pg.getMinX(), pg.getMaxX());
-  std::uniform_real_distribution<double> dist_y(pg.getMinY(), pg.getMaxY());
+  const double min_x = static_cast< double >(pg.getMinX());
+  const double min_y = static_cast< double >(pg.getMinY());
+  const double base = 2147483646.0;
+  const double denom = base * base;
+  const double scale_x = static_cast< double >(pg.getMaxX() - pg.getMinX()) / denom;
+  const double scale_y = static_cast< double >(pg.getMaxY() - pg.getMinY()) / denom;
 
   std::size_t res_all = 0;
   std::size_t res_is = 0;
 
+  if (fig_size == 1)
+  {
+    const double cx = static_cast< double >(figures[0].getX());
+    const double cy = static_cast< double >(figures[0].getY());
+    const double r = static_cast< double >(figures[0].getRadius());
+    const double cr2 = r * r;
+
+    for (std::size_t i = 0; i < tries; ++i)
+    {
+      std::uint64_t p1 = s * 16807ULL;
+      s = (p1 & 0x7FFFFFFFULL) + (p1 >> 31);
+      if (s >= 2147483647ULL) s -= 2147483647ULL;
+      const double r1 = static_cast< double >(s - 1ULL);
+
+      std::uint64_t p2 = s * 16807ULL;
+      s = (p2 & 0x7FFFFFFFULL) + (p2 >> 31);
+      if (s >= 2147483647ULL) s -= 2147483647ULL;
+      const double r2 = static_cast< double >(s - 1ULL);
+
+      const double x = min_x + (r1 + r2 * base) * scale_x;
+
+      std::uint64_t p3 = s * 16807ULL;
+      s = (p3 & 0x7FFFFFFFULL) + (p3 >> 31);
+      if (s >= 2147483647ULL) s -= 2147483647ULL;
+      const double r3 = static_cast< double >(s - 1ULL);
+
+      std::uint64_t p4 = s * 16807ULL;
+      s = (p4 & 0x7FFFFFFFULL) + (p4 >> 31);
+      if (s >= 2147483647ULL) s -= 2147483647ULL;
+      const double r4 = static_cast< double >(s - 1ULL);
+
+      const double y = min_y + (r3 + r4 * base) * scale_y;
+
+      const double dx = x - cx;
+      const double dy = y - cy;
+      if ((dx * dx + dy * dy) <= cr2)
+      {
+        ++res_all;
+        ++res_is;
+      }
+    }
+    return {res_all, res_is};
+  }
+
+  std::vector< FastCircle > fast_figures(fig_size);
+  for (std::size_t j = 0; j < fig_size; ++j)
+  {
+    const double r = static_cast< double >(figures[j].getRadius());
+    fast_figures[j] = {
+      static_cast< double >(figures[j].getX()),
+      static_cast< double >(figures[j].getY()),
+      r * r
+    };
+  }
+  const FastCircle *fig_ptr = fast_figures.data();
+
   for (std::size_t i = 0; i < tries; ++i)
   {
-    const double x = dist_x(engine);
-    const double y = dist_y(engine);
+    std::uint64_t p1 = s * 16807ULL;
+    s = (p1 & 0x7FFFFFFFULL) + (p1 >> 31);
+    if (s >= 2147483647ULL) s -= 2147483647ULL;
+    const double r1 = static_cast< double >(s - 1ULL);
+
+    std::uint64_t p2 = s * 16807ULL;
+    s = (p2 & 0x7FFFFFFFULL) + (p2 >> 31);
+    if (s >= 2147483647ULL) s -= 2147483647ULL;
+    const double r2 = static_cast< double >(s - 1ULL);
+
+    const double x = min_x + (r1 + r2 * base) * scale_x;
+
+    std::uint64_t p3 = s * 16807ULL;
+    s = (p3 & 0x7FFFFFFFULL) + (p3 >> 31);
+    if (s >= 2147483647ULL) s -= 2147483647ULL;
+    const double r3 = static_cast< double >(s - 1ULL);
+
+    std::uint64_t p4 = s * 16807ULL;
+    s = (p4 & 0x7FFFFFFFULL) + (p4 >> 31);
+    if (s >= 2147483647ULL) s -= 2147483647ULL;
+    const double r4 = static_cast< double >(s - 1ULL);
+
+    const double y = min_y + (r3 + r4 * base) * scale_y;
 
     std::size_t count_fig = 0;
     for (std::size_t j = 0; j < fig_size; ++j)
     {
-      const double dx = x - figs_ptr[j].x;
-      const double dy = y - figs_ptr[j].y;
-      if ((dx * dx + dy * dy) <= figs_ptr[j].r2)
+      const double dx = x - fig_ptr[j].x;
+      const double dy = y - fig_ptr[j].y;
+      if (((dx * dx) + (dy * dy)) <= fig_ptr[j].r2)
       {
         ++count_fig;
       }

@@ -35,17 +35,6 @@ namespace
       res.push_back(elem);
     }
 
-    // std::cout << '{';
-    // for (std::size_t i = 0; i < res.size(); ++i)
-    // {
-    //   std::cout << '"' << res[i] << '"';
-    //   if (i + 1 < res.size())
-    //   {
-    //     std::cout << ", ";
-    //   }
-    // }
-    // std::cout << "}\n";
-
     return res;
   }
 

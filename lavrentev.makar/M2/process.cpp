@@ -138,7 +138,6 @@ void lavrentev::Process::poll_results(calc_map& global_cm)
   pfd.fd = out_fd_;
   pfd.events = POLLIN;
 
-  // Неблокирующая проверка: если в трубе уже лежат готовые ответы, считываем их
   while (!pending_calcs_.empty() && poll(&pfd, 1, 0) > 0 && (pfd.revents & POLLIN))
   {
     std::string next_calc = pending_calcs_.front();
