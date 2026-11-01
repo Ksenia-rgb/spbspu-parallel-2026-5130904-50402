@@ -144,6 +144,49 @@ namespace petrov {
     return process;
   }
 
+  bool sendCalculation(const process_t& process, const request_t& request, const std::vector< shape_t >& shapes)
+  {
+    if (!sendAll(process.request_descriptor, &request, sizeof(request_t))) {
+      return false;
+    }
+    std::vector< shape_data_t > data(shapes.size());
+    for (std::size_t index = 0; index < shapes.size(); ++index) {
+      data[index].radius = shapes[index].radius;
+      data[index].x = shapes[index].center.x;
+      data[index].y = shapes[index].center.y;
+    }
+    return sendAll(process.request_descriptor, data.data(), data.size() * sizeof(shape_data_t));
+  }
+
+  bool receiveResult(process_t& process, result_t& result)
+  {
+    if (process.result_descriptor == invalid_descriptor) {
+      return false;
+    }
+    const ssize_t received = read(process.result_descriptor, &result, sizeof(result_t));
+    if (received == static_cast< ssize_t >(sizeof(result_t))) {
+      return true;
+    }
+    if (received == 0) {
+      closeDescriptor(process.result_descriptor);
+    }
+    return false;
+  }
+
+  bool receiveResultBlocking(process_t& process, result_t& result)
+  {
+    if (process.result_descriptor == invalid_descriptor) {
+      return false;
+    }
+    setDescriptorMode(process.result_descriptor, false);
+    const bool is_received = receiveAll(process.result_descriptor, &result, sizeof(result_t));
+    setDescriptorMode(process.result_descriptor, true);
+    if (!is_received) {
+      closeDescriptor(process.result_descriptor);
+    }
+    return is_received;
+  }
+
   void closeProcess(process_t& process)
   {
     closeDescriptor(process.request_descriptor);
