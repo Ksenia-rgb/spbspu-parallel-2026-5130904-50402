@@ -15,17 +15,17 @@ namespace karpovich
     point_t min;
   };
 
-  enum class shape_type
+  enum class ShapeType
   {
-    circle,
-    ellipse
+    Circle,
+    Ellipse,
   };
 
   struct shape_t
   {
-    shape_type type;
-    double rx;
-    double ry;
+    ShapeType type;
+    double r1;
+    double r2;
     point_t center;
   };
 

@@ -55,11 +55,11 @@ int main(int argc, char **argv)
   {
     if (second_radius)
     {
-      shapes.push_back({shape_type::ellipse, radius, second_radius, {x, y}});
+      shapes.push_back({ShapeType::Circle, radius, second_radius, {x, y}});
     }
     else
     {
-      shapes.push_back({shape_type::circle, radius, radius, {x, y}});
+      shapes.push_back({ShapeType::Ellipse, radius, radius, {x, y}});
     }
   }
   if (!std::cin.eof())
