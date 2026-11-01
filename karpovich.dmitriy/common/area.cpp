@@ -19,93 +19,63 @@ namespace karpovich
     {
       std::default_random_engine gen(seed);
 
-      const bool one_circle = shapes.size() == 1 && shapes.front().type == shape_type::circle;
-
       std::uniform_real_distribution< double > dist_x(min.x, max.x);
       std::uniform_real_distribution< double > dist_y(min.y, max.y);
-
-      const double engine_min = static_cast< double >(gen.min());
-      const double engine_range = static_cast< double >(gen.max()) - engine_min;
-
-      const double kx = (max.x - min.x) / engine_range;
-      const double ky = (max.y - min.y) / engine_range;
 
       size_t hits_intersection = 0;
       size_t hits_cover = 0;
 
       for (size_t i = 0; i < tests; ++i)
       {
-        point_t point;
-
-        if (one_circle)
-        {
-          point.x = min.x + (static_cast< double >(gen()) - engine_min) * kx;
-          point.y = min.y + (static_cast< double >(gen()) - engine_min) * ky;
-        }
-        else
-        {
-          point.x = dist_x(gen);
-          point.y = dist_y(gen);
-        }
+        const point_t p{dist_x(gen), dist_y(gen)};
 
         bool is_inside_any = false;
         bool is_inside_all = true;
 
-        for (const auto &shape : shapes)
+        for (const auto &shp : shapes)
         {
-          bool inside = false;
-
-          if (one_circle)
+          if (contains(shp, p))
           {
-            const double dx = point.x - shape.center.x;
-            const double dy = point.y - shape.center.y;
-            const double radius2 = shape.rx * shape.rx;
-
-            inside = dx * dx + dy * dy <= radius2;
+            is_inside_any = true;
           }
           else
           {
-            inside = contains(shape, point);
-          }
-
-          is_inside_any = is_inside_any || inside;
-          is_inside_all = is_inside_all && inside;
-
-          if (is_inside_any && !is_inside_all)
-          {
-            break;
+            is_inside_all = false;
           }
         }
+
         if (is_inside_all)
         {
           ++hits_intersection;
         }
+
         if (is_inside_any)
         {
           ++hits_cover;
         }
       }
+
       return {hits_intersection, hits_cover};
     }
 
-  }
-
-  rectangle_t getBoundingBox(const shapes_t &shapes)
-  {
-    const double inf = std::numeric_limits< double >::infinity();
-    point_t max{-inf, -inf};
-    point_t min{inf, inf};
-    for (const auto &shape : shapes)
+    rectangle_t getBoundingBox(const shapes_t &shapes)
     {
-      const point_t shape_min = getMinCorner(shape);
-      const point_t shape_max = getMaxCorner(shape);
+      const double inf = std::numeric_limits< double >::infinity();
+      point_t max{-inf, -inf};
+      point_t min{inf, inf};
+      for (const auto &shape : shapes)
+      {
+        const point_t shape_min = getMinCorner(shape);
+        const point_t shape_max = getMaxCorner(shape);
 
-      min.x = std::min(min.x, shape_min.x);
-      min.y = std::min(min.y, shape_min.y);
-      max.x = std::max(max.x, shape_max.x);
-      max.y = std::max(max.y, shape_max.y);
+        min.x = std::min(min.x, shape_min.x);
+        min.y = std::min(min.y, shape_min.y);
+        max.x = std::max(max.x, shape_max.x);
+        max.y = std::max(max.y, shape_max.y);
+      }
+      return {max, min};
     }
-    return {max, min};
+
   }
 
   std::pair< double, double > area(const shapes_t &shapes, size_t threads, size_t tests, size_t seed)
