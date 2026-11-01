@@ -2,9 +2,10 @@
 #define PIPE_HPP
 
 #include <sys/types.h>
+
 namespace shirokov
 {
-  struct UniqueFd
+  class UniqueFd
   {
   public:
     constexpr UniqueFd() noexcept = default;
@@ -32,7 +33,7 @@ namespace shirokov
     Pipe();
   };
 
-  struct DuplexChannel
+  class DuplexChannel
   {
   public:
     DuplexChannel(UniqueFd read, UniqueFd write) noexcept;
@@ -43,7 +44,7 @@ namespace shirokov
     UniqueFd read_fd_, write_fd_;
   };
 
-  struct PipeBridge
+  class PipeBridge
   {
   public:
     PipeBridge();
