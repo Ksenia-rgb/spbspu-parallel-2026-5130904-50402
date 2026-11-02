@@ -18,11 +18,16 @@ namespace petrov {
     constexpr std::size_t circle_y_index = 4;
     constexpr std::size_t set_size_index = 2;
     constexpr std::size_t spawn_seed_index = 2;
+    constexpr std::size_t area_calculation_index = 2;
+    constexpr std::size_t area_set_index = 3;
+    constexpr std::size_t area_threads_index = 4;
+    constexpr std::size_t area_tries_index = 5;
 
     constexpr std::size_t name_token_count = 2;
     constexpr std::size_t set_token_count = 3;
     constexpr std::size_t spawn_token_count = 3;
     constexpr std::size_t circle_token_count = 5;
+    constexpr std::size_t area_token_count = 6;
 
     constexpr char invalid_command_message[] = "<INVALID COMMAND>";
     constexpr char unknown_command_message[] = "<UNKNOWN COMMAND>";
@@ -96,7 +101,8 @@ namespace petrov {
               {"showset", &Session::showSet},
               {"frame", &Session::showFrame},
               {"frameset", &Session::showSetFrame},
-              {"spawn", &Session::spawnProcess}
+              {"spawn", &Session::spawnProcess},
+              {"area-on", &Session::startCalculation}
             }
   {}
 
@@ -139,6 +145,15 @@ namespace petrov {
       }
     }
     return nullptr;
+  }
+
+  calculation_t* Session::findCalculation(const std::string& name)
+  {
+    const auto calculation = calculations_.find(name);
+    if (calculation == calculations_.end()) {
+      return nullptr;
+    }
+    return &calculation->second;
   }
 
   bool Session::collectShapes(const std::string& name, std::vector< shape_t >& shapes) const
@@ -300,6 +315,45 @@ namespace petrov {
     } catch (const std::exception&) {
       return false;
     }
+    return true;
+  }
+
+  bool Session::startCalculation(const std::vector< std::string >& tokens)
+  {
+    if (tokens.size() != area_token_count) {
+      return false;
+    }
+    if (!isName(tokens[argument_index]) || !isName(tokens[area_calculation_index])) {
+      return false;
+    }
+    const process_t* const process = findProcess(tokens[argument_index]);
+    if ((process == nullptr) || (findCalculation(tokens[area_calculation_index]) != nullptr)) {
+      return false;
+    }
+    std::vector< shape_t > shapes;
+    if (!collectShapes(tokens[area_set_index], shapes)) {
+      return false;
+    }
+    int threads = 0;
+    int tries = 0;
+    const bool is_parsed
+        = parseInteger(tokens[area_threads_index], threads) && parseInteger(tokens[area_tries_index], tries);
+    if (!is_parsed || (threads < 0) || (tries <= 0)) {
+      return false;
+    }
+    request_t request = {};
+    request.calculation_id = next_calculation_id_;
+    request.threads = threads;
+    request.tries = tries;
+    request.shape_count = static_cast< int >(shapes.size());
+    if (!sendCalculation(*process, request, shapes)) {
+      return false;
+    }
+    calculation_t calculation = {};
+    calculation.id = next_calculation_id_;
+    calculation.process_name = tokens[argument_index];
+    calculations_.emplace(tokens[area_calculation_index], calculation);
+    ++next_calculation_id_;
     return true;
   }
 
