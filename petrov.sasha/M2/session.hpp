@@ -48,6 +48,10 @@ namespace petrov {
     bool startCalculation(const std::vector< std::string >& tokens);
     bool showStatus(const std::vector< std::string >& tokens);
 
+    void updateResults();
+    void storeResult(const result_t& result);
+    void printCalculation(const calculation_t& calculation) const;
+
     void closeProcesses();
 
     std::istream& input_;

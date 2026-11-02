@@ -3,32 +3,20 @@
 #include <cctype>
 #include <cstddef>
 #include <exception>
+#include <iomanip>
 #include <istream>
 #include <ostream>
 #include <string>
 #include <vector>
-#include <iomanip>
 
 namespace petrov {
 
   namespace {
 
-    constexpr std::size_t argument_index = 1;
-    constexpr std::size_t circle_radius_index = 2;
-    constexpr std::size_t circle_x_index = 3;
-    constexpr std::size_t circle_y_index = 4;
-    constexpr std::size_t set_size_index = 2;
-    constexpr std::size_t spawn_seed_index = 2;
-    constexpr std::size_t area_calculation_index = 2;
-    constexpr std::size_t area_set_index = 3;
-    constexpr std::size_t area_threads_index = 4;
     constexpr std::size_t area_tries_index = 5;
-
-    constexpr std::size_t name_token_count = 2;
-    constexpr std::size_t set_token_count = 3;
-    constexpr std::size_t spawn_token_count = 3;
     constexpr std::size_t circle_token_count = 5;
     constexpr std::size_t area_token_count = 6;
+
     constexpr int output_precision = 3;
 
     constexpr char invalid_command_message[] = "<INVALID COMMAND>";
@@ -106,8 +94,7 @@ namespace petrov {
               {"frameset", &Session::showSetFrame},
               {"spawn", &Session::spawnProcess},
               {"area-on", &Session::startCalculation},
-              {"status", &Session::showStatus}
-            }
+              {"status", &Session::showStatus}}
   {}
 
   void Session::runCommands()
@@ -200,14 +187,13 @@ namespace petrov {
     if (tokens.size() != circle_token_count) {
       return false;
     }
-    if (!isName(tokens[argument_index])) {
+    if (!isName(tokens[1])) {
       return false;
     }
     int radius = 0;
     int x = 0;
     int y = 0;
-    const bool is_parsed = parseInteger(tokens[circle_radius_index], radius) && parseInteger(tokens[circle_x_index], x)
-        && parseInteger(tokens[circle_y_index], y);
+    const bool is_parsed = parseInteger(tokens[2], radius) && parseInteger(tokens[3], x) && parseInteger(tokens[4], y);
     if (!is_parsed || (radius <= 0)) {
       return false;
     }
@@ -215,40 +201,40 @@ namespace petrov {
     shape.radius = static_cast< double >(radius);
     shape.center.x = static_cast< double >(x);
     shape.center.y = static_cast< double >(y);
-    return shapes_.emplace(tokens[argument_index], shape).second;
+    return shapes_.emplace(tokens[1], shape).second;
   }
 
   bool Session::createSet(const std::vector< std::string >& tokens)
   {
-    if (tokens.size() < set_token_count) {
+    if (tokens.size() < 3) {
       return false;
     }
-    if (!isName(tokens[argument_index])) {
+    if (!isName(tokens[1])) {
       return false;
     }
     int size = 0;
-    if (!parseInteger(tokens[set_size_index], size)) {
+    if (!parseInteger(tokens[2], size)) {
       return false;
     }
-    if ((size <= 0) || (static_cast< std::size_t >(size) != (tokens.size() - set_token_count))) {
+    if ((size <= 0) || (static_cast< std::size_t >(size) != (tokens.size() - 3))) {
       return false;
     }
     std::vector< std::string > members;
-    for (std::size_t index = set_token_count; index < tokens.size(); ++index) {
+    for (std::size_t index = 3; index < tokens.size(); ++index) {
       if (!isName(tokens[index]) || (findShape(tokens[index]) == nullptr)) {
         return false;
       }
       members.push_back(tokens[index]);
     }
-    return sets_.emplace(tokens[argument_index], members).second;
+    return sets_.emplace(tokens[1], members).second;
   }
 
   bool Session::showShape(const std::vector< std::string >& tokens)
   {
-    if (tokens.size() != name_token_count) {
+    if (tokens.size() != 2) {
       return false;
     }
-    const shape_t* const shape = findShape(tokens[argument_index]);
+    const shape_t* const shape = findShape(tokens[1]);
     if (shape == nullptr) {
       return false;
     }
@@ -258,11 +244,11 @@ namespace petrov {
 
   bool Session::showSet(const std::vector< std::string >& tokens)
   {
-    if (tokens.size() != name_token_count) {
+    if (tokens.size() != 2) {
       return false;
     }
     std::vector< shape_t > shapes;
-    if (!collectShapes(tokens[argument_index], shapes)) {
+    if (!collectShapes(tokens[1], shapes)) {
       return false;
     }
     for (const shape_t& shape : shapes) {
@@ -273,10 +259,10 @@ namespace petrov {
 
   bool Session::showFrame(const std::vector< std::string >& tokens)
   {
-    if (tokens.size() != name_token_count) {
+    if (tokens.size() != 2) {
       return false;
     }
-    const shape_t* const shape = findShape(tokens[argument_index]);
+    const shape_t* const shape = findShape(tokens[1]);
     if (shape == nullptr) {
       return false;
     }
@@ -286,11 +272,11 @@ namespace petrov {
 
   bool Session::showSetFrame(const std::vector< std::string >& tokens)
   {
-    if (tokens.size() != name_token_count) {
+    if (tokens.size() != 2) {
       return false;
     }
     std::vector< shape_t > shapes;
-    if (!collectShapes(tokens[argument_index], shapes)) {
+    if (!collectShapes(tokens[1], shapes)) {
       return false;
     }
     output_ << findFrame(shapes) << '\n';
@@ -299,14 +285,14 @@ namespace petrov {
 
   bool Session::spawnProcess(const std::vector< std::string >& tokens)
   {
-    if (tokens.size() != spawn_token_count) {
+    if (tokens.size() != 3) {
       return false;
     }
-    if (!isName(tokens[argument_index]) || (findProcess(tokens[argument_index]) != nullptr)) {
+    if (!isName(tokens[1]) || (findProcess(tokens[1]) != nullptr)) {
       return false;
     }
     std::size_t seed = 0;
-    if (!parseSize(tokens[spawn_seed_index], seed)) {
+    if (!parseSize(tokens[2], seed)) {
       return false;
     }
     std::vector< int > inherited;
@@ -315,7 +301,7 @@ namespace petrov {
       inherited.push_back(process.result_descriptor);
     }
     try {
-      processes_.push_back(createProcess(tokens[argument_index], seed, inherited));
+      processes_.push_back(createProcess(tokens[1], seed, inherited));
     } catch (const std::exception&) {
       return false;
     }
@@ -327,21 +313,20 @@ namespace petrov {
     if (tokens.size() != area_token_count) {
       return false;
     }
-    if (!isName(tokens[argument_index]) || !isName(tokens[area_calculation_index])) {
+    if (!isName(tokens[1]) || !isName(tokens[2])) {
       return false;
     }
-    const process_t* const process = findProcess(tokens[argument_index]);
-    if ((process == nullptr) || (findCalculation(tokens[area_calculation_index]) != nullptr)) {
+    const process_t* const process = findProcess(tokens[1]);
+    if ((process == nullptr) || (findCalculation(tokens[2]) != nullptr)) {
       return false;
     }
     std::vector< shape_t > shapes;
-    if (!collectShapes(tokens[area_set_index], shapes)) {
+    if (!collectShapes(tokens[3], shapes)) {
       return false;
     }
     int threads = 0;
     int tries = 0;
-    const bool is_parsed
-        = parseInteger(tokens[area_threads_index], threads) && parseInteger(tokens[area_tries_index], tries);
+    const bool is_parsed = parseInteger(tokens[4], threads) && parseInteger(tokens[area_tries_index], tries);
     if (!is_parsed || (threads < 0) || (tries <= 0)) {
       return false;
     }
@@ -355,19 +340,19 @@ namespace petrov {
     }
     calculation_t calculation = {};
     calculation.id = next_calculation_id_;
-    calculation.process_name = tokens[argument_index];
-    calculations_.emplace(tokens[area_calculation_index], calculation);
+    calculation.process_name = tokens[1];
+    calculations_.emplace(tokens[2], calculation);
     ++next_calculation_id_;
     return true;
   }
 
   bool Session::showStatus(const std::vector< std::string >& tokens)
   {
-    if (tokens.size() != name_token_count) {
+    if (tokens.size() != 2) {
       return false;
     }
     updateResults();
-    const calculation_t* const calculation = findCalculation(tokens[argument_index]);
+    const calculation_t* const calculation = findCalculation(tokens[1]);
     if (calculation == nullptr) {
       return false;
     }
