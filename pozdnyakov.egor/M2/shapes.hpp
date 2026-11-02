@@ -27,8 +27,14 @@ namespace pozdnyakov
 
   using ellipses_t = std::vector< ellipse_t >;
 
-  ellipse_t makeCircle();
+  std::ostream& operator<<(std::ostream& out, const ellipse_t& ellipse);
+  std::ostream& operator<<(std::ostream& out, const rectangle_t& rectangle);
 
+  ellipse_t makeCircle(double radius, const point_t& center);
+  bool isInside(const ellipse_t& ellipse, const point_t& point);
+  rectangle_t getFrame(const ellipse_t& ellipse);
+  rectangle_t getFrame(const ellipses_t& ellipses);
+  double getArea(const rectangle_t& rectangle);
 }
 
 #endif
