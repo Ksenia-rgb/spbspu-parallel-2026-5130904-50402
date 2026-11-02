@@ -86,7 +86,8 @@ namespace petrov {
   Session::Session(std::istream& input, std::ostream& output):
     input_(input),
     output_(output),
-    commands_{{"circle", &Session::createCircle},
+    commands_{
+              {"circle", &Session::createCircle},
               {"set", &Session::createSet},
               {"show", &Session::showShape},
               {"showset", &Session::showSet},
@@ -94,7 +95,9 @@ namespace petrov {
               {"frameset", &Session::showSetFrame},
               {"spawn", &Session::spawnProcess},
               {"area-on", &Session::startCalculation},
-              {"status", &Session::showStatus}}
+              {"status", &Session::showStatus},
+              {"wait", &Session::waitCalculation}
+            }
   {}
 
   void Session::runCommands()
@@ -355,6 +358,31 @@ namespace petrov {
     const calculation_t* const calculation = findCalculation(tokens[1]);
     if (calculation == nullptr) {
       return false;
+    }
+    printCalculation(*calculation);
+    return true;
+  }
+
+  bool Session::waitCalculation(const std::vector< std::string >& tokens)
+  {
+    if (tokens.size() != 2) {
+      return false;
+    }
+    updateResults();
+    const calculation_t* const calculation = findCalculation(tokens[1]);
+    if (calculation == nullptr) {
+      return false;
+    }
+    while (!calculation->is_finished) {
+      process_t* const process = findProcess(calculation->process_name);
+      if (process == nullptr) {
+        break;
+      }
+      result_t result = {};
+      if (!receiveResultBlocking(*process, result)) {
+        break;
+      }
+      storeResult(result);
     }
     printCalculation(*calculation);
     return true;
