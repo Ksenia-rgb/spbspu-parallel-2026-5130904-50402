@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <unistd.h>
 
 namespace vishnevskiy
 {
@@ -33,10 +34,19 @@ namespace vishnevskiy
     }
   };
 
+  struct ProcInfo
+  {
+    pid_t pid;
+    int pipeToChild;
+    int pipeToParent
+    size_t seed;
+  };
+
   struct Maps
   {
     std::map<std::string, Circle> shapes;
     std::map<std::string, &std::vector<Circle>> sets;
+    std::map<std::string, ProcInfo> procs;
   };
 
   CircleBoundaries getBoundaries(Circle c);

@@ -1,7 +1,9 @@
 #include <iostream>
 #include <string>
 #include <map>
-#include "shapes.hpp"
+#include <random>
+#include <unistd.h>
+#include "commands.hpp"
 
 namespace vishnevskiy
 {
@@ -49,6 +51,36 @@ namespace vishnevskiy
       }
     }
     return b;
+  }
+
+  size_t writeSafe(int &err, int wr, const char *b, size_t k)
+  {
+    size_t r = 0;
+    while (r < k)
+    {
+      err = write(wr, b + r, k - r);
+      if (err < 0)
+      {
+        break;
+      }
+      r += err;
+    }
+    return r;
+  }
+
+  size_t readSafe(int &err, int rd, const char *b, size_t k)
+  {
+    size_t r = 0;
+    while (r < k)
+    {
+      err = write(rd, b + r, k - r);
+      if (err < 0)
+      {
+        break;
+      }
+      r += err;
+    }
+    return r;
   }
 
   void circle(std::istream &i, std::ostream &, Maps &map)
@@ -178,6 +210,70 @@ namespace vishnevskiy
     }
     CircleBoundaries b = getSetBoundaries(shapeSet);
     o << b.maxX_ << b.maxY_ << b.minX_ << b.minY_ << "\n";
+  }
+
+  void spawn(std::istream &i, std::ostream &, Maps &map)
+  {
+    std::string name;
+    size_t seed;
+    const char buffer[256] = "";
+    if (!(i >> name >> seed))
+    {
+      throw std::runtime_error("Invalid arguments");
+    }
+    int toChild[2] = {}, err = pipe(toChild);
+    if (err)
+    {
+      std::cerr << std::strerror(errno) << "\n";
+      return 1;
+    }
+    int rdC = toChild[0], wrC = toChild[1];
+    int toParent[2] = {}, err = pipe(toParent);
+    if (err)
+    {
+      std::cerr << std::strerror(errno) << "\n";
+      return 1;
+    }
+    int rdP = toParent[0], wrP = toParent[1];
+    pid_t pid = fork();
+    if (pid < 0)
+    {
+      std::cerr << std::strerror(errno) << "\n";
+      return 1;
+    }
+    if (pid == 0)
+    {
+      err = close(wrC);
+      if (err)
+      {
+        std::cerr << std::strerror(errno) << "\n";
+        return 1;
+      }
+      err = close(rdP);
+      if (err)
+      {
+        std::cerr << std::strerror(errno) << "\n";
+        return 1;
+      }
+      readSafe(err, rdC, buffer, 255);
+    }
+    else
+    {
+      err = close(rdC);
+      if (err)
+      {
+        std::cerr << std::strerror(errno) << "\n";
+        return 1;
+      }
+      err = close(wrP);
+      if (err)
+      {
+        std::cerr << std::strerror(errno) << "\n";
+        return 1;
+      }
+      ProcsInfo info{pid, toChild, toParent, seed};
+      maps.procs[name] = info;
+    }
   }
 }
 
