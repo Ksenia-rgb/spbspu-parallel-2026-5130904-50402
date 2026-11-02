@@ -86,18 +86,10 @@ namespace petrov {
   Session::Session(std::istream& input, std::ostream& output):
     input_(input),
     output_(output),
-    commands_{
-              {"circle", &Session::createCircle},
-              {"set", &Session::createSet},
-              {"show", &Session::showShape},
-              {"showset", &Session::showSet},
-              {"frame", &Session::showFrame},
-              {"frameset", &Session::showSetFrame},
-              {"spawn", &Session::spawnProcess},
-              {"area-on", &Session::startCalculation},
-              {"status", &Session::showStatus},
-              {"wait", &Session::waitCalculation}
-            }
+    commands_{{"circle", &Session::createCircle}, {"set", &Session::createSet}, {"show", &Session::showShape},
+        {"showset", &Session::showSet}, {"frame", &Session::showFrame}, {"frameset", &Session::showSetFrame},
+        {"spawn", &Session::spawnProcess}, {"area-on", &Session::startCalculation}, {"status", &Session::showStatus},
+        {"wait", &Session::waitCalculation}}
   {}
 
   void Session::runCommands()
