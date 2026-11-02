@@ -74,6 +74,11 @@ void pozdnyakov::Registry::addCalculation(const std::string& name, const std::st
   insertOrThrow(calculations_, name, calculation);
 }
 
+bool pozdnyakov::Registry::hasCalculation(const std::string& name) const
+{
+  return calculations_.count(name) != 0;
+}
+
 const pozdnyakov::ellipse_t& pozdnyakov::Registry::getShape(const std::string& name) const
 {
   return findOrThrow(shapes_, name);

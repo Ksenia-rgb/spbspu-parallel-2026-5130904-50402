@@ -21,6 +21,7 @@ namespace pozdnyakov
     void addSet(const std::string& name, const names_t& shapes);
     void addCalculation(const std::string& name, const std::string& process);
 
+    bool hasCalculation(const std::string& name) const;
     const ellipse_t& getShape(const std::string& name) const;
     ellipses_t getSet(const std::string& name) const;
     calculation_t& getCalculation(const std::string& name);
