@@ -35,7 +35,7 @@ namespace pozdnyakov
     calculation_result_t result;
   };
 
-
+  std::ostream& operator<<(std::ostream& out, const calculation_t& calculation);
 }
 
 #endif
