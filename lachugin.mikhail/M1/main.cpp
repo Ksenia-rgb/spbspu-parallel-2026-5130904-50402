@@ -1,5 +1,15 @@
 #include <iostream>
 
+namespace lachugin
+{
+  struct Circle
+  {
+    int r;
+    int x;
+    int y;
+  };
+}
+
 int main(int argc, char* argv[])
 {
   if (argc != 3 && argc != 4)
