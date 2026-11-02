@@ -46,6 +46,7 @@ namespace petrov {
     bool showSetFrame(const std::vector< std::string >& tokens);
     bool spawnProcess(const std::vector< std::string >& tokens);
     bool startCalculation(const std::vector< std::string >& tokens);
+    bool showStatus(const std::vector< std::string >& tokens);
 
     void closeProcesses();
 

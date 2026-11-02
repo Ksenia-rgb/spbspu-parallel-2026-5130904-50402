@@ -7,6 +7,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <iomanip>
 
 namespace petrov {
 
@@ -28,9 +29,11 @@ namespace petrov {
     constexpr std::size_t spawn_token_count = 3;
     constexpr std::size_t circle_token_count = 5;
     constexpr std::size_t area_token_count = 6;
+    constexpr int output_precision = 3;
 
     constexpr char invalid_command_message[] = "<INVALID COMMAND>";
     constexpr char unknown_command_message[] = "<UNKNOWN COMMAND>";
+    constexpr char in_progress_message[] = "<IN PROGRESS>";
 
     bool isName(const std::string& text)
     {
@@ -102,7 +105,8 @@ namespace petrov {
               {"frame", &Session::showFrame},
               {"frameset", &Session::showSetFrame},
               {"spawn", &Session::spawnProcess},
-              {"area-on", &Session::startCalculation}
+              {"area-on", &Session::startCalculation},
+              {"status", &Session::showStatus}
             }
   {}
 
@@ -355,6 +359,57 @@ namespace petrov {
     calculations_.emplace(tokens[area_calculation_index], calculation);
     ++next_calculation_id_;
     return true;
+  }
+
+  bool Session::showStatus(const std::vector< std::string >& tokens)
+  {
+    if (tokens.size() != name_token_count) {
+      return false;
+    }
+    updateResults();
+    const calculation_t* const calculation = findCalculation(tokens[argument_index]);
+    if (calculation == nullptr) {
+      return false;
+    }
+    printCalculation(*calculation);
+    return true;
+  }
+
+  void Session::updateResults()
+  {
+    for (process_t& process : processes_) {
+      result_t result = {};
+      while (receiveResult(process, result)) {
+        storeResult(result);
+      }
+    }
+  }
+
+  void Session::storeResult(const result_t& result)
+  {
+    for (auto& entry : calculations_) {
+      if (entry.second.id == result.calculation_id) {
+        entry.second.is_finished = true;
+        entry.second.milliseconds = result.milliseconds;
+        entry.second.area = result.area;
+        return;
+      }
+    }
+  }
+
+  void Session::printCalculation(const calculation_t& calculation) const
+  {
+    output_ << calculation.process_name << ' ';
+    if (!calculation.is_finished) {
+      output_ << in_progress_message << '\n';
+      return;
+    }
+    const std::ios_base::fmtflags flags = output_.flags();
+    const std::streamsize precision = output_.precision();
+    output_ << std::fixed << std::setprecision(output_precision) << calculation.milliseconds << ' ' << calculation.area
+            << '\n';
+    output_.flags(flags);
+    output_.precision(precision);
   }
 
   void Session::closeProcesses()
