@@ -9,17 +9,30 @@ int main(int argc, char* argv[])
   }
 
   int seed = 0;
-  size_t pos = 0;
+  size_t posSeed = 0;
+  int threads = 0;
+  size_t posThreads = 0;
+  int tries = 0;
+  size_t posTries = 0;
   try
   {
     if (argc == 4)
     {
-      seed = std::stoi(argv[3], &pos);
-      if (pos != std::string(argv[3]).length() || seed < 0)
+      seed = std::stoi(argv[3], &posSeed);
+      if (posSeed != std::string(argv[3]).length() || seed < 0)
       {
-        throw std::invalid_argument (" wrong parametr");
+        throw std::invalid_argument("wrong seed");
       }
     }
+
+    threads = std::stoi(argv[1], &posThreads);
+    tries = std::stoi(argv[2], &posTries);
+    if (posThreads != std::string(argv[1]).length() || threads < 0
+      || posTries != std::string(argv[2]).length() || tries <= 0)
+    {
+      throw std::invalid_argument (" wrong parametr");
+    }
+
   } catch (const std::exception& err)
   {
     std::cerr << err.what() << "\n";
