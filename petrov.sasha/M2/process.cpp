@@ -21,8 +21,7 @@ namespace petrov {
     {
       const char* const buffer = static_cast< const char* >(data);
       std::size_t sent = 0;
-      while (sent < size)
-      {
+      while (sent < size) {
         const ssize_t written = write(descriptor, buffer + sent, size - sent);
         if (written <= 0) {
           return false;
