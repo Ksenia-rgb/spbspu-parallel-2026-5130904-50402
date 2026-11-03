@@ -1,6 +1,3 @@
-#include "montecarlo.hpp"
-#include "shape.hpp"
-
 #include <cstddef>
 #include <cstring>
 #include <exception>
@@ -8,6 +5,9 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include "../common/montecarlo.hpp"
+#include "../common/shape.hpp"
 
 namespace petrov {
   namespace {

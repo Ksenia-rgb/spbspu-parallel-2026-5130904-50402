@@ -3,10 +3,10 @@
 
 #include <cstddef>
 #include <string>
+#include <sys/types.h>
 #include <vector>
 
-#include <shape.hpp>
-#include <sys/types.h>
+#include "../common/shape.hpp"
 
 namespace petrov {
 

@@ -11,41 +11,30 @@ namespace petrov {
 
   namespace {
 
-    bool isInsideUnion(const point_t& point, const std::vector< shape_t >& shapes)
-    {
-      for (const shape_t& shape : shapes) {
-        if (isInside(point, shape)) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    bool isInsideIntersection(const point_t& point, const std::vector< shape_t >& shapes)
-    {
-      for (const shape_t& shape : shapes) {
-        if (!isInside(point, shape)) {
-          return false;
-        }
-      }
-      return true;
-    }
-
     void countWorkerHits(
         const std::vector< shape_t >& shapes, const frame_t& frame, std::size_t tries, std::size_t seed, hits_t& result)
     {
       std::default_random_engine generator(seed);
-      std::uniform_real_distribution< double > x_distribution(frame.min_point.x, frame.max_point.x);
-      std::uniform_real_distribution< double > y_distribution(frame.min_point.y, frame.max_point.y);
+      const double generator_begin = static_cast< double >(generator.min());
+      const double generator_width = static_cast< double >(generator.max()) - generator_begin;
+      const double step_x = (frame.max_point.x - frame.min_point.x) / generator_width;
+      const double step_y = (frame.max_point.y - frame.min_point.y) / generator_width;
       hits_t hits = {};
       for (std::size_t attempt = 0; attempt < tries; ++attempt) {
-        const double x = x_distribution(generator);
-        const double y = y_distribution(generator);
+        const double x = frame.min_point.x + ((static_cast< double >(generator()) - generator_begin) * step_x);
+        const double y = frame.min_point.y + ((static_cast< double >(generator()) - generator_begin) * step_y);
         const point_t point = {x, y};
-        if (isInsideUnion(point, shapes)) {
+        bool inside_union = false;
+        bool inside_intersection = true;
+        for (const shape_t& shape : shapes) {
+          const bool inside = isInside(point, shape);
+          inside_union = inside_union || inside;
+          inside_intersection = inside_intersection && inside;
+        }
+        if (inside_union) {
           ++hits.union_count;
         }
-        if (isInsideIntersection(point, shapes)) {
+        if (inside_intersection) {
           ++hits.intersection_count;
         }
       }

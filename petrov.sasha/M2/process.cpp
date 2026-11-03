@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <vector>
 
-#include <montecarlo.hpp>
+#include "../common/montecarlo.hpp"
 
 namespace petrov {
 

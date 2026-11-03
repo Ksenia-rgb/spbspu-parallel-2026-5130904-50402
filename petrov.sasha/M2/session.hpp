@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "../common/shape.hpp"
 #include "process.hpp"
-#include <shape.hpp>
 
 namespace petrov {
 
