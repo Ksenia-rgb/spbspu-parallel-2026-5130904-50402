@@ -65,6 +65,11 @@ namespace lachugin
 
     }
   }
+
+  bool isInsideCircle(const Circle& circle, double x, double y)
+  {
+    return ((x-circle.x) * (x-circle.x)) + (y-circle.y) * (y-circle.y) <= circle.r * circle.r;
+  }
 }
 
 int main(int argc, char* argv[])
