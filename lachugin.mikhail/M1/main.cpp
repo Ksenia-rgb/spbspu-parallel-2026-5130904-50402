@@ -48,4 +48,32 @@ int main(int argc, char* argv[])
     std::cerr << err.what() << "\n";
     return 1;
   }
+
+  int r = 0;
+  int ign = 0;
+  int x = 0;
+  int y = 0;
+
+  while (true)
+  {
+    std::cin >> r;
+    if (std::cin.eof())
+    {
+      break;
+    }
+    if (std::cin.fail())
+    {
+      std::cerr << ("wrong data\n");
+      return 1;
+    }
+    std::cin >> ign >> x >> y;
+    if (std::cin.eof() || std::cin.fail())
+    {
+      std::cerr << ("wrong data\n");
+      return 1;
+    }
+  }
+
+
+
 }
