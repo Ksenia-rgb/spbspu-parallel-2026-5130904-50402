@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <vector>
 #include <string>
+#include <functional>
+#include <utility>
 
 namespace karpenkov {
 constexpr size_t count_of_args = 4;
@@ -20,27 +22,27 @@ constexpr size_t invalid_args = 2;
 constexpr size_t invalid_input = 3;
 struct Circle {
 public:
-  Circle(int x, int y, int radius) : x(x), y(y), radius(radius) {
+  Circle(int x, int y, int radius) : x_(x), y_(y), radius_(radius) {
     if (radius <= 0) {
       throw std::invalid_argument("Radius must be positive");
     }
   }
-  int getRadius() const { return radius; }
-  double left() const { return static_cast<double>(x) - radius; }
-  double right() const { return static_cast<double>(x) + radius; }
-  double bottom() const { return static_cast<double>(y) - radius; }
-  double top() const { return static_cast<double>(y) + radius; }
+  int get_radius() const { return radius_; }
+  double left() const { return static_cast<double>(x_) - radius_; }
+  double right() const { return static_cast<double>(x_) + radius_; }
+  double bottom() const { return static_cast<double>(y_) - radius_; }
+  double top() const { return static_cast<double>(y_) + radius_; }
   bool contains(double px, double py) const {
-    const double dx = px - x;
-    const double dy = py - y;
-    const double r = radius;
+    const double dx = px - x_;
+    const double dy = py - y_;
+    const double r = radius_;
     return dx * dx + dy * dy <= r * r;
   }
 
 private:
-  int x;
-  int y;
-  int radius;
+  int x_;
+  int y_;
+  int radius_;
 };
 size_t stringToSizeT(const char *lms) {
   if (*lms == '-') {
@@ -55,32 +57,32 @@ size_t stringToSizeT(const char *lms) {
   return static_cast<size_t>(rms);
 }
 struct Box {
-  double minX, maxX, minY, maxY;
-  double area() const { return (maxX - minX) * (maxY - minY); }
+  double min_x, max_x, min_y, max_y;
+  double area() const { return (max_x - min_x) * (max_y - min_y); }
 };
 Box boundingBox(const std::vector<Circle> &circles) {
   Box box{circles[0].left(), circles[0].right(), circles[0].bottom(),
           circles[0].top()};
   for (const Circle &c : circles) {
-    box.minX = std::min(box.minX, c.left());
-    box.maxX = std::max(box.maxX, c.right());
-    box.minY = std::min(box.minY, c.bottom());
-    box.maxY = std::max(box.maxY, c.top());
+    box.min_x = std::min(box.min_x, c.left());
+    box.max_x = std::max(box.max_x, c.right());
+    box.min_y = std::min(box.min_y, c.bottom());
+    box.max_y = std::max(box.max_y, c.top());
   }
   return box;
 }
 std::pair<size_t, size_t>
 monteCarloGenerator(const std::vector<Circle> &circles, const Box &box,
                     size_t count, size_t seed) {
-  std::default_random_engine randomGenerator(seed);
-  std::uniform_real_distribution<double> distX(box.minX, box.maxX);
-  std::uniform_real_distribution<double> distY(box.minY, box.maxY);
+  std::default_random_engine random_generator(seed);
+  std::uniform_real_distribution<double> dist_x(box.min_x, box.max_x);
+  std::uniform_real_distribution<double> dist_y(box.min_y, box.max_y);
 
-  size_t inUnion = 0;
-  size_t inIntersection = 0;
+  size_t in_union = 0;
+  size_t in_intersection = 0;
   for (size_t i = 0; i < count; ++i) {
-    const double x = distX(randomGenerator);
-    const double y = distY(randomGenerator);
+    const double x = dist_x(random_generator);
+    const double y = dist_y(random_generator);
 
     size_t inside = 0;
     for (const Circle &c : circles) {
@@ -89,17 +91,17 @@ monteCarloGenerator(const std::vector<Circle> &circles, const Box &box,
       }
     }
     if (inside > 0) {
-      ++inUnion;
+      ++in_union;
     }
     if (inside == circles.size()) {
-      ++inIntersection;
+      ++in_intersection;
     }
   }
-  return {inUnion, inIntersection};
+  return {in_union, in_intersection};
 }
 struct Areas {
-  double unionArea;
-  double intersectionArea;
+  double union_area;
+  double intersection_area;
 };
 Areas getAreas(const std::vector<Circle> &circles, size_t threads, size_t tries,
                size_t seed) {
@@ -115,18 +117,18 @@ Areas getAreas(const std::vector<Circle> &circles, size_t threads, size_t tries,
                                  seed + i));
   }
 
-  size_t inUnion = 0;
-  size_t inIntersection = 0;
+  size_t in_union = 0;
+  size_t in_intersection = 0;
   for (auto &f : results) {
     const std::pair<size_t, size_t> part = f.get();
-    inUnion += part.first;
-    inIntersection += part.second;
+    in_union += part.first;
+    in_intersection += part.second;
   }
 
-  const double boxArea = box.area();
+  const double box_area = box.area();
   const double total = static_cast<double>(tries);
-  return {boxArea * static_cast<double>(inUnion) / total,
-          boxArea * static_cast<double>(inIntersection) / total};
+  return {box_area * static_cast<double>(in_union) / total,
+          box_area * static_cast<double>(in_intersection) / total};
 }
 bool readCircles(std::istream &in, std::vector<Circle> &out) {
   int radius = 0, x = 0, y = 0;
@@ -175,6 +177,6 @@ int main(int argc, const char *argv[]) {
     areas = karpenkov::getAreas(circles, threads, tries, seed);
   }
   std::cout << std::setprecision(std::numeric_limits<double>::max_digits10)
-            << areas.unionArea << ' ' << areas.intersectionArea << '\n';
+            << areas.union_area << ' ' << areas.intersection_area << '\n';
   return 0;
 }
