@@ -8,6 +8,20 @@ namespace lachugin
     int x;
     int y;
   };
+
+  Circle* newCircles(size_t size, size_t& cap, const Circle* oldCircles)
+  {
+    size_t newCap = cap * 2;
+    Circle* res = new Circle[newCap];
+
+    for (size_t i = 0; i < size; ++i)
+    {
+      res[i] = oldCircles[i];
+    }
+    cap = newCap;
+
+    return res;
+  }
 }
 
 int main(int argc, char* argv[])
@@ -54,6 +68,11 @@ int main(int argc, char* argv[])
   int x = 0;
   int y = 0;
 
+  lachugin::Circle* circles = nullptr;
+  size_t size = 0;
+  size_t cap = 2;
+  circles = new lachugin::Circle[cap];
+
   while (true)
   {
     std::cin >> r;
@@ -64,15 +83,44 @@ int main(int argc, char* argv[])
     if (std::cin.fail())
     {
       std::cerr << ("wrong data\n");
+      delete[] circles;
       return 1;
     }
     std::cin >> ign >> x >> y;
     if (std::cin.eof() || std::cin.fail())
     {
       std::cerr << ("wrong data\n");
+      delete[] circles;
       return 1;
     }
+
+    try
+    {
+      if (cap == size)
+      {
+        lachugin::Circle* circleNew = nullptr;
+        circleNew = lachugin::newCircles(size, cap, circles);
+        delete[] circles;
+        circles = circleNew;
+      }
+    } catch (const std::bad_alloc& err)
+    {
+      std::cerr << err.what();
+      delete[] circles;
+      return 1;
+    }
+
+    circles[size].r = r;
+    circles[size].x = x;
+    circles[size].y = y;
+
+    size++;
+
+
   }
+
+
+  delete[] circles;
 
 
 
