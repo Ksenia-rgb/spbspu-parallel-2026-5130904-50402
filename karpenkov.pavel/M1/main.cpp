@@ -34,7 +34,7 @@ namespace karpenkov
         throw std::invalid_argument("Radius must be positive");
       }
     }
-    int get_radius() const
+    int getRadius() const
     {
       return radius_;
     }
