@@ -70,6 +70,55 @@ namespace lachugin
   {
     return ((x-circle.x) * (x-circle.x)) + (y-circle.y) * (y-circle.y) <= circle.r * circle.r;
   }
+
+  bool isInsideUnion(const Circle* circles, size_t size, double x, double y)
+  {
+    for (size_t i = 0; i < size; ++i) {
+      if (isInsideCircle(circles[i], x, y)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool isInsideIntersection(const Circle* circles, size_t size, double x, double y) {
+    for (size_t i = 0; i < size; ++i) {
+      if (!isInsideCircle(circles[i], x, y)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void findBounds(const Circle* circles, size_t size, double& minX, double& maxX,
+    double& minY, double& maxY)
+  {
+    minX = circles[0].x - circles[0].r;
+    maxX = circles[0].x + circles[0].r;
+
+    minY = circles[0].y - circles[0].r;
+    maxY = circles[0].y + circles[0].r;
+    for (size_t i = 1; i < size; ++i)
+    {
+      if (circles[i].x - circles[i].r < minX)
+      {
+        minX = circles[i].x - circles[i].r;
+      }
+      if (circles[i].x + circles[i].r > maxX)
+      {
+        maxX = circles[i].x + circles[i].r;
+      }
+
+      if (circles[i].y - circles[i].r < minY)
+      {
+        minY = circles[i].y - circles[i].r;
+      }
+      if (circles[i].y + circles[i].r > maxY)
+      {
+        maxY = circles[i].y + circles[i].r;
+      }
+    }
+  }
 }
 
 int main(int argc, char* argv[])
