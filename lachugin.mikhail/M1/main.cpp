@@ -1,4 +1,6 @@
 #include <iostream>
+#include <random>
+#include <utility>
 
 namespace lachugin
 {
@@ -119,6 +121,54 @@ namespace lachugin
       }
     }
   }
+
+  std::pair< double, double > generatePoint(std::mt19937& generator,
+    double minX, double maxX, double minY, double maxY)
+  {
+    std::uniform_real_distribution< double > distrX(minX, maxX);
+    double x = distrX(generator);
+    std::uniform_real_distribution< double > distrY(minY, maxY);
+    double y = distrY(generator);
+
+    return {x, y};
+  }
+
+  std::pair< double, double > calculateAreas(const Circle* circles, size_t size,
+    size_t tries, std::mt19937& generator)
+  {
+    size_t uCount = 0;
+    size_t iCount = 0;
+
+    double minX = 0;
+    double maxX = 0;
+    double minY = 0;
+    double maxY = 0;
+
+    findBounds(circles, size, minX, maxX, minY, maxY);
+    double area = (maxX - minX) * (maxY - minY);
+
+    for (size_t i = 0; i < tries; ++i)
+    {
+      std::pair< double, double > point;
+      point = generatePoint(generator, minX, maxX, minY, maxY);
+
+      if (isInsideUnion(circles, size, point.first, point.second))
+      {
+        uCount++;
+      }
+      if (isInsideIntersection(circles, size, point.first, point.second)) {
+        iCount++;
+      }
+    }
+
+    double areaU = area * (static_cast< double >(uCount) / tries);
+
+    double areaI = area * (static_cast< double >(iCount) / tries);
+
+    return {areaU, areaI};
+  }
+
+
 }
 
 int main(int argc, char* argv[])
