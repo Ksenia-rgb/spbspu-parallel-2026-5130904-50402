@@ -22,6 +22,49 @@ namespace lachugin
 
     return res;
   }
+
+  void readCircles(Circle*& circles, size_t& cap, size_t& size)
+  {
+    int r = 0;
+    int ign = 0;
+    int x = 0;
+    int y = 0;
+
+    while (true)
+    {
+      std::cin >> r;
+      if (std::cin.eof())
+      {
+        break;
+      }
+      if (std::cin.fail())
+      {
+        throw std::invalid_argument("wrong data");
+      }
+      std::cin >> ign >> x >> y;
+      if (std::cin.eof() || std::cin.fail())
+      {
+        throw std::invalid_argument("wrong data");
+      }
+
+
+      if (cap == size)
+      {
+        Circle* circleNew = nullptr;
+        circleNew = newCircles(size, cap, circles);
+        delete[] circles;
+        circles = circleNew;
+      }
+
+      circles[size].r = r;
+      circles[size].x = x;
+      circles[size].y = y;
+
+      size++;
+
+
+    }
+  }
 }
 
 int main(int argc, char* argv[])
@@ -63,60 +106,26 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  int r = 0;
-  int ign = 0;
-  int x = 0;
-  int y = 0;
 
   lachugin::Circle* circles = nullptr;
   size_t size = 0;
   size_t cap = 2;
   circles = new lachugin::Circle[cap];
 
-  while (true)
+  try
   {
-    std::cin >> r;
-    if (std::cin.eof())
-    {
-      break;
-    }
-    if (std::cin.fail())
-    {
-      std::cerr << ("wrong data\n");
-      delete[] circles;
-      return 1;
-    }
-    std::cin >> ign >> x >> y;
-    if (std::cin.eof() || std::cin.fail())
-    {
-      std::cerr << ("wrong data\n");
-      delete[] circles;
-      return 1;
-    }
-
-    try
-    {
-      if (cap == size)
-      {
-        lachugin::Circle* circleNew = nullptr;
-        circleNew = lachugin::newCircles(size, cap, circles);
-        delete[] circles;
-        circles = circleNew;
-      }
-    } catch (const std::bad_alloc& err)
-    {
-      std::cerr << err.what();
-      delete[] circles;
-      return 1;
-    }
-
-    circles[size].r = r;
-    circles[size].x = x;
-    circles[size].y = y;
-
-    size++;
-
-
+    lachugin::readCircles(circles, cap, size);
+  } catch (const std::invalid_argument& err)
+  {
+    std::cerr << err.what();
+    delete[] circles;
+    return 1;
+  }
+  catch (const std::bad_alloc& err)
+  {
+    std::cerr << err.what();
+    delete[] circles;
+    return 1;
   }
 
 
@@ -125,3 +134,4 @@ int main(int argc, char* argv[])
 
 
 }
+
