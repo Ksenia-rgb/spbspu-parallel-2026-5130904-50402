@@ -24,7 +24,77 @@ namespace vishnevskiy
     py = distY(gen);
   }
 
+  size_t calc(const std::vector<Circle> &circles, size_t tests, size_t seed, const CircleBoundaries &b)
+  {
+    std::mt19937_64 gen(seed);
+    size_t count = 0;
+    for (size_t i = 0; i < tests; ++i)
+    {
+      double x = 0.0;
+      double y = 0.0;
+      generatePoint(gen, b, x, y);
+      for (size_t j = 0; j < circles.size(); ++j)
+      {
+        if (isInside(x, y, circles[j]))
+        {
+          count++;
+          break;
+        }
+      }
+    }
+    return count;
+  }
 
+  void *threadStarter(void *arg)
+  {
+    ThreadInfo *t = static_cast<ThreadInfo *>(arg);
+    t->result = calc(*t->circles, t->tests, t->seed, *t->b);
+    return nullptr;
+  }
+
+  size_t runCalc(const std::vector<Circle> &circles, size_t threads, size_t tests, size_t seed, const CircleBoundaries &b)
+  {
+    size_t block = tests / threads;
+    size_t remainder = tests % threads;
+    std::vector<pthread_t> ids(threads);
+    std::vector<ThreadInfo> tasks(threads);
+    std::vector<bool> started(threads, false);
+
+    for (size_t i = 0; i < threads; ++i)
+    {
+      size_t currTests = block;
+      if (i < remainder)
+      {
+        currTests++;
+      }
+      tasks[i].circles = &circles;
+      tasks[i].b = &b;
+      tasks[i].tests = currTests;
+      tasks[i].seed = seed;
+      tasks[i].result = 0;
+      int err = pthread_create(&ids[i], nullptr, threadStarter, &tasks[i]);
+      if (err != 0)
+      {
+        tasks[i].result = calc(circles, currTests, seed, b);
+        started[i] = false;
+      }
+      else
+      {
+        started[i] = true;
+      }
+    }
+
+    size_t res = 0;
+    for (size_t i = 0; i < threads; ++i)
+    {
+      if (started[i])
+      {
+        pthread_join(ids[i], nullptr);
+      }
+      res += tasks[i].result;
+    }
+    return res;
+  }
 
   CircleBoundaries getBoundaries(Circle c)
   {

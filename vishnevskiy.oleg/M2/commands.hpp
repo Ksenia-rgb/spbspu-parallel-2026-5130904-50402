@@ -42,6 +42,15 @@ namespace vishnevskiy
     size_t seed;
   };
 
+  struct ThreadInfo
+  {
+    const std::vector<Circle> *circles;
+    const CircleBoundaries *b;
+    size_t tests;
+    size_t seed;
+    size_t result;
+  };
+
   struct Maps
   {
     std::map<std::string, Circle> shapes;
