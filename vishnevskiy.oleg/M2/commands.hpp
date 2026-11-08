@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <unistd.h>
+#include <map>
+#include <random>
 
 namespace vishnevskiy
 {
@@ -51,16 +53,25 @@ namespace vishnevskiy
     size_t result;
   };
 
+  struct CalcInfo
+  {
+    std::string procName;
+    bool done = false;
+    double area = 0.0;
+    double ms = 0.0;
+  };
+
   struct Maps
   {
     std::map<std::string, Circle> shapes;
     std::map<std::string, std::vector<Circle>> sets;
     std::map<std::string, ProcInfo> procs;
+    std::map<std::string, CalcInfo> calcs;
   };
 
   bool isInside(double x, double y, const Circle &c);
   void generatePoint(std::mt19937_64 &gen, const CircleBoundaries &b, double &px, double &py);
-  size_t calc(const std::vector<Circle> &circles, size_t tests,size_t seed, const CircleBoundaries &b);
+  size_t calc(const std::vector<Circle> &circles, size_t tests, size_t seed, const CircleBoundaries &b);
   size_t runCalc(const std::vector<Circle> &circles, size_t threads, size_t tests, size_t seed, const CircleBoundaries &b);
   CircleBoundaries getBoundaries(Circle c);
   CircleBoundaries getSetBoundaries(std::vector<Circle> &circles);
@@ -76,4 +87,4 @@ namespace vishnevskiy
   void wait(std::istream &, std::ostream &, Maps &);
 }
 
-#define
+#endif
