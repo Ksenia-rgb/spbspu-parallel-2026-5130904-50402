@@ -7,7 +7,6 @@
 
 namespace vishnevskiy
 {
-
   bool isInside(double x, double y, const Circle &c)
   {
     double rx = x - c.x_;
@@ -359,7 +358,6 @@ namespace vishnevskiy
   {
     std::string name;
     size_t seed;
-    const char buffer[256] = "";
     if (!(i >> name >> seed))
     {
       throw std::runtime_error("Invalid arguments");
@@ -400,23 +398,81 @@ namespace vishnevskiy
         throw std::runtime_error("Close failed");
       }
       std::mt19937_64 rng(seed);
+      std::string line;
+      int e = 0;
+      bool reading = true;
+      while (reading)
+      {
+        if (readLine(e, rdC, line) == 0)
+        {
+          reading = false;
+          break;
+        }
+        std::istringstream iss(line);
+        size_t threads = 0, tries = 0, count = 0;
+        if (!(iss >> threads >> tries >> count) || count == 0 || tries == 0 || threads == 0)
+        {
+          int we = 0;
+          writeLine(we, wrP, "0 0");
+          continue;
+        }
 
+        std::vector<Circle> circles;
+        circles.reserve(count);
+        bool ok = true;
+        for (size_t k = 0; ok && k < count; ++k)
+        {
+          int re = 0;
+          if (readLine(re, r, line) == 0)
+          {
+            ok = false;
+            if (re != 0) e = re;
+            break;
+          }
+          std::istringstream circleiss(line);
+          Circle c{};
+          if (!(circleiss >> c.r_ >> c.x_ >> c.y_))
+          {
+            ok = false;
+            break;
+          }
+          circles.push_back(c);
+        }
+        if (!ok)
+        {
+          reading = false;
+          break;
+        }
 
+        CircleBoundaries b = getSetBoundaries(circles);
+        std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
+        size_t baseSeed = rng();
+        size_t hits = runUnion(circles, threads, tries, baseSeed, b);
+        std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+        double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+        double area = b.area() * static_cast<double>(hits) / static_cast<double>(tries);
 
+        std::ostringstream os;
+        os << area << ' '  << ms;
+        int wr = 0;
+        writeLine(wr, wrP, os.str());
+      }
+
+      close(rdC);
+      close(wrP);
+      _exit(0);
     }
     else
     {
       err = close(rdC);
       if (err)
       {
-        std::cerr << std::strerror(errno) << "\n";
-        return 1;
+        throw std::runtime_error("Pipe failed");
       }
       err = close(wrP);
       if (err)
       {
-        std::cerr << std::strerror(errno) << "\n";
-        return 1;
+        throw std::runtime_error("Pipe failed");
       }
       ProcsInfo info{pid, toChild, toParent, seed};
       maps.procs[name] = info;
