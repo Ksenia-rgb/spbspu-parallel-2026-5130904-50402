@@ -7,6 +7,25 @@
 
 namespace vishnevskiy
 {
+
+  bool isInside(double x, double y, const Circle &c)
+  {
+    double rx = x - c.x_;
+    double ry = y - c.y_;
+    double r  = c.r_;
+    return (rx * rx + ry * ry) <= (r * r);
+  }
+
+  void generatePoint(std::mt19937_64 &gen, const CircleBoundaries &b, double &px, double &py)
+  {
+    std::uniform_real_distribution<double> distX(b.minX_, b.maxX_);
+    std::uniform_real_distribution<double> distY(b.minY_, b.maxY_);
+    px = distX(gen);
+    py = distY(gen);
+  }
+
+
+
   CircleBoundaries getBoundaries(Circle c)
   {
     CircleBoundaries b {0,0,0,0};
@@ -73,7 +92,7 @@ namespace vishnevskiy
     size_t r = 0;
     while (r < k)
     {
-      err = write(rd, b + r, k - r);
+      err = read(rd, b + r, k - r);
       if (err < 0)
       {
         break;
@@ -81,6 +100,60 @@ namespace vishnevskiy
       r += err;
     }
     return r;
+  }
+
+  size_t readLine(int &err, int rd, std::string &o)
+  {
+    o.clear();
+    err = 0;
+    size_t res = 0;
+    bool done = false;
+    while (!done)
+    {
+      char ch = 0;
+      int e = 0;
+      size_t n = readSafe(e, rd, &ch, 1);
+      if (n == 1)
+      {
+        if (ch == '\n')
+        {
+          res = 1;
+          done = true;
+        }
+        else
+        {
+          o.push_back(ch);
+        }
+      }
+      else if (e != 0)
+      {
+        err = e;
+        done = true;
+      }
+      else
+      {
+        done = true;
+      }
+    }
+    return res;
+  }
+
+  size_t writeLine(int &err, int wr, const std::string &s)
+  {
+    std::string buf = s;
+    buf.push_back('\n');
+    int e = 0;
+    size_t n = writeSafe(e, wr, buf.data(), buf.size());
+    err = e;
+    if (e != 0)
+    {
+      return 0;
+    }
+    if (n == buf.size())
+    {
+      return 1;
+    }
+    return 0;
   }
 
   void circle(std::istream &i, std::ostream &, Maps &map)
@@ -95,7 +168,7 @@ namespace vishnevskiy
     {
       throw std::runtime_error("Invalid name");
     }
-    Circle res = {r_ = r, x_ = x, y_ = y};
+    Circle res = {r, x, y};
     map.shapes[name] = res;
   }
 
@@ -128,7 +201,7 @@ namespace vishnevskiy
       }
       shapeSet.push_back(el);
     }
-    map.sets[name] = &shapeSet;
+    map.sets[name] = shapeSet;
   }
 
   void show(std::istream &i, std::ostream &o, Maps &map)
@@ -192,7 +265,7 @@ namespace vishnevskiy
     o << b.maxX_ << b.maxY_ << b.minX_ << b.minY_ << "\n";
   }
 
-  void frame(std::istream &i, std::ostream &o, Maps &map)
+  void frameset(std::istream &i, std::ostream &o, Maps &map)
   {
     Circle res;
     std::string name;
@@ -224,38 +297,42 @@ namespace vishnevskiy
     int toChild[2] = {}, err = pipe(toChild);
     if (err)
     {
-      std::cerr << std::strerror(errno) << "\n";
-      return 1;
+      throw std::runtime_error("Pipe failed");
     }
     int rdC = toChild[0], wrC = toChild[1];
     int toParent[2] = {}, err = pipe(toParent);
     if (err)
     {
-      std::cerr << std::strerror(errno) << "\n";
-      return 1;
+      close(rdC);
+      close(wrC);
+      throw std::runtime_error("Pipe failed");
     }
     int rdP = toParent[0], wrP = toParent[1];
     pid_t pid = fork();
     if (pid < 0)
     {
-      std::cerr << std::strerror(errno) << "\n";
-      return 1;
+      close(rdP);
+      close(rdC);
+      close(wrP);
+      close(wrC)
+      throw std::runtime_error("Fork failed");
     }
     if (pid == 0)
     {
       err = close(wrC);
       if (err)
       {
-        std::cerr << std::strerror(errno) << "\n";
-        return 1;
+        throw std::runtime_error("Close failed");
       }
       err = close(rdP);
       if (err)
       {
-        std::cerr << std::strerror(errno) << "\n";
-        return 1;
+        throw std::runtime_error("Close failed");
       }
-      readSafe(err, rdC, buffer, 255);
+      std::mt19937_64 rng(seed);
+
+
+
     }
     else
     {
@@ -274,6 +351,11 @@ namespace vishnevskiy
       ProcsInfo info{pid, toChild, toParent, seed};
       maps.procs[name] = info;
     }
+  }
+
+  void area_on(std::istream &i, std::ostream &, Maps &map)
+  {
+    
   }
 }
 

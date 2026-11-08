@@ -38,17 +38,21 @@ namespace vishnevskiy
   {
     pid_t pid;
     int pipeToChild;
-    int pipeToParent
+    int pipeToParent;
     size_t seed;
   };
 
   struct Maps
   {
     std::map<std::string, Circle> shapes;
-    std::map<std::string, &std::vector<Circle>> sets;
+    std::map<std::string, std::vector<Circle>> sets;
     std::map<std::string, ProcInfo> procs;
   };
 
+  bool isInside(double x, double y, const Circle &c);
+  void generatePoint(std::mt19937_64 &gen, const CircleBoundaries &b, double &px, double &py);
+  size_t calc(const std::vector<Circle> &circles, size_t tests,size_t seed, const CircleBoundaries &b);
+  size_t runCalc(const std::vector<Circle> &circles, size_t threads, size_t tests, size_t seed, const CircleBoundaries &b);
   CircleBoundaries getBoundaries(Circle c);
   CircleBoundaries getSetBoundaries(std::vector<Circle> &circles);
   void circle(std::istream &, std::ostream &, Maps &);
