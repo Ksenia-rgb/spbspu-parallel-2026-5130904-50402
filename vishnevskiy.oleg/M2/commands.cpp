@@ -216,8 +216,9 @@ namespace vishnevskiy
     int e = 0;
     size_t n = writeSafe(e, wr, buf.data(), buf.size());
     err = e;
-    if (e != 0)
+    if (e < 0)
     {
+      std::cout << e << "\n";
       return 0;
     }
     if (n == buf.size())
