@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
     return 1;
   }
   std::string line;
-  std::vector<vishnevskiy::Circle> circles;
+  std::vector< vishnevskiy::Circle > circles;
   while (std::getline(std::cin, line))
   {
     vishnevskiy::Circle c;
@@ -83,11 +83,11 @@ int main(int argc, char* argv[])
     return 0;
   }
   vishnevskiy::CircleBoundaries b = getBoundaries(circles);
-  size_t resUnion = vishnevskiy::runUnion(circles, threads, tests, seed, b);
-  size_t resIntersection = vishnevskiy::runIntersection(circles, threads, tests, seed, b);
-  double area = static_cast<double>(b.area());
-  double unionArea = (static_cast<double>(resUnion) / static_cast<double>(tests)) * area;
-  double intersectionArea = (static_cast<double>(resIntersection) / static_cast<double>(tests)) * area;
-  std::cout << unionArea << " " << intersectionArea << "\n";
+  const size_t res_union = vishnevskiy::runUnion(circles, threads, tests, seed, b);
+  const size_t res_intersection = vishnevskiy::runIntersection(circles, threads, tests, seed, b);
+  const double area = static_cast< double >(b.area());
+  const double union_area = (static_cast< double >(res_union) / static_cast< double >(tests)) * area;
+  const double intersection_area = (static_cast< double >(res_intersection) / static_cast< double >(tests)) * area;
+  std::cout << union_area << " " << intersection_area << "\n";
   return 0;
 }

@@ -8,16 +8,15 @@ namespace vishnevskiy
 {
   bool isInside(double x, double y, const Circle& c)
   {
-    double rx = x - c.x;
-    double ry = y - c.y;
-    double r  = c.r;
+    const double rx = x - c.x;
+    const double ry = y - c.y;
+    const double r = c.r;
     return (rx * rx + ry * ry) <= (r * r);
   }
 
-  CircleBoundaries getBoundaries(std::vector<Circle>& circles)
+  CircleBoundaries getBoundaries(std::vector< Circle >& circles)
   {
-    CircleBoundaries b
-    {
+    CircleBoundaries b {
       std::numeric_limits<double>::max(),
       std::numeric_limits<double>::lowest(),
       std::numeric_limits<double>::max(),
@@ -26,25 +25,25 @@ namespace vishnevskiy
     for (size_t i = 0; i < circles.size(); ++i)
     {
       const Circle& c = circles[i];
-      double curMinX = c.x - c.r;
-      double curMaxX = c.x + c.r;
-      double curMinY = c.y - c.r;
-      double curMaxY = c.y + c.r;
-      if (curMinX < b.minX)
+      const double cur_min_x = c.x - c.r;
+      const double cur_max_x = c.x + c.r;
+      const double cur_min_y = c.y - c.r;
+      const double cur_max_y = c.y + c.r;
+      if (cur_min_x < b.min_x)
       {
-        b.minX = curMinX;
+        b.min_x = cur_min_x;
       }
-      if (curMaxX > b.maxX)
+      if (cur_max_x > b.max_x)
       {
-        b.maxX = curMaxX;
+        b.max_x = cur_max_x;
       }
-      if (curMinY < b.minY)
+      if (cur_min_y < b.min_y)
       {
-        b.minY = curMinY;
+        b.min_y = cur_min_y;
       }
-      if (curMaxY > b.maxY)
+      if (cur_max_y > b.max_y)
       {
-        b.maxY = curMaxY;
+        b.max_y = cur_max_y;
       }
     }
     return b;
@@ -52,13 +51,13 @@ namespace vishnevskiy
 
   void generatePoint(std::mt19937_64& gen, const CircleBoundaries& b, double& px, double& py)
   {
-    std::uniform_real_distribution<double> distX(static_cast<double>(b.minX), static_cast<double>(b.maxX));
-    std::uniform_real_distribution<double> distY(static_cast<double>(b.minY), static_cast<double>(b.maxY));
-    px = distX(gen);
-    py = distY(gen);
+    std::uniform_real_distribution<double> dist_x(static_cast< double >(b.min_x), static_cast< double >(b.max_x));
+    std::uniform_real_distribution<double> dist_y(static_cast< double >(b.min_y), static_cast< double >(b.max_y));
+    px = dist_x(gen);
+    py = dist_y(gen);
   }
 
-  size_t calcUnion(const std::vector<Circle>& circles, size_t tests, size_t seed, const CircleBoundaries& b)
+  size_t calcUnion(const std::vector< Circle >& circles, size_t tests, size_t seed, const CircleBoundaries& b)
   {
     std::mt19937_64 gen(seed);
     size_t count = 0;
@@ -79,7 +78,7 @@ namespace vishnevskiy
     return count;
   }
 
-  size_t calcIntersection(const std::vector<Circle>& circles, size_t tests, size_t seed, const CircleBoundaries& b)
+  size_t calcIntersection(const std::vector< Circle >& circles, size_t tests, size_t seed, const CircleBoundaries& b)
   {
     std::mt19937_64 gen(seed);
     size_t count = 0;
@@ -88,16 +87,16 @@ namespace vishnevskiy
       double x = 0.0;
       double y = 0.0;
       generatePoint(gen, b, x, y);
-      bool insideAll = true;
+      bool inside_all = true;
       for (size_t j = 0; j < circles.size(); ++j)
       {
         if (!isInside(x, y, circles[j]))
         {
-          insideAll = false;
+          inside_all = false;
           break;
         }
       }
-      if (insideAll)
+      if (inside_all)
       {
         count++;
       }
@@ -105,21 +104,21 @@ namespace vishnevskiy
     return count;
   }
 
-  size_t runUnion(std::vector<Circle>& circles, size_t threads, size_t tests, size_t seed, CircleBoundaries& b)
+  size_t runUnion(std::vector< Circle >& circles, size_t threads, size_t tests, size_t seed, CircleBoundaries& b)
   {
-    size_t block = tests / threads;
-    size_t remainder = tests % threads;
-    std::vector<std::future<size_t>> futures;
+    const size_t block = tests / threads;
+    const size_t remainder = tests % threads;
+    std::vector< std::future< size_t > > futures;
     futures.reserve(threads);
 
     for (size_t i = 0; i < threads; ++i)
     {
-      size_t currTests = block;
+      size_t curr_tests = block;
       if (i < remainder)
       {
-        currTests++;
+        curr_tests++;
       }
-      futures.push_back(std::async(std::launch::async, calcUnion, circles, currTests, seed, b));
+      futures.push_back(std::async(std::launch::async, calcUnion, circles, curr_tests, seed, b));
     }
 
     size_t res = 0;
@@ -130,21 +129,21 @@ namespace vishnevskiy
     return res;
   }
 
-  size_t runIntersection(std::vector<Circle>& circles, size_t threads, size_t tests, size_t seed, CircleBoundaries& b)
+  size_t runIntersection(std::vector< Circle >& circles, size_t threads, size_t tests, size_t seed, CircleBoundaries& b)
   {
-    size_t block = tests / threads;
-    size_t remainder = tests % threads;
-    std::vector<std::future<size_t>> futures;
+    const size_t block = tests / threads;
+    const size_t remainder = tests % threads;
+    std::vector< std::future< size_t > > futures;
     futures.reserve(threads);
 
     for (size_t i = 0; i < threads; ++i)
     {
-      size_t currTests = block;
+      size_t curr_tests = block;
       if (i < remainder)
       {
-        currTests++;
+        curr_tests++;
       }
-      futures.push_back(std::async(std::launch::async, calcIntersection, circles, currTests, seed, b));
+      futures.push_back(std::async(std::launch::async, calcIntersection, circles, curr_tests, seed, b));
     }
 
     size_t res = 0;
