@@ -75,16 +75,16 @@ namespace vishnevskiy
   size_t runCalc(const std::vector<Circle> &circles, size_t threads, size_t tests, size_t seed, const CircleBoundaries &b);
   CircleBoundaries getBoundaries(Circle c);
   CircleBoundaries getSetBoundaries(std::vector<Circle> &circles);
-  void circle(std::istream &, std::ostream &, Maps &);
-  void set(std::istream &, std::ostream &, Maps &);
-  void show(std::istream &, std::ostream &, Maps &);
-  void showset(std::istream &, std::ostream &, Maps &);
-  void frame(std::istream &, std::ostream &, Maps &);
-  void frameset(std::istream &, std::ostream &, Maps &);
-  void spawn(std::istream &, std::ostream &, Maps &);
-  void area_on(std::istream &, std::ostream &, Maps &);
-  void status(std::istream &, std::ostream &, Maps &);
-  void wait(std::istream &, std::ostream &, Maps &);
+  void circle(std::istream &i, std::ostream &, Maps &map);
+  void set(std::istream &i, std::ostream &, Maps &map);
+  void show(std::istream &i, std::ostream &o, Maps &map);
+  void showset(std::istream &i, std::ostream &o, Maps &map);
+  void frame(std::istream &i, std::ostream &o, Maps &map);
+  void frameset(std::istream &i, std::ostream &o, Maps &map);
+  void spawn(std::istream &i, std::ostream &, Maps &map);
+  void area_on(std::istream &i, std::ostream &o, Maps &map);
+  void status(std::istream &i, std::ostream &o, Maps &map);
+  void wait(std::istream &i, std::ostream &o, Maps &map);
 }
 
 #endif

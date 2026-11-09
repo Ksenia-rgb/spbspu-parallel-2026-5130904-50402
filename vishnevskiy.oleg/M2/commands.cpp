@@ -291,7 +291,7 @@ namespace vishnevskiy
     {
       throw std::out_of_range("No name found");
     }
-    o << res.r_ << res.x_ << res.y_ << "\n";
+    o << res.r_ << " (" << res.x_ << " " << res.y_ << ")" << "\n";
   }
 
   void showset(std::istream &i, std::ostream &o, Maps &map)
@@ -332,7 +332,7 @@ namespace vishnevskiy
       throw std::out_of_range("No name found");
     }
     CircleBoundaries b = getBoundaries(res);
-    o << b.maxX_ << b.maxY_ << b.minX_ << b.minY_ << "\n";
+    o << "(" << b.maxX_ << b.maxY_ << ") (" << b.minX_ << b.minY_ << ")" << "\n";
   }
 
   void frameset(std::istream &i, std::ostream &o, Maps &map)
@@ -481,7 +481,7 @@ namespace vishnevskiy
     }
   }
 
-  void area_on(std::istream &i, std::ostream &, Maps &map)
+  void area_on(std::istream &i, std::ostream &o, Maps &map)
   {
     std::string procName, calcName, setName;
     size_t threads = 0, tries = 0;
