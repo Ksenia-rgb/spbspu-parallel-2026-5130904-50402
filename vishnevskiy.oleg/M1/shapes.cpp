@@ -106,14 +106,14 @@ namespace vishnevskiy
 
   size_t runUnion(std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b)
   {
-    const size_t block = tests / threads;
-    const size_t remainder = tests % threads;
+    const long long block = tests / threads;
+    const long long remainder = tests % threads;
     std::vector< std::future< size_t > > futures;
     futures.reserve(threads);
 
     for (long long i = 0; i < threads; ++i)
     {
-      size_t curr_tests = block;
+      long long curr_tests = block;
       if (i < remainder)
       {
         curr_tests++;
@@ -131,14 +131,14 @@ namespace vishnevskiy
 
   size_t runIntersection(std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b)
   {
-    const size_t block = tests / threads;
-    const size_t remainder = tests % threads;
+    const long long block = tests / threads;
+    const long long remainder = tests % threads;
     std::vector< std::future< size_t > > futures;
     futures.reserve(threads);
 
     for (long long i = 0; i < threads; ++i)
     {
-      size_t curr_tests = block;
+      long long curr_tests = block;
       if (i < remainder)
       {
         curr_tests++;
