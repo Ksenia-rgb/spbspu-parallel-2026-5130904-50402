@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
       (static_cast< double >(calcUnion(circles, tests, seed, b)) / static_cast< double >(tests));
     std::cout << r_u * area << " ";
     const double r_i =
-      (static_cast< double >(calcIntersection(circles, tests, seed, b)) / static_cast< double >(tests))
+      (static_cast< double >(calcIntersection(circles, tests, seed, b)) / static_cast< double >(tests));
     std::cout << r_i * area;
     std::cout << "\n";
     return 0;
