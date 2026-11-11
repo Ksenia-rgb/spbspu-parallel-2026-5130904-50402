@@ -61,7 +61,7 @@ namespace vishnevskiy
   {
     std::default_random_engine gen(seed);
     size_t count = 0;
-    for (size_t i = 0; i < tests; ++i)
+    for (long long i = 0; i < tests; ++i)
     {
       double x = 0.0;
       double y = 0.0;
@@ -82,7 +82,7 @@ namespace vishnevskiy
   {
     std::default_random_engine gen(seed);
     size_t count = 0;
-    for (size_t i = 0; i < tests; ++i)
+    for (long long i = 0; i < tests; ++i)
     {
       double x = 0.0;
       double y = 0.0;
@@ -111,7 +111,7 @@ namespace vishnevskiy
     std::vector< std::future< size_t > > futures;
     futures.reserve(threads);
 
-    for (size_t i = 0; i < threads; ++i)
+    for (long long i = 0; i < threads; ++i)
     {
       size_t curr_tests = block;
       if (i < remainder)
@@ -136,7 +136,7 @@ namespace vishnevskiy
     std::vector< std::future< size_t > > futures;
     futures.reserve(threads);
 
-    for (size_t i = 0; i < threads; ++i)
+    for (long long i = 0; i < threads; ++i)
     {
       size_t curr_tests = block;
       if (i < remainder)
