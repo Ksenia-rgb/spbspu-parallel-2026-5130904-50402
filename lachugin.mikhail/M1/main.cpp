@@ -1,6 +1,8 @@
 #include <iostream>
 #include <random>
 #include <utility>
+#include <functional>
+#include <thread>
 
 namespace lachugin
 {
@@ -9,6 +11,13 @@ namespace lachugin
     int r;
     int x;
     int y;
+  };
+
+  struct ThreadData
+  {
+    std::thread worker;
+    size_t uCount = 0;
+    size_t iCount = 0;
   };
 
   Circle* newCircles(size_t size, size_t& cap, const Circle* oldCircles)
@@ -133,20 +142,87 @@ namespace lachugin
     return {x, y};
   }
 
-  std::pair< double, double > calculateAreas(const Circle* circles, size_t size,
-    size_t tries, std::mt19937& generator)
+  void threadFunction(const Circle* circles, size_t size, size_t tries, size_t threadNumber,
+    int seed, double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount);
+
+  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::mt19937& generator,
+    double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount);
+
+  std::pair< double, double > calculateAreas(const Circle* circles,
+    size_t size, size_t tries, int threads, int seed)
+{
+  double minX = 0;
+  double maxX = 0;
+  double minY = 0;
+  double maxY = 0;
+
+  findBounds(circles, size, minX, maxX, minY, maxY);
+
+  double area = (maxX - minX) * (maxY - minY);
+  if (threads == 0)
   {
     size_t uCount = 0;
     size_t iCount = 0;
+    std::mt19937 generator(seed);
 
-    double minX = 0;
-    double maxX = 0;
-    double minY = 0;
-    double maxY = 0;
+    calculateCounts(circles, size, tries, generator,
+      minX, maxX, minY, maxY, uCount, iCount);
+    double areaU = area * (static_cast< double >(uCount) / tries);
+    double areaI = area * (static_cast< double >(iCount) / tries);
+    return {areaU, areaI};
+  }
+  size_t threadCount = static_cast< size_t >(threads);
+  size_t triesPerThread = tries / threadCount;
+  size_t remainder = tries % threadCount;
+  ThreadData* data = new ThreadData[threadCount];
+  size_t started = 0;
 
-    findBounds(circles, size, minX, maxX, minY, maxY);
-    double area = (maxX - minX) * (maxY - minY);
+  try
+  {
+    for (size_t i = 0; i < threadCount; ++i)
+    {
+      size_t currentTries = triesPerThread;
+      if (i == threadCount - 1)
+      {
+          currentTries += remainder;
+      }
+      data[i].worker = std::thread(threadFunction,
+        circles, size, currentTries, i, seed,
+        minX, maxX, minY, maxY, std::ref(data[i].uCount),
+        std::ref(data[i].iCount));
+      started++;
+    }
+  }
+  catch (...)
+  {
+    for (size_t i = 0; i < started; ++i)
+    {
+      data[i].worker.join();
+    }
 
+    delete[] data;
+    throw;
+  }
+  size_t totalU = 0;
+  size_t totalI = 0;
+  for (size_t i = 0; i < threadCount; ++i)
+  {
+    data[i].worker.join();
+    totalU += data[i].uCount;
+    totalI += data[i].iCount;
+  }
+
+  delete[] data;
+
+  double areaU = area * (static_cast< double >(totalU) / tries);
+  double areaI = area * (static_cast< double >(totalI) / tries);
+  return {areaU, areaI};
+}
+
+
+  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::mt19937& generator,
+    double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount)
+  {
     for (size_t i = 0; i < tries; ++i)
     {
       std::pair< double, double > point;
@@ -160,12 +236,14 @@ namespace lachugin
         iCount++;
       }
     }
+  }
 
-    double areaU = area * (static_cast< double >(uCount) / tries);
+  void threadFunction(const Circle* circles, size_t size, size_t tries, size_t threadNumber,
+    int seed, double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount)
+  {
+    std::mt19937 generator(seed + threadNumber);
 
-    double areaI = area * (static_cast< double >(iCount) / tries);
-
-    return {areaU, areaI};
+    calculateCounts(circles, size, tries, generator, minX, maxX, minY, maxY, uCount, iCount);
   }
 
 
