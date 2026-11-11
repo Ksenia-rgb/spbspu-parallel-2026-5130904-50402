@@ -14,20 +14,20 @@ namespace vishnevskiy
 
   struct CircleBoundaries
   {
-    const double min_x;
-    const double max_x;
-    const double min_y;
-    const double max_y;
+    double min_x;
+    double max_x;
+    double min_y;
+    double max_y;
 
-    const double width()
+    double width() const
     {
       return max_x - min_x;
     }
-    const double height()
+    double height() const
     {
       return max_y - min_y;
     }
-    const double area()
+    double area() const
     {
       return width() * height();
     }
