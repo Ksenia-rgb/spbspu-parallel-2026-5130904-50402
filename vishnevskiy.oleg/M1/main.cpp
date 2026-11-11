@@ -35,9 +35,9 @@ int main(int argc, char* argv[])
     std::cerr << "Wrong arg amount!\n";
     return 1;
   }
-  size_t threads = 0;
-  size_t tests = 0;
-  size_t seed = 0;
+  long long threads = 0;
+  long long tests = 0;
+  long long seed = 0;
   try
   {
     threads = std::stoull(argv[1]);
@@ -56,9 +56,19 @@ int main(int argc, char* argv[])
     std::cerr << "Bad args!\n";
     return 1;
   }
-  if (threads == 0)
+  if (threads < 0)
   {
     std::cerr << "Wrong thread number!\n";
+    return 1;
+  }
+  if (tests < 0)
+  {
+    std::cerr << "Wrong test number!\n";
+    return 1;
+  }
+  if (seed < 0)
+  {
+    std::cerr << "Wrong seed number!\n";
     return 1;
   }
   if (tests == 0)
@@ -83,9 +93,16 @@ int main(int argc, char* argv[])
     return 0;
   }
   vishnevskiy::CircleBoundaries b = getBoundaries(circles);
+  const double area = static_cast< double >(b.area());
+  if (threads == 0)
+  {
+    std::cout << (static_cast< double >(calcUnion(circles, tests, seed, b)) / static_cast< double >(tests)) * area << " ";
+    std::cout << (static_cast< double >(calcIntersection(circles, tests, seed, b)) / static_cast< double >(tests)) * area;
+    std::cout << "\n";
+    return 0;
+  }
   const size_t res_union = vishnevskiy::runUnion(circles, threads, tests, seed, b);
   const size_t res_intersection = vishnevskiy::runIntersection(circles, threads, tests, seed, b);
-  const double area = static_cast< double >(b.area());
   const double union_area = (static_cast< double >(res_union) / static_cast< double >(tests)) * area;
   const double intersection_area = (static_cast< double >(res_intersection) / static_cast< double >(tests)) * area;
   std::cout << union_area << " " << intersection_area << "\n";

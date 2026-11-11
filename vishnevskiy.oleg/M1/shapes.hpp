@@ -34,11 +34,11 @@ namespace vishnevskiy
   };
 
   bool isInside(double x, double y, const Circle& c);
-  void generatePoint(std::mt19937_64& gen, const CircleBoundaries& b, double& px, double& py);
+  void generatePoint(std::default_random_engine& gen, const CircleBoundaries& b, double& px, double& py);
   CircleBoundaries getBoundaries(std::vector< Circle >& circles);
-  size_t calcUnion(const std::vector< Circle >& circles, size_t tests, size_t seed, const CircleBoundaries& b);
-  size_t calcIntersection(const std::vector< Circle >& circles, size_t tests, size_t seed, const CircleBoundaries& b);
-  size_t runUnion(std::vector< Circle >& circles, size_t threads, size_t tests, size_t seed, CircleBoundaries& b);
-  size_t runIntersection(std::vector< Circle >& circles, size_t threads, size_t tests, size_t seed, CircleBoundaries& b);
+  size_t calcUnion(const std::vector< Circle >& circles, long long tests, long long seed, const CircleBoundaries& b);
+  size_t calcIntersection(const std::vector< Circle >& circles, long long tests, long long seed, const CircleBoundaries& b);
+  size_t runUnion(std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b);
+  size_t runIntersection(std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b);
 }
 #endif
