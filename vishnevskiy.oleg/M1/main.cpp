@@ -96,15 +96,20 @@ int main(int argc, char* argv[])
   const double area = static_cast< double >(b.area());
   if (threads == 0)
   {
-    std::cout << (static_cast< double >(calcUnion(circles, tests, seed, b)) / static_cast< double >(tests)) * area << " ";
-    std::cout << (static_cast< double >(calcIntersection(circles, tests, seed, b)) / static_cast< double >(tests)) * area;
+    const double r_u =
+      (static_cast< double >(calcUnion(circles, tests, seed, b)) / static_cast< double >(tests));
+    std::cout << r_u * area << " ";
+    const double r_i =
+      (static_cast< double >(calcIntersection(circles, tests, seed, b)) / static_cast< double >(tests))
+    std::cout << r_i * area;
     std::cout << "\n";
     return 0;
   }
   const size_t res_union = vishnevskiy::runUnion(circles, threads, tests, seed, b);
   const size_t res_intersection = vishnevskiy::runIntersection(circles, threads, tests, seed, b);
   const double union_area = (static_cast< double >(res_union) / static_cast< double >(tests)) * area;
-  const double intersection_area = (static_cast< double >(res_intersection) / static_cast< double >(tests)) * area;
+  const double intersection_area =
+    (static_cast< double >(res_intersection) / static_cast< double >(tests)) * area;
   std::cout << union_area << " " << intersection_area << "\n";
   return 0;
 }

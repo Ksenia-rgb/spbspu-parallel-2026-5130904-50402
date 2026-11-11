@@ -16,12 +16,10 @@ namespace vishnevskiy
 
   CircleBoundaries getBoundaries(std::vector< Circle >& circles)
   {
-    CircleBoundaries b {
-      std::numeric_limits<double>::max(),
-      std::numeric_limits<double>::lowest(),
-      std::numeric_limits<double>::max(),
-      std::numeric_limits<double>::lowest()
-    };
+    CircleBoundaries b {std::numeric_limits< double >::max(),
+                        std::numeric_limits< double >::lowest(),
+                        std::numeric_limits< double >::max(),
+                        std::numeric_limits< double >::lowest()};
     for (size_t i = 0; i < circles.size(); ++i)
     {
       const Circle& c = circles[i];
@@ -78,7 +76,8 @@ namespace vishnevskiy
     return count;
   }
 
-  size_t calcIntersection(const std::vector< Circle >& circles, long long tests, long long seed, const CircleBoundaries& b)
+  size_t calcIntersection(
+    const std::vector< Circle >& circles, long long tests, long long seed, const CircleBoundaries& b)
   {
     std::default_random_engine gen(seed);
     size_t count = 0;
@@ -104,7 +103,8 @@ namespace vishnevskiy
     return count;
   }
 
-  size_t runUnion(std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b)
+  size_t runUnion(
+    std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b)
   {
     const long long block = tests / threads;
     const long long remainder = tests % threads;
@@ -129,7 +129,8 @@ namespace vishnevskiy
     return res;
   }
 
-  size_t runIntersection(std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b)
+  size_t runIntersection(
+    std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b)
   {
     const long long block = tests / threads;
     const long long remainder = tests % threads;
