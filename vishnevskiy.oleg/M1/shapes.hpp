@@ -12,6 +12,8 @@ namespace vishnevskiy
     double r, x, y;
   };
 
+  using circ_t = std::vector< Circle >;
+
   struct CircleBoundaries
   {
     double min_x;
@@ -35,13 +37,10 @@ namespace vishnevskiy
 
   bool isInside(double x, double y, const Circle& c);
   void generatePoint(std::default_random_engine& gen, const CircleBoundaries& b, double& px, double& py);
-  CircleBoundaries getBoundaries(std::vector< Circle >& circles);
-  size_t calcUnion(const std::vector< Circle >& circles, long long tests, long long seed, const CircleBoundaries& b);
-  size_t calcIntersection(
-    const std::vector< Circle >& circles, long long tests, long long seed, const CircleBoundaries& b);
-  size_t runUnion(
-    std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b);
-  size_t runIntersection(
-    std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b);
+  CircleBoundaries getBoundaries(circ_t& circles);
+  size_t calcUnion(const circ_t& circles, long long tests, long long seed, const CircleBoundaries& b);
+  size_t calcIntersection(const circ_t& circles, long long tests, long long seed, const CircleBoundaries& b);
+  size_t runUnion(circ_t& circles, long long threads, long long tests, long long seed, CircleBoundaries& b);
+  size_t runIntersection(circ_t& circles, long long threads, long long tests, long long seed, CircleBoundaries& b);
 }
 #endif

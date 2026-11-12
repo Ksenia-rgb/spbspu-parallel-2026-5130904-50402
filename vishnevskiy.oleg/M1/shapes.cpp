@@ -6,8 +6,8 @@
 
 namespace vishnevskiy
 {
- constexpr double mx = std::numeric_limits< double >::max();
- constexpr double mn = std::numeric_limits< double >::lowest();
+  using circ_t = std::vector< Circle >;
+
   bool isInside(double x, double y, const Circle& c)
   {
     const double rx = x - c.x;
@@ -16,8 +16,10 @@ namespace vishnevskiy
     return (rx * rx + ry * ry) <= (r * r);
   }
 
-  CircleBoundaries getBoundaries(std::vector< Circle >& circles)
+  CircleBoundaries getBoundaries(circ_t& circles)
   {
+    constexpr double mx = std::numeric_limits< double >::max();
+    constexpr double mn = std::numeric_limits< double >::lowest();
     CircleBoundaries b{mx, mn, mx, mn};
     for (size_t i = 0; i < circles.size(); ++i)
     {
@@ -54,7 +56,7 @@ namespace vishnevskiy
     py = dist_y(gen);
   }
 
-  size_t calcUnion(const std::vector< Circle >& circles, long long tests, long long seed, const CircleBoundaries& b)
+  size_t calcUnion(const circ_t& circles, long long tests, long long seed, const CircleBoundaries& b)
   {
     std::default_random_engine gen(seed);
     size_t count = 0;
@@ -75,8 +77,7 @@ namespace vishnevskiy
     return count;
   }
 
-  size_t calcIntersection(
-      const std::vector< Circle >& circles, long long tests, long long seed, const CircleBoundaries& b)
+  size_t calcIntersection(const circ_t& circles, long long tests, long long seed, const CircleBoundaries& b)
   {
     std::default_random_engine gen(seed);
     size_t count = 0;
@@ -102,8 +103,7 @@ namespace vishnevskiy
     return count;
   }
 
-  size_t runUnion(
-      std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b)
+  size_t runUnion(circ_t& circles, long long threads, long long tests, long long seed, CircleBoundaries& b)
   {
     const long long block = tests / threads;
     const long long remainder = tests % threads;
@@ -128,8 +128,7 @@ namespace vishnevskiy
     return res;
   }
 
-  size_t runIntersection(
-      std::vector< Circle >& circles, long long threads, long long tests, long long seed, CircleBoundaries& b)
+  size_t runIntersection(circ_t& circles, long long threads, long long tests, long long seed, CircleBoundaries& b)
   {
     const long long block = tests / threads;
     const long long remainder = tests % threads;
