@@ -1,0 +1,63 @@
+#include <iostream>
+#include <map>
+#include <string>
+#include <sys/wait.h>
+#include "commands.hpp"
+
+int main(int argc, char* [])
+{
+  if (argc != 1)
+  {
+    return 1;
+  }
+  std::map< std::string, void (*)(std::istream &, std::ostream &, vishnevskiy::Maps &) > cmds;
+  cmds["circle"] = vishnevskiy::circle;
+  cmds["set"] = vishnevskiy::set;
+  cmds["show"] = vishnevskiy::show;
+  cmds["showset"] = vishnevskiy::showset;
+  cmds["frame"] = vishnevskiy::frame;
+  cmds["frameset"] = vishnevskiy::frameset;
+  cmds["spawn"] = vishnevskiy::spawn;
+  cmds["area-on"] = vishnevskiy::area_on;
+  cmds["status"] = vishnevskiy::status;
+  cmds["wait"] = vishnevskiy::wait;
+  vishnevskiy::Maps mp{};
+  std::string cmd;
+  while (std::cin >> cmd)
+  {
+    try
+    {
+      cmds.at(cmd)(std::cin, std::cout, mp);
+    }
+    catch (const std::runtime_error &e)
+    {
+      std::cout << "<INVALID COMMAND>\n";
+      auto toignore = std::numeric_limits< std::streamsize >::max();
+      std::cin.ignore(toignore, '\n');
+    }
+    catch (...)
+    {
+      std::cout << "<UNKNOWN COMMAND>\n";
+      auto toignore = std::numeric_limits< std::streamsize >::max();
+      std::cin.ignore(toignore, '\n');
+    }
+  }
+  if (!std::cin.eof())
+  {
+    std::cerr << "Bad input!\n";
+    return 1;
+  }
+  for (std::map< std::string, vishnevskiy::ProcInfo >::iterator it = mp.procs.begin(); it != mp.procs.end(); ++it)
+  {
+    close(it->second.pipeToChild);
+  }
+  for (std::map< std::string, vishnevskiy::ProcInfo >::iterator it = mp.procs.begin(); it != mp.procs.end(); ++it)
+  {
+    waitpid(it->second.pid, nullptr, 0);
+  }
+  for (std::map< std::string, vishnevskiy::ProcInfo >::iterator it = mp.procs.begin(); it != mp.procs.end(); ++it)
+  {
+    close(it->second.pipeToParent);
+  }
+  return 0;
+}
