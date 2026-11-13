@@ -15,7 +15,7 @@ namespace vishnevskiy
   {
     double rx = x - c.x_;
     double ry = y - c.y_;
-    double r  = c.r_;
+    double r = c.r_;
     return (rx * rx + ry * ry) <= (r * r);
   }
 
@@ -101,7 +101,7 @@ namespace vishnevskiy
 
   CircleBoundaries getBoundaries(Circle c)
   {
-    CircleBoundaries b{0,0,0,0};
+    CircleBoundaries b{0, 0, 0, 0};
     b.minX_ = c.x_ - c.r_;
     b.maxX_ = c.x_ + c.r_;
     b.minY_ = c.y_ - c.r_;
@@ -116,7 +116,7 @@ namespace vishnevskiy
     CircleBoundaries b{mx, mn, mx, mn};
     for (size_t i = 0; i < circles.size(); ++i)
     {
-      const Circle& c = circles[i];
+      const Circle &c = circles[i];
       double curMinX = c.x_ - c.r_;
       double curMaxX = c.x_ + c.r_;
       double curMinY = c.y_ - c.r_;
@@ -265,7 +265,7 @@ namespace vishnevskiy
       {
         el = map.shapes.at(shapeName);
       }
-      catch(const std::out_of_range& e)
+      catch (const std::out_of_range &e)
       {
         throw std::out_of_range("No name found");
       }
@@ -286,7 +286,7 @@ namespace vishnevskiy
       Circle res = map.shapes.at(name);
       o << res.r_ << " (" << res.x_ << " " << res.y_ << ")" << "\n";
     }
-    catch(const std::out_of_range& e)
+    catch (const std::out_of_range &e)
     {
       throw std::out_of_range("No name found");
     }
@@ -325,7 +325,7 @@ namespace vishnevskiy
     {
       res = map.shapes.at(name);
     }
-    catch(const std::out_of_range& e)
+    catch (const std::out_of_range &e)
     {
       throw std::out_of_range("No name found");
     }
@@ -425,7 +425,10 @@ namespace vishnevskiy
           if (readLine(re, rdC, line) == 0)
           {
             ok = false;
-            if (re != 0) e = re;
+            if (re != 0)
+            {
+              e = re;
+            }
             break;
           }
           std::istringstream circleiss(line);
@@ -452,7 +455,7 @@ namespace vishnevskiy
         double area = b.area() * static_cast< double >(hits) / static_cast< double >(tries);
 
         std::ostringstream os;
-        os << area << ' '  << ms;
+        os << area << ' ' << ms;
         int wr = 0;
         writeLine(wr, wrP, os.str());
       }
