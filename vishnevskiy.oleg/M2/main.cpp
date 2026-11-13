@@ -3,7 +3,7 @@
 #include <string>
 #include "commands.hpp"
 
-int main(int argc, char* argv[])
+int main(int argc, char*[])
 {
   if (argc != 1)
   {
@@ -28,16 +28,16 @@ int main(int argc, char* argv[])
     {
       cmds.at(cmd)(std::cin, std::cout, mp);
     }
-    catch(std::runtime_error)
+    catch(const std::runtime_error &e)
     {
       std::cout << "<INVALID COMMAND>\n";
-      auto toignore = std::numeric_limits<std::streamsize>::max();
+      auto toignore = std::numeric_limits< std::streamsize >::max();
       std::cin.ignore(toignore, '\n');
     }
     catch (...)
     {
       std::cout << "<UNKNOWN COMMAND>\n";
-      auto toignore = std::numeric_limits<std::streamsize>::max();
+      auto toignore = std::numeric_limits< std::streamsize >::max();
       std::cin.ignore(toignore, '\n');
     }
   }

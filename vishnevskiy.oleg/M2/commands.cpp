@@ -9,6 +9,8 @@
 
 namespace vishnevskiy
 {
+  using circ_t = std::vector< Circle >;
+
   bool isInside(double x, double y, const Circle &c)
   {
     double rx = x - c.x_;
@@ -17,17 +19,17 @@ namespace vishnevskiy
     return (rx * rx + ry * ry) <= (r * r);
   }
 
-  void generatePoint(std::mt19937_64 &gen, const CircleBoundaries &b, double &px, double &py)
+  void generatePoint(std::default_random_engine &gen, const CircleBoundaries &b, double &px, double &py)
   {
-    std::uniform_real_distribution<double> distX(b.minX_, b.maxX_);
-    std::uniform_real_distribution<double> distY(b.minY_, b.maxY_);
+    std::uniform_real_distribution< double > distX(b.minX_, b.maxX_);
+    std::uniform_real_distribution< double > distY(b.minY_, b.maxY_);
     px = distX(gen);
     py = distY(gen);
   }
 
-  size_t calc(const std::vector<Circle> &circles, size_t tests, size_t seed, const CircleBoundaries &b)
+  size_t calc(const circ_t &circles, size_t tests, size_t seed, const CircleBoundaries &b)
   {
-    std::mt19937_64 gen(seed);
+    std::default_random_engine gen(seed);
     size_t count = 0;
     for (size_t i = 0; i < tests; ++i)
     {
@@ -48,18 +50,18 @@ namespace vishnevskiy
 
   void *threadStarter(void *arg)
   {
-    ThreadInfo *t = static_cast<ThreadInfo *>(arg);
+    ThreadInfo *t = static_cast< ThreadInfo * >(arg);
     t->result = calc(*t->circles, t->tests, t->seed, *t->b);
     return nullptr;
   }
 
-  size_t runCalc(const std::vector<Circle> &circles, size_t threads, size_t tests, size_t seed, const CircleBoundaries &b)
+  size_t runCalc(const circ_t &circles, size_t threads, size_t tests, size_t seed, const CircleBoundaries &b)
   {
     size_t block = tests / threads;
     size_t remainder = tests % threads;
-    std::vector<pthread_t> ids(threads);
-    std::vector<ThreadInfo> tasks(threads);
-    std::vector<bool> started(threads, false);
+    std::vector< pthread_t > ids(threads);
+    std::vector< ThreadInfo > tasks(threads);
+    std::vector< bool > started(threads, false);
 
     for (size_t i = 0; i < threads; ++i)
     {
@@ -71,7 +73,7 @@ namespace vishnevskiy
       tasks[i].circles = &circles;
       tasks[i].b = &b;
       tasks[i].tests = currTests;
-      tasks[i].seed = seed;
+      tasks[i].seed = seed + i;
       tasks[i].result = 0;
       int err = pthread_create(&ids[i], nullptr, threadStarter, &tasks[i]);
       if (err != 0)
@@ -99,7 +101,7 @@ namespace vishnevskiy
 
   CircleBoundaries getBoundaries(Circle c)
   {
-    CircleBoundaries b {0,0,0,0};
+    CircleBoundaries b{0,0,0,0};
     b.minX_ = c.x_ - c.r_;
     b.maxX_ = c.x_ + c.r_;
     b.minY_ = c.y_ - c.r_;
@@ -107,15 +109,11 @@ namespace vishnevskiy
     return b;
   }
 
-  CircleBoundaries getSetBoundaries(std::vector<Circle> &circles)
+  CircleBoundaries getSetBoundaries(circ_t &circles)
   {
-    CircleBoundaries b
-    {
-      std::numeric_limits<double>::max(),
-      std::numeric_limits<double>::lowest(),
-      std::numeric_limits<double>::max(),
-      std::numeric_limits<double>::lowest()
-    };
+    constexpr double mx = std::numeric_limits< double >::max();
+    constexpr double mn = std::numeric_limits< double >::lowest();
+    CircleBoundaries b{mx, mn, mx, mn};
     for (size_t i = 0; i < circles.size(); ++i)
     {
       const Circle& c = circles[i];
@@ -163,7 +161,7 @@ namespace vishnevskiy
     size_t r = 0;
     while (r < k)
     {
-      err = read(rd, const_cast<char *>(b) + r, k - r);
+      err = read(rd, const_cast< char * >(b) + r, k - r);
       if (err < 0)
       {
         break;
@@ -256,7 +254,7 @@ namespace vishnevskiy
     {
       throw std::runtime_error("Invalid name");
     }
-    std::vector<Circle> shapeSet;
+    circ_t shapeSet;
     shapeSet.reserve(size);
     for (size_t j = 0; j < size; ++j)
     {
@@ -278,7 +276,6 @@ namespace vishnevskiy
 
   void show(std::istream &i, std::ostream &o, Maps &map)
   {
-    Circle res;
     std::string name;
     if (!(i >> name))
     {
@@ -286,13 +283,13 @@ namespace vishnevskiy
     }
     try
     {
-      res = map.shapes.at(name);
+      Circle res = map.shapes.at(name);
+      o << res.r_ << " (" << res.x_ << " " << res.y_ << ")" << "\n";
     }
     catch(const std::out_of_range& e)
     {
       throw std::out_of_range("No name found");
     }
-    o << res.r_ << " (" << res.x_ << " " << res.y_ << ")" << "\n";
   }
 
   void showset(std::istream &i, std::ostream &o, Maps &map)
@@ -302,13 +299,13 @@ namespace vishnevskiy
     {
       throw std::runtime_error("Invalid arguments");
     }
-    std::map<std::string, std::vector<Circle>>::iterator it = map.sets.find(name);
+    std::map< std::string, circ_t >::iterator it = map.sets.find(name);
     if (it == map.sets.end())
     {
       throw std::out_of_range("No name found");
     }
 
-    const std::vector<Circle> &shapeSet = it->second;
+    const circ_t &shapeSet = it->second;
     for (size_t k = 0; k < shapeSet.size(); ++k)
     {
       const Circle &res = shapeSet[k];
@@ -345,13 +342,13 @@ namespace vishnevskiy
       throw std::runtime_error("Invalid arguments");
     }
 
-    std::map<std::string, std::vector<Circle>>::iterator it = map.sets.find(name);
+    std::map< std::string, circ_t >::iterator it = map.sets.find(name);
     if (it == map.sets.end())
     {
       throw std::out_of_range("No name found");
     }
 
-    std::vector<Circle> &shapeSet = it->second;
+    circ_t &shapeSet = it->second;
     CircleBoundaries b = getSetBoundaries(shapeSet);
     o << "(" << b.minX_ << " " << b.minY_ << ") (" << b.maxX_ << " " << b.maxY_ << ")\n";
   }
@@ -400,7 +397,7 @@ namespace vishnevskiy
       {
         throw std::runtime_error("Close failed");
       }
-      std::mt19937_64 rng(seed);
+      std::default_random_engine rng(seed);
       std::string line;
       int e = 0;
       bool reading = true;
@@ -420,7 +417,7 @@ namespace vishnevskiy
           continue;
         }
 
-        std::vector<Circle> circles;
+        circ_t circles;
         circles.reserve(count);
         bool ok = true;
         for (size_t k = 0; ok && k < count; ++k)
@@ -452,8 +449,8 @@ namespace vishnevskiy
         size_t baseSeed = rng();
         size_t hits = runCalc(circles, threads, tries, baseSeed, b);
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-        double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
-        double area = b.area() * static_cast<double>(hits) / static_cast<double>(tries);
+        double ms = std::chrono::duration< double, std::milli >(t1 - t0).count();
+        double area = b.area() * static_cast< double >(hits) / static_cast< double >(tries);
 
         std::ostringstream os;
         os << area << ' '  << ms;
@@ -482,7 +479,7 @@ namespace vishnevskiy
     }
   }
 
-  void area_on(std::istream &i, std::ostream &o, Maps &map)
+  void area_on(std::istream &i, std::ostream &, Maps &map)
   {
     std::string procName, calcName, setName;
     size_t threads = 0, tries = 0;
@@ -490,7 +487,7 @@ namespace vishnevskiy
     {
       throw std::runtime_error("Invalid arguments");
     }
-    std::map<std::string, ProcInfo>::iterator pit = map.procs.find(procName);
+    std::map< std::string, ProcInfo >::iterator pit = map.procs.find(procName);
     if (pit == map.procs.end())
     {
       throw std::runtime_error("Invalid process");
@@ -499,7 +496,7 @@ namespace vishnevskiy
     {
       throw std::runtime_error("Invalid calc name");
     }
-    std::map<std::string, std::vector<Circle>>::iterator sit = map.sets.find(setName);
+    std::map< std::string, circ_t >::iterator sit = map.sets.find(setName);
     if (sit == map.sets.end())
     {
       throw std::runtime_error("Invalid set");
@@ -509,7 +506,7 @@ namespace vishnevskiy
       throw std::runtime_error("Invalid arguments");
     }
 
-    const std::vector<Circle> &circles = sit->second;
+    const circ_t &circles = sit->second;
     std::ostringstream oss;
     oss << threads << ' ' << tries << ' ' << circles.size();
     int we = 0;
@@ -538,7 +535,7 @@ namespace vishnevskiy
     {
       throw std::runtime_error("Invalid arguments");
     }
-    std::map<std::string, CalcInfo>::iterator it = map.calcs.find(calcName);
+    std::map< std::string, CalcInfo >::iterator it = map.calcs.find(calcName);
     if (it == map.calcs.end())
     {
       throw std::runtime_error("Invalid calc");
@@ -561,7 +558,7 @@ namespace vishnevskiy
     {
       throw std::runtime_error("Invalid arguments");
     }
-    std::map<std::string, CalcInfo>::iterator it = map.calcs.find(calcName);
+    std::map< std::string, CalcInfo >::iterator it = map.calcs.find(calcName);
     if (it == map.calcs.end())
     {
       throw std::runtime_error("Invalid calc");
@@ -569,7 +566,7 @@ namespace vishnevskiy
     CalcInfo &c = it->second;
     if (!c.done)
     {
-      std::map<std::string, ProcInfo>::iterator pit = map.procs.find(c.procName);
+      std::map< std::string, ProcInfo >::iterator pit = map.procs.find(c.procName);
       if (pit == map.procs.end())
       {
         throw std::runtime_error("Invalid process");

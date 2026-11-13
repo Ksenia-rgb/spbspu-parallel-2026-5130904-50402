@@ -15,6 +15,8 @@ namespace vishnevskiy
     double r_, x_, y_;
   };
 
+  using circ_t = std::vector< Circle >;
+
   struct CircleBoundaries
   {
     double minX_;
@@ -46,7 +48,7 @@ namespace vishnevskiy
 
   struct ThreadInfo
   {
-    const std::vector<Circle> *circles;
+    const circ_t *circles;
     const CircleBoundaries *b;
     size_t tests;
     size_t seed;
@@ -63,18 +65,18 @@ namespace vishnevskiy
 
   struct Maps
   {
-    std::map<std::string, Circle> shapes;
-    std::map<std::string, std::vector<Circle>> sets;
-    std::map<std::string, ProcInfo> procs;
-    std::map<std::string, CalcInfo> calcs;
+    std::map< std::string, Circle > shapes;
+    std::map< std::string, circ_t > sets;
+    std::map< std::string, ProcInfo > procs;
+    std::map< std::string, CalcInfo > calcs;
   };
 
   bool isInside(double x, double y, const Circle &c);
-  void generatePoint(std::mt19937_64 &gen, const CircleBoundaries &b, double &px, double &py);
-  size_t calc(const std::vector<Circle> &circles, size_t tests, size_t seed, const CircleBoundaries &b);
-  size_t runCalc(const std::vector<Circle> &circles, size_t threads, size_t tests, size_t seed, const CircleBoundaries &b);
+  void generatePoint(std::default_random_engine &gen, const CircleBoundaries &b, double &px, double &py);
+  size_t calc(const circ_t &circles, size_t tests, size_t seed, const CircleBoundaries &b);
+  size_t runCalc(const circ_t &circles, size_t threads, size_t tests, size_t seed, const CircleBoundaries &b);
   CircleBoundaries getBoundaries(Circle c);
-  CircleBoundaries getSetBoundaries(std::vector<Circle> &circles);
+  CircleBoundaries getSetBoundaries(circ_t &circles);
   void circle(std::istream &i, std::ostream &, Maps &map);
   void set(std::istream &i, std::ostream &, Maps &map);
   void show(std::istream &i, std::ostream &o, Maps &map);
