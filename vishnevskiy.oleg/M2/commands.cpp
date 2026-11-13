@@ -335,7 +335,6 @@ namespace vishnevskiy
 
   void frameset(std::istream &i, std::ostream &o, Maps &map)
   {
-    Circle res;
     std::string name;
     if (!(i >> name))
     {
