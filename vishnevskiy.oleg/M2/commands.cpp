@@ -162,7 +162,7 @@ namespace vishnevskiy
     while (r < k)
     {
       err = read(rd, const_cast< char * >(b) + r, k - r);
-      if (err < 0)
+      if (err <= 0)
       {
         break;
       }
@@ -359,6 +359,10 @@ namespace vishnevskiy
     if (!(i >> name >> seed))
     {
       throw std::runtime_error("Invalid arguments");
+    }
+    if (map.procs.count(name) != 0)
+    {
+      throw std::runtime_error("Process already exists");
     }
     int toChild[2] = {}, err = pipe(toChild);
     if (err)
