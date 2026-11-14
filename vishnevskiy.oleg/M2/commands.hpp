@@ -72,7 +72,7 @@ namespace vishnevskiy
   };
 
   bool isInside(double x, double y, const Circle &c);
-  void generatePoint(std::default_random_engine &gen, const CircleBoundaries &b, double &px, double &py);
+  void generatePoint(std::default_random_engine &gen, const CircleBoundaries &b, double &px, double &py, bool single);
   size_t calc(const circ_t &circles, size_t tests, size_t seed, const CircleBoundaries &b);
   size_t runCalc(const circ_t &circles, size_t threads, size_t tests, size_t seed, const CircleBoundaries &b);
   CircleBoundaries getBoundaries(Circle c);

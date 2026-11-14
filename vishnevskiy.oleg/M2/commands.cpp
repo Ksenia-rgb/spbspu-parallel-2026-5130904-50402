@@ -19,12 +19,22 @@ namespace vishnevskiy
     return (rx * rx + ry * ry) <= (r * r);
   }
 
-  void generatePoint(std::default_random_engine &gen, const CircleBoundaries &b, double &px, double &py)
+  void generatePoint(std::default_random_engine &gen, const CircleBoundaries &b, double &px, double &py, bool single)
   {
-    std::uniform_real_distribution< double > distX(b.minX_, b.maxX_);
-    std::uniform_real_distribution< double > distY(b.minY_, b.maxY_);
-    px = distX(gen);
-    py = distY(gen);
+    if (single)
+    {
+      const double gen_min = static_cast<double>(gen.min());
+      const double range = static_cast<double>(gen.max()) - gen_min;
+      px = b.minX_ + (static_cast<double>(gen()) - gen_min) * ((b.maxX_ - b.minX_) / range);
+      py = b.minY_ + (static_cast<double>(gen()) - gen_min) * ((b.maxY_ - b.minY_) / range);
+    }
+    else
+    {
+      std::uniform_real_distribution< double > distX(b.minX_, b.maxX_);
+      std::uniform_real_distribution< double > distY(b.minY_, b.maxY_);
+      px = distX(gen);
+      py = distY(gen);
+    }
   }
 
   size_t calc(const circ_t &circles, size_t tests, size_t seed, const CircleBoundaries &b)
@@ -35,7 +45,14 @@ namespace vishnevskiy
     {
       double x = 0.0;
       double y = 0.0;
-      generatePoint(gen, b, x, y);
+      if (circles.size() == 1)
+      {
+        generatePoint(gen, b, x, y, true);
+      }
+      else
+      {
+        generatePoint(gen, b, x, y, false);
+      }
       for (size_t j = 0; j < circles.size(); ++j)
       {
         if (isInside(x, y, circles[j]))
@@ -73,7 +90,7 @@ namespace vishnevskiy
       tasks[i].circles = &circles;
       tasks[i].b = &b;
       tasks[i].tests = currTests;
-      tasks[i].seed = seed + i;
+      tasks[i].seed = seed;
       tasks[i].result = 0;
       int err = pthread_create(&ids[i], nullptr, threadStarter, &tasks[i]);
       if (err != 0)
