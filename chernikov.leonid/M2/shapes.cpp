@@ -2,13 +2,13 @@
 #include <algorithm>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 
 chernikov::Circle::Circle(double radius, const point_t &c):
   r(radius),
   center(c)
 {}
 
-// [M1] бывший isInside
 bool chernikov::Circle::contains(const point_t &p) const
 {
   const double dx = p.x - center.x;
@@ -16,7 +16,6 @@ bool chernikov::Circle::contains(const point_t &p) const
   return dx * dx + dy * dy <= r * r;
 }
 
-// [M1] кусок getShapesFrame: рамка одного круга
 chernikov::frame_t chernikov::Circle::getFrame() const
 {
   return {{center.x - r, center.y - r}, {center.x + r, center.y + r}};
@@ -24,24 +23,22 @@ chernikov::frame_t chernikov::Circle::getFrame() const
 
 void chernikov::Circle::print(std::ostream &out) const
 {
-  // TODO
-  (void)out;
+  out << r << " (" << center.x << " " << center.y << ")";
 }
 
 chernikov::shape_data_t chernikov::Circle::toData() const
 {
-  // TODO
-  return {};
+  return {0, r, r, center.x, center.y, 0.0};
 }
 
 std::unique_ptr< chernikov::Shape > chernikov::makeShape(const shape_data_t &data)
 {
-  // TODO: по data.type создать нужную фигуру
-  (void)data;
-  return nullptr;
+  if (data.type == 0) {
+    return std::unique_ptr< Shape >(new Circle(data.rx, {data.x, data.y}));
+  }
+  throw std::invalid_argument("unknown shape type");
 }
 
-// [M1] кусок getShapesFrame: объединение двух рамок
 chernikov::frame_t chernikov::unite(const frame_t &a, const frame_t &b)
 {
   frame_t res = a;
@@ -50,4 +47,9 @@ chernikov::frame_t chernikov::unite(const frame_t &a, const frame_t &b)
   res.max.x = std::max(res.max.x, b.max.x);
   res.max.y = std::max(res.max.y, b.max.y);
   return res;
+}
+
+void chernikov::printFrame(std::ostream &out, const frame_t &frame)
+{
+  out << "(" << frame.min.x << " " << frame.min.y << ") (" << frame.max.x << " " << frame.max.y << ")";
 }

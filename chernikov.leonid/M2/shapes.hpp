@@ -14,9 +14,8 @@ namespace chernikov {
     point_t max;
   };
 
-  // То, что уходит в пайп: только числа, без vptr и указателей
   struct shape_data_t {
-    int type; // 0 — круг; 1 — эллипс (доп. задание)
+    int type;
     double rx;
     double ry;
     double x;
@@ -28,8 +27,8 @@ namespace chernikov {
     virtual ~Shape() = default;
     virtual bool contains(const point_t &p) const = 0;
     virtual frame_t getFrame() const = 0;
-    virtual void print(std::ostream &out) const = 0; // TODO: "5 (3 4)"
-    virtual shape_data_t toData() const = 0;         // TODO: объект -> числа
+    virtual void print(std::ostream &out) const = 0;
+    virtual shape_data_t toData() const = 0;
   };
 
   struct Circle: Shape {
@@ -43,7 +42,8 @@ namespace chernikov {
     point_t center;
   };
 
-  std::unique_ptr< Shape > makeShape(const shape_data_t &data); // TODO: числа -> объект
+  std::unique_ptr< Shape > makeShape(const shape_data_t &data);
   frame_t unite(const frame_t &a, const frame_t &b);
+  void printFrame(std::ostream &out, const frame_t &frame);
 }
 #endif
