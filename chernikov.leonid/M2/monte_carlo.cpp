@@ -33,14 +33,22 @@ void chernikov::fillThreadData(
 
 void chernikov::countHits(thread_data_t &data)
 {
+  const size_t count = data.shapes->size();
+  std::vector< const Shape * > shapes(count);
+  for (size_t i = 0; i < count; ++i) {
+    shapes[i] = (*data.shapes)[i].get();
+  }
+  const Shape *const *const first = shapes.data();
+  std::minstd_rand gen(data.seed);
+  const double scale = 1.0 / (static_cast< double >(std::minstd_rand::max()) + 1.0);
+  const double width = (data.frame.max.x - data.frame.min.x) * scale;
+  const double height = (data.frame.max.y - data.frame.min.y) * scale;
   size_t in_any = 0;
-  std::default_random_engine gen(data.seed);
-  std::uniform_real_distribution< double > dist_x(data.frame.min.x, data.frame.max.x);
-  std::uniform_real_distribution< double > dist_y(data.frame.min.y, data.frame.max.y);
   for (size_t i = 0; i < data.tests; ++i) {
-    const point_t p = {dist_x(gen), dist_y(gen)};
-    for (const std::unique_ptr< Shape > &s : *data.shapes) {
-      if (s->contains(p)) {
+    const point_t p = {data.frame.min.x + width * static_cast< double >(gen()),
+        data.frame.min.y + height * static_cast< double >(gen())};
+    for (size_t j = 0; j < count; ++j) {
+      if (first[j]->contains(p)) {
         ++in_any;
         break;
       }
