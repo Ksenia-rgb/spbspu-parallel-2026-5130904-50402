@@ -51,7 +51,7 @@ void chernikov::countHits(thread_data_t &data)
 
 double chernikov::coverArea(const shapes_t &shapes, size_t threads, size_t tests, size_t seed)
 {
-  if (shapes.empty()) {
+  if (shapes.empty() || tests == 0) {
     return 0.0;
   }
   if (threads == 0) {
