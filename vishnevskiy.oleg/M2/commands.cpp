@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sstream>
 #include <chrono>
+#include <iomanip>
 #include "commands.hpp"
 
 namespace vishnevskiy
@@ -251,6 +252,10 @@ namespace vishnevskiy
     {
       throw std::runtime_error("Invalid arguments");
     }
+    if (name.empty() || !std::isalpha(static_cast< unsigned char >(name[0])))
+    {
+      throw std::runtime_error("Invalid name");
+    }
     if (map.shapes.count(name))
     {
       throw std::runtime_error("Invalid name");
@@ -352,7 +357,7 @@ namespace vishnevskiy
       throw std::runtime_error("No name found");
     }
     CircleBoundaries b = getBoundaries(res);
-    o << "(" << b.min_x_ << " " << b.min_y_ << ")" << ") (" << b.max_x_ << " " << b.max_y_ << "\n";
+    o << "(" << b.min_x_ << " " << b.min_y_ << ") (" << b.max_x_ << " " << b.max_y_ << ")" << "\n";
   }
 
   void frameset(std::istream &i, std::ostream &o, Maps &map)
@@ -480,7 +485,7 @@ namespace vishnevskiy
         double area = b.area() * static_cast< double >(hits) / static_cast< double >(tries);
 
         std::ostringstream os;
-        os << area << ' ' << ms;
+        os << std::fixed << std::setprecision(3) << area << ' ' << std::fixed << std::setprecision(3) << ms;
         int wr = 0;
         writeLine(wr, wr_p, os.str());
       }
@@ -574,7 +579,8 @@ namespace vishnevskiy
     }
     else
     {
-      o << c.proc_name << ' ' << c.ms << ' ' << c.area << '\n';
+      o << c.proc_name << ' ' << std::fixed << std::setprecision(3) << c.ms;
+      o << ' ' << std::fixed << std::setprecision(3) << c.area << '\n';
     }
   }
 
@@ -614,7 +620,8 @@ namespace vishnevskiy
       c.ms = ms;
       c.done = true;
     }
-    o << c.proc_name << ' ' << c.ms << ' ' << c.area << '\n';
+    o << c.proc_name << ' ' << std::fixed << std::setprecision(3) << c.ms;
+    o << ' ' << std::fixed << std::setprecision(3) << c.area << '\n';
   }
 }
 
