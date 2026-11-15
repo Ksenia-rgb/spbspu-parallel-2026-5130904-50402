@@ -12,25 +12,25 @@ namespace vishnevskiy
 {
   struct Circle
   {
-    double r_, x_, y_;
+    double r, x, y;
   };
 
   using circ_t = std::vector< Circle >;
 
   struct CircleBoundaries
   {
-    double min_x_;
-    double max_x_;
-    double min_y_;
-    double max_y_;
+    double min_x;
+    double max_x;
+    double min_y;
+    double max_y;
 
-    double width()
+    double width() const
     {
-      return max_x_ - min_x_;
+      return max_x - min_x;
     }
-    double height()
+    double height() const
     {
-      return max_y_ - min_y_;
+      return max_y - min_y;
     }
     double area()
     {
@@ -84,7 +84,7 @@ namespace vishnevskiy
   void frame(std::istream &i, std::ostream &o, Maps &map);
   void frameset(std::istream &i, std::ostream &o, Maps &map);
   void spawn(std::istream &i, std::ostream &, Maps &map);
-  void area_on(std::istream &i, std::ostream &o, Maps &map);
+  void areaOn(std::istream &i, std::ostream &o, Maps &map);
   void status(std::istream &i, std::ostream &o, Maps &map);
   void wait(std::istream &i, std::ostream &o, Maps &map);
 }

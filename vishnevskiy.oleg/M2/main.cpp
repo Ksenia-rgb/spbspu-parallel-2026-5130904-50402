@@ -5,7 +5,7 @@
 #include <sstream>
 #include "commands.hpp"
 
-int main(int argc, char* [])
+int main(int argc, char *[])
 {
   if (argc != 1)
   {
@@ -19,7 +19,7 @@ int main(int argc, char* [])
   cmds["frame"] = vishnevskiy::frame;
   cmds["frameset"] = vishnevskiy::frameset;
   cmds["spawn"] = vishnevskiy::spawn;
-  cmds["area-on"] = vishnevskiy::area_on;
+  cmds["area-on"] = vishnevskiy::areaOn;
   cmds["status"] = vishnevskiy::status;
   cmds["wait"] = vishnevskiy::wait;
   vishnevskiy::Maps mp{};
