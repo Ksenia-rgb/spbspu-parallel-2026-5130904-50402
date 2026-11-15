@@ -197,7 +197,7 @@ namespace vishnevskiy
     bool done = false;
     while (!done)
     {
-      const char ch = 0;
+      char ch = 0;
       int e = 0;
       const size_t n = readSafe(e, rd, &ch, 1);
       if (n == 1)
@@ -267,7 +267,7 @@ namespace vishnevskiy
   void set(std::istream &i, std::ostream &, Maps &map)
   {
     std::string name;
-    size_t size;
+    size_t size = 0;
     if (!(i >> name >> size) || size == 0)
     {
       throw std::runtime_error("Invalid arguments");
@@ -375,7 +375,7 @@ namespace vishnevskiy
     }
 
     circ_t &shape_set = it->second;
-    CircleBoundaries b = getSetBoundaries(shape_set);
+    const CircleBoundaries b = getSetBoundaries(shape_set);
     o << "(" << b.min_x << " " << b.min_y << ") (" << b.max_x << " " << b.max_y << ")\n";
   }
 
@@ -567,7 +567,7 @@ namespace vishnevskiy
     {
       throw std::runtime_error("Invalid arguments");
     }
-    std::map< std::string, CalcInfo >::iterator it = map.calcs.find(calc_name);
+    const std::map< std::string, CalcInfo >::iterator it = map.calcs.find(calc_name);
     if (it == map.calcs.end())
     {
       throw std::runtime_error("Invalid calc");
