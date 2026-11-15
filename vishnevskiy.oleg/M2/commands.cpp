@@ -68,8 +68,8 @@ namespace vishnevskiy
 
   void *threadStarter(void *arg)
   {
-    ThreadInfo *t = static_cast< ThreadInfo * >(arg);
-    t->result = calc(*t->circles, t->tests, t->seed, *t->b);
+    ThreadInfo &t = *static_cast< ThreadInfo * >(arg);
+    t.result = calc(*t.circles, t.tests, t.seed, *t.b);
     return nullptr;
   }
 
@@ -174,7 +174,7 @@ namespace vishnevskiy
     return r;
   }
 
-  size_t readSafe(int &err, int rd, const char *b, size_t k)
+  size_t readSafe(int &err, int rd, char *b, size_t k)
   {
     size_t r = 0;
     while (r < k)
@@ -477,7 +477,7 @@ namespace vishnevskiy
           break;
         }
 
-        CircleBoundaries b = getSetBoundaries(circles);
+        const CircleBoundaries b = getSetBoundaries(circles);
         const std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
         const size_t hits = runCalc(circles, threads, tries, seed, b);
         const std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
