@@ -232,8 +232,11 @@ namespace saldaev {
   size_t calculate(Frame frame, const ShapeVector &shapes, size_t tries, size_t seed)
   {
     std::default_random_engine gen(seed);
-    std::uniform_real_distribution< double > width(frame.min.x, frame.max.x);
-    std::uniform_real_distribution< double > hight(frame.min.y, frame.max.y);
+
+    const double engine_min = static_cast< double >(gen.min());
+    const double engine_range = static_cast< double >(gen.max()) - engine_min;
+    const double kx = (frame.max.x - frame.min.x) / engine_range;
+    const double ky = (frame.max.y - frame.min.y) / engine_range;
 
     std::vector< const Shape * > raw;
     raw.reserve(shapes.size());
@@ -245,7 +248,9 @@ namespace saldaev {
     size_t hits = 0;
 
     for (size_t i = 0; i < tries; ++i) {
-      const Point p{width(gen), hight(gen)};
+      const double ux = static_cast< double >(gen()) - engine_min;
+      const double uy = static_cast< double >(gen()) - engine_min;
+      const Point p{frame.min.x + ux * kx, frame.min.y + uy * ky};
 
       for (size_t j = 0; j < n; ++j) {
         if (raw[j]->contain(p)) {
