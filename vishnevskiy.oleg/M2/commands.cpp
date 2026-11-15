@@ -25,15 +25,15 @@ namespace vishnevskiy
     {
       const double gen_min = static_cast<double>(gen.min());
       const double range = static_cast<double>(gen.max()) - gen_min;
-      px = b.minX_ + (static_cast<double>(gen()) - gen_min) * ((b.maxX_ - b.minX_) / range);
-      py = b.minY_ + (static_cast<double>(gen()) - gen_min) * ((b.maxY_ - b.minY_) / range);
+      px = b.min_x_ + (static_cast<double>(gen()) - gen_min) * ((b.max_x_ - b.min_x_) / range);
+      py = b.min_y_ + (static_cast<double>(gen()) - gen_min) * ((b.max_y_ - b.min_y_) / range);
     }
     else
     {
-      std::uniform_real_distribution< double > distX(b.minX_, b.maxX_);
-      std::uniform_real_distribution< double > distY(b.minY_, b.maxY_);
-      px = distX(gen);
-      py = distY(gen);
+      std::uniform_real_distribution< double > dist_x(b.min_x_, b.max_x_);
+      std::uniform_real_distribution< double > dist_y(b.min_y_, b.max_y_);
+      px = dist_x(gen);
+      py = dist_y(gen);
     }
   }
 
@@ -82,20 +82,20 @@ namespace vishnevskiy
 
     for (size_t i = 0; i < threads; ++i)
     {
-      size_t currTests = block;
+      size_t curr_tests = block;
       if (i < remainder)
       {
-        currTests++;
+        curr_tests++;
       }
       tasks[i].circles = &circles;
       tasks[i].b = &b;
-      tasks[i].tests = currTests;
-      tasks[i].seed = seed;
+      tasks[i].tests = curr_tests;
+      tasks[i].seed = seed + i;
       tasks[i].result = 0;
       int err = pthread_create(&ids[i], nullptr, threadStarter, &tasks[i]);
       if (err != 0)
       {
-        tasks[i].result = calc(circles, currTests, seed, b);
+        tasks[i].result = calc(circles, curr_tests, seed + i, b);
         started[i] = false;
       }
       else
@@ -119,10 +119,10 @@ namespace vishnevskiy
   CircleBoundaries getBoundaries(Circle c)
   {
     CircleBoundaries b{0, 0, 0, 0};
-    b.minX_ = c.x_ - c.r_;
-    b.maxX_ = c.x_ + c.r_;
-    b.minY_ = c.y_ - c.r_;
-    b.maxY_ = c.y_ + c.r_;
+    b.min_x_ = c.x_ - c.r_;
+    b.max_x_ = c.x_ + c.r_;
+    b.min_y_ = c.y_ - c.r_;
+    b.max_y_ = c.y_ + c.r_;
     return b;
   }
 
@@ -134,25 +134,25 @@ namespace vishnevskiy
     for (size_t i = 0; i < circles.size(); ++i)
     {
       const Circle &c = circles[i];
-      double curMinX = c.x_ - c.r_;
-      double curMaxX = c.x_ + c.r_;
-      double curMinY = c.y_ - c.r_;
-      double curMaxY = c.y_ + c.r_;
-      if (curMinX < b.minX_)
+      double cur_min_x = c.x_ - c.r_;
+      double cur_max_x = c.x_ + c.r_;
+      double cur_min_y = c.y_ - c.r_;
+      double cur_max_y = c.y_ + c.r_;
+      if (cur_min_x < b.min_x_)
       {
-        b.minX_ = curMinX;
+        b.min_x_ = cur_min_x;
       }
-      if (curMaxX > b.maxX_)
+      if (cur_max_x > b.max_x_)
       {
-        b.maxX_ = curMaxX;
+        b.max_x_ = cur_max_x;
       }
-      if (curMinY < b.minY_)
+      if (cur_min_y < b.min_y_)
       {
-        b.minY_ = curMinY;
+        b.min_y_ = cur_min_y;
       }
-      if (curMaxY > b.maxY_)
+      if (cur_max_y > b.max_y_)
       {
-        b.maxY_ = curMaxY;
+        b.max_y_ = cur_max_y;
       }
     }
     return b;
@@ -271,24 +271,29 @@ namespace vishnevskiy
     {
       throw std::runtime_error("Invalid name");
     }
-    circ_t shapeSet;
-    shapeSet.reserve(size);
+    circ_t shape_set;
+    shape_set.reserve(size);
     for (size_t j = 0; j < size; ++j)
     {
-      std::string shapeName;
+      std::string shape_name;
       Circle el;
-      i >> shapeName;
+      i >> shape_name;
       try
       {
-        el = map.shapes.at(shapeName);
+        el = map.shapes.at(shape_name);
       }
       catch (const std::out_of_range &e)
       {
         throw std::runtime_error("No name found");
       }
-      shapeSet.push_back(el);
+      shape_set.push_back(el);
     }
-    map.sets[name] = shapeSet;
+    std::string more;
+    if (i >> more)
+    {
+      throw std::runtime_error("Invalid arguments");
+    }
+    map.sets[name] = shape_set;
   }
 
   void show(std::istream &i, std::ostream &o, Maps &map)
@@ -322,10 +327,10 @@ namespace vishnevskiy
       throw std::runtime_error("No name found");
     }
 
-    const circ_t &shapeSet = it->second;
-    for (size_t k = 0; k < shapeSet.size(); ++k)
+    const circ_t &shape_set = it->second;
+    for (size_t k = 0; k < shape_set.size(); ++k)
     {
-      const Circle &res = shapeSet[k];
+      const Circle &res = shape_set[k];
       o << res.r_ << " (" << res.x_ << " " << res.y_ << ")\n";
     }
   }
@@ -347,7 +352,7 @@ namespace vishnevskiy
       throw std::runtime_error("No name found");
     }
     CircleBoundaries b = getBoundaries(res);
-    o << "(" << b.maxX_ << " " << b.maxY_ << ") (" << b.minX_ << " " << b.minY_ << ")" << "\n";
+    o << "(" << b.min_x_ << " " << b.min_y_ << ")" << ") (" << b.max_x_ << " " << b.max_y_ << "\n";
   }
 
   void frameset(std::istream &i, std::ostream &o, Maps &map)
@@ -364,9 +369,9 @@ namespace vishnevskiy
       throw std::runtime_error("No name found");
     }
 
-    circ_t &shapeSet = it->second;
-    CircleBoundaries b = getSetBoundaries(shapeSet);
-    o << "(" << b.minX_ << " " << b.minY_ << ") (" << b.maxX_ << " " << b.maxY_ << ")\n";
+    circ_t &shape_set = it->second;
+    CircleBoundaries b = getSetBoundaries(shape_set);
+    o << "(" << b.min_x_ << " " << b.min_y_ << ") (" << b.max_x_ << " " << b.max_y_ << ")\n";
   }
 
   void spawn(std::istream &i, std::ostream &, Maps &map)
@@ -381,38 +386,38 @@ namespace vishnevskiy
     {
       throw std::runtime_error("Process already exists");
     }
-    int toChild[2] = {}, err = pipe(toChild);
+    int to_child[2] = {}, err = pipe(to_child);
     if (err)
     {
       throw std::runtime_error("Pipe failed");
     }
-    int rdC = toChild[0], wrC = toChild[1];
-    int toParent[2] = {};
-    err = pipe(toParent);
+    int rd_c = to_child[0], wr_c = to_child[1];
+    int to_parent[2] = {};
+    err = pipe(to_parent);
     if (err)
     {
-      close(rdC);
-      close(wrC);
+      close(rd_c);
+      close(wr_c);
       throw std::runtime_error("Pipe failed");
     }
-    int rdP = toParent[0], wrP = toParent[1];
+    int rd_p = to_parent[0], wr_p = to_parent[1];
     pid_t pid = fork();
     if (pid < 0)
     {
-      close(rdP);
-      close(rdC);
-      close(wrP);
-      close(wrC);
+      close(rd_p);
+      close(rd_c);
+      close(wr_p);
+      close(wr_c);
       throw std::runtime_error("Fork failed");
     }
     if (pid == 0)
     {
-      err = close(wrC);
+      err = close(wr_c);
       if (err)
       {
         throw std::runtime_error("Close failed");
       }
-      err = close(rdP);
+      err = close(rd_p);
       if (err)
       {
         throw std::runtime_error("Close failed");
@@ -423,7 +428,7 @@ namespace vishnevskiy
       bool reading = true;
       while (reading)
       {
-        if (readLine(e, rdC, line) == 0)
+        if (readLine(e, rd_c, line) == 0)
         {
           reading = false;
           break;
@@ -433,7 +438,7 @@ namespace vishnevskiy
         if (!(iss >> threads >> tries >> count) || count == 0 || tries == 0 || threads == 0)
         {
           int we = 0;
-          writeLine(we, wrP, "0 0");
+          writeLine(we, wr_p, "0 0");
           continue;
         }
 
@@ -443,7 +448,7 @@ namespace vishnevskiy
         for (size_t k = 0; ok && k < count; ++k)
         {
           int re = 0;
-          if (readLine(re, rdC, line) == 0)
+          if (readLine(re, rd_c, line) == 0)
           {
             ok = false;
             if (re != 0)
@@ -469,8 +474,7 @@ namespace vishnevskiy
 
         CircleBoundaries b = getSetBoundaries(circles);
         std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
-        size_t baseSeed = rng();
-        size_t hits = runCalc(circles, threads, tries, baseSeed, b);
+        size_t hits = runCalc(circles, threads, tries, seed, b);
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
         double ms = std::chrono::duration< double, std::milli >(t1 - t0).count();
         double area = b.area() * static_cast< double >(hits) / static_cast< double >(tries);
@@ -478,48 +482,48 @@ namespace vishnevskiy
         std::ostringstream os;
         os << area << ' ' << ms;
         int wr = 0;
-        writeLine(wr, wrP, os.str());
+        writeLine(wr, wr_p, os.str());
       }
 
-      close(rdC);
-      close(wrP);
+      close(rd_c);
+      close(wr_p);
       _exit(0);
     }
     else
     {
-      err = close(rdC);
+      err = close(rd_c);
       if (err)
       {
         throw std::runtime_error("Pipe failed");
       }
-      err = close(wrP);
+      err = close(wr_p);
       if (err)
       {
         throw std::runtime_error("Pipe failed");
       }
-      ProcInfo info{pid, wrC, rdP, seed};
+      ProcInfo info{pid, wr_c, rd_p, seed};
       map.procs[name] = info;
     }
   }
 
   void area_on(std::istream &i, std::ostream &, Maps &map)
   {
-    std::string procName, calcName, setName;
+    std::string proc_name, calc_name, set_name;
     long long threads = 0, tries = 0;
-    if (!(i >> procName >> calcName >> setName >> threads >> tries))
+    if (!(i >> proc_name >> calc_name >> set_name >> threads >> tries))
     {
       throw std::runtime_error("Invalid arguments");
     }
-    std::map< std::string, ProcInfo >::iterator pit = map.procs.find(procName);
+    std::map< std::string, ProcInfo >::iterator pit = map.procs.find(proc_name);
     if (pit == map.procs.end())
     {
       throw std::runtime_error("Invalid process");
     }
-    if (map.calcs.count(calcName))
+    if (map.calcs.count(calc_name))
     {
       throw std::runtime_error("Invalid calc name");
     }
-    std::map< std::string, circ_t >::iterator sit = map.sets.find(setName);
+    std::map< std::string, circ_t >::iterator sit = map.sets.find(set_name);
     if (sit == map.sets.end())
     {
       throw std::runtime_error("Invalid set");
@@ -533,7 +537,7 @@ namespace vishnevskiy
     std::ostringstream oss;
     oss << threads << ' ' << tries << ' ' << circles.size();
     int we = 0;
-    if (writeLine(we, pit->second.pipeToChild, oss.str()) == 0)
+    if (writeLine(we, pit->second.pipe_to_child, oss.str()) == 0)
     {
       throw std::runtime_error("Write failed");
     }
@@ -542,23 +546,23 @@ namespace vishnevskiy
     {
       std::ostringstream os;
       os << circles[k].r_ << ' ' << circles[k].x_ << ' ' << circles[k].y_;
-      if (writeLine(we, pit->second.pipeToChild, os.str()) == 0)
+      if (writeLine(we, pit->second.pipe_to_child, os.str()) == 0)
       {
         throw std::runtime_error("Write failed");
       }
     }
-    CalcInfo info{procName, false, 0.0, 0.0};
-    map.calcs[calcName] = info;
+    CalcInfo info{proc_name, false, 0.0, 0.0};
+    map.calcs[calc_name] = info;
   }
 
   void status(std::istream &i, std::ostream &o, Maps &map)
   {
-    std::string calcName;
-    if (!(i >> calcName))
+    std::string calc_name;
+    if (!(i >> calc_name))
     {
       throw std::runtime_error("Invalid arguments");
     }
-    std::map< std::string, CalcInfo >::iterator it = map.calcs.find(calcName);
+    std::map< std::string, CalcInfo >::iterator it = map.calcs.find(calc_name);
     if (it == map.calcs.end())
     {
       throw std::runtime_error("Invalid calc");
@@ -566,22 +570,22 @@ namespace vishnevskiy
     const CalcInfo &c = it->second;
     if (!c.done)
     {
-      o << c.procName << " <IN PROGRESS>\n";
+      o << c.proc_name << " <IN PROGRESS>\n";
     }
     else
     {
-      o << c.procName << ' ' << c.ms << ' ' << c.area << '\n';
+      o << c.proc_name << ' ' << c.ms << ' ' << c.area << '\n';
     }
   }
 
   void wait(std::istream &i, std::ostream &o, Maps &map)
   {
-    std::string calcName;
-    if (!(i >> calcName))
+    std::string calc_name;
+    if (!(i >> calc_name))
     {
       throw std::runtime_error("Invalid arguments");
     }
-    std::map< std::string, CalcInfo >::iterator it = map.calcs.find(calcName);
+    std::map< std::string, CalcInfo >::iterator it = map.calcs.find(calc_name);
     if (it == map.calcs.end())
     {
       throw std::runtime_error("Invalid calc");
@@ -589,14 +593,14 @@ namespace vishnevskiy
     CalcInfo &c = it->second;
     if (!c.done)
     {
-      std::map< std::string, ProcInfo >::iterator pit = map.procs.find(c.procName);
+      std::map< std::string, ProcInfo >::iterator pit = map.procs.find(c.proc_name);
       if (pit == map.procs.end())
       {
         throw std::runtime_error("Invalid process");
       }
       std::string line;
       int e = 0;
-      if (readLine(e, pit->second.pipeToParent, line) == 0)
+      if (readLine(e, pit->second.pipe_to_parent, line) == 0)
       {
         throw std::runtime_error("Read failed");
       }
@@ -610,7 +614,7 @@ namespace vishnevskiy
       c.ms = ms;
       c.done = true;
     }
-    o << c.procName << ' ' << c.ms << ' ' << c.area << '\n';
+    o << c.proc_name << ' ' << c.ms << ' ' << c.area << '\n';
   }
 }
 

@@ -19,18 +19,18 @@ namespace vishnevskiy
 
   struct CircleBoundaries
   {
-    double minX_;
-    double maxX_;
-    double minY_;
-    double maxY_;
+    double min_x_;
+    double max_x_;
+    double min_y_;
+    double max_y_;
 
     double width()
     {
-      return maxX_ - minX_;
+      return max_x_ - min_x_;
     }
     double height()
     {
-      return maxY_ - minY_;
+      return max_y_ - min_y_;
     }
     double area()
     {
@@ -41,8 +41,8 @@ namespace vishnevskiy
   struct ProcInfo
   {
     pid_t pid;
-    int pipeToChild;
-    int pipeToParent;
+    int pipe_to_child;
+    int pipe_to_parent;
     size_t seed;
   };
 
@@ -57,7 +57,7 @@ namespace vishnevskiy
 
   struct CalcInfo
   {
-    std::string procName;
+    std::string proc_name;
     bool done = false;
     double area = 0.0;
     double ms = 0.0;

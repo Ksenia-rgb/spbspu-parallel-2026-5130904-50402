@@ -2,6 +2,7 @@
 #include <map>
 #include <string>
 #include <sys/wait.h>
+#include <sstream>
 #include "commands.hpp"
 
 int main(int argc, char* [])
@@ -22,24 +23,23 @@ int main(int argc, char* [])
   cmds["status"] = vishnevskiy::status;
   cmds["wait"] = vishnevskiy::wait;
   vishnevskiy::Maps mp{};
-  std::string cmd;
-  while (std::cin >> cmd)
+  std::string line;
+  while (std::getline(std::cin, line))
   {
+    std::istringstream iss(line);
+    std::string cmd;
+    iss >> cmd;
     try
     {
-      cmds.at(cmd)(std::cin, std::cout, mp);
+      cmds.at(cmd)(iss, std::cout, mp);
     }
     catch (const std::runtime_error &e)
     {
       std::cout << "<INVALID COMMAND>\n";
-      auto toignore = std::numeric_limits< std::streamsize >::max();
-      std::cin.ignore(toignore, '\n');
     }
     catch (...)
     {
       std::cout << "<UNKNOWN COMMAND>\n";
-      auto toignore = std::numeric_limits< std::streamsize >::max();
-      std::cin.ignore(toignore, '\n');
     }
   }
   if (!std::cin.eof())
@@ -49,7 +49,7 @@ int main(int argc, char* [])
   }
   for (std::map< std::string, vishnevskiy::ProcInfo >::iterator it = mp.procs.begin(); it != mp.procs.end(); ++it)
   {
-    close(it->second.pipeToChild);
+    close(it->second.pipe_to_child);
   }
   for (std::map< std::string, vishnevskiy::ProcInfo >::iterator it = mp.procs.begin(); it != mp.procs.end(); ++it)
   {
@@ -57,7 +57,7 @@ int main(int argc, char* [])
   }
   for (std::map< std::string, vishnevskiy::ProcInfo >::iterator it = mp.procs.begin(); it != mp.procs.end(); ++it)
   {
-    close(it->second.pipeToParent);
+    close(it->second.pipe_to_parent);
   }
   return 0;
 }
