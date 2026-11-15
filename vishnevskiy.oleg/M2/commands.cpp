@@ -27,7 +27,7 @@ namespace vishnevskiy
       const double gen_min = static_cast< double >(gen.min());
       const double range = static_cast< double >(gen.max()) - gen_min;
       px = b.min_x + (static_cast< double >(gen()) - gen_min) * ((b.max_x - b.min_x) / range);
-      py = b.min_y + (static_cast< double >(gen()) - gen_min) * ((b.max_y- b.min_y) / range);
+      py = b.min_y + (static_cast< double >(gen()) - gen_min) * ((b.max_y - b.min_y) / range);
     }
     else
     {
