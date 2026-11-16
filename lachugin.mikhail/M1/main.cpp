@@ -85,8 +85,7 @@ namespace lachugin
 
   bool isInsideCircle(const Circle& circle, double x, double y)
   {
-    return ((x - circle.x) * (x - circle.x))
-        + ((y - circle.y) * (y - circle.y)) <= circle.r * circle.r;
+    return ((x - circle.x) * (x - circle.x)) + ((y - circle.y) * (y - circle.y)) <= circle.r * circle.r;
   }
 
   bool isInsideUnion(const Circle* circles, size_t size, double x, double y)
@@ -115,8 +114,7 @@ namespace lachugin
     return true;
   }
 
-  void findBounds(const Circle* circles, size_t size, double& min_x, double& max_x,
-      double& min_y, double& max_y)
+  void findBounds(const Circle* circles, size_t size, double& min_x, double& max_x, double& min_y, double& max_y)
   {
     min_x = circles[0].x - circles[0].r;
     max_x = circles[0].x + circles[0].r;
@@ -148,8 +146,8 @@ namespace lachugin
     }
   }
 
-  std::pair< double, double > generatePoint(std::default_random_engine& generator,
-      double min_x, double max_x, double min_y, double max_y)
+  std::pair< double, double > generatePoint(std::default_random_engine& generator, double min_x, double max_x,
+      double min_y, double max_y)
   {
     std::uniform_real_distribution< double > distr_x(min_x, max_x);
     const double x = distr_x(generator);
@@ -160,16 +158,13 @@ namespace lachugin
     return {x, y};
   }
 
-  void threadFunction(const Circle* circles, size_t size, size_t tries,
-      size_t thread_number, int seed, double min_x, double max_x,
-      double min_y, double max_y, size_t& u_count, size_t& i_count);
+  void threadFunction(const Circle* circles, size_t size, size_t tries, size_t thread_number, int seed, double min_x,
+      double max_x, double min_y, double max_y, size_t& u_count, size_t& i_count);
 
-  void calculateCounts(const Circle* circles, size_t size, size_t tries,
-      std::default_random_engine& generator, double min_x, double max_x,
-      double min_y, double max_y, size_t& u_count, size_t& i_count);
+  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::default_random_engine& generator,
+      double min_x, double max_x, double min_y, double max_y, size_t& u_count, size_t& i_count);
 
-  std::pair< double, double > calculateAreas(const Circle* circles,
-      size_t size, size_t tries, int threads, int seed)
+  std::pair< double, double > calculateAreas(const Circle* circles, size_t size, size_t tries, int threads, int seed)
   {
     double min_x = 0;
     double max_x = 0;
@@ -187,8 +182,7 @@ namespace lachugin
 
       std::default_random_engine generator(seed);
 
-      calculateCounts(circles, size, tries, generator,
-          min_x, max_x, min_y, max_y, u_count, i_count);
+      calculateCounts(circles, size, tries, generator, min_x, max_x, min_y, max_y, u_count, i_count);
 
       const double area_u = area * (static_cast< double >(u_count) / tries);
       const double area_i = area * (static_cast< double >(i_count) / tries);
@@ -214,11 +208,8 @@ namespace lachugin
           current_tries += remainder;
         }
 
-        data[i].worker = std::thread(threadFunction,
-            circles, size, current_tries, i, seed,
-            min_x, max_x, min_y, max_y,
-            std::ref(data[i].u_count),
-            std::ref(data[i].i_count));
+        data[i].worker = std::thread(threadFunction, circles, size, current_tries, i, seed, min_x, max_x,
+            min_y, max_y, std::ref(data[i].u_count), std::ref(data[i].i_count));
 
         started++;
       }
@@ -253,14 +244,12 @@ namespace lachugin
     return {area_u, area_i};
   }
 
-  void calculateCounts(const Circle* circles, size_t size, size_t tries,
-      std::default_random_engine& generator, double min_x, double max_x,
-      double min_y, double max_y, size_t& u_count, size_t& i_count)
+  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::default_random_engine& generator,
+      double min_x, double max_x, double min_y, double max_y, size_t& u_count, size_t& i_count)
   {
     for (size_t i = 0; i < tries; ++i)
     {
-      const std::pair< double, double > point =
-          generatePoint(generator, min_x, max_x, min_y, max_y);
+      const std::pair< double, double > point = generatePoint(generator, min_x, max_x, min_y, max_y);
 
       if (isInsideUnion(circles, size, point.first, point.second))
       {
@@ -274,14 +263,12 @@ namespace lachugin
     }
   }
 
-  void threadFunction(const Circle* circles, size_t size, size_t tries,
-      size_t thread_number, int seed, double min_x, double max_x,
-      double min_y, double max_y, size_t& u_count, size_t& i_count)
+  void threadFunction(const Circle* circles, size_t size, size_t tries, size_t thread_number, int seed, double min_x,
+      double max_x, double min_y, double max_y, size_t& u_count, size_t& i_count)
   {
     std::default_random_engine generator(seed + thread_number);
 
-    calculateCounts(circles, size, tries, generator,
-        min_x, max_x, min_y, max_y, u_count, i_count);
+    calculateCounts(circles, size, tries, generator, min_x, max_x, min_y, max_y, u_count, i_count);
   }
 }
 
@@ -317,8 +304,8 @@ int main(int argc, char* argv[])
     threads = std::stoi(argv[1], &pos_threads);
     tries = std::stoi(argv[2], &pos_tries);
 
-    if (pos_threads != std::string(argv[1]).length() || threads < 0
-        || pos_tries != std::string(argv[2]).length() || tries <= 0)
+    if (pos_threads != std::string(argv[1]).length()
+        || threads < 0 || pos_tries != std::string(argv[2]).length() || tries <= 0)
     {
       throw std::invalid_argument("wrong parametr");
     }
@@ -354,8 +341,7 @@ int main(int argc, char* argv[])
 
   try
   {
-    const std::pair< double, double > result =
-        lachugin::calculateAreas(circles, size, tries, threads, seed);
+    const std::pair< double, double > result = lachugin::calculateAreas(circles, size, tries, threads, seed);
 
     std::cout << std::setprecision(std::numeric_limits< double >::max_digits10);
 
