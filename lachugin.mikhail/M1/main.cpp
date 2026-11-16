@@ -147,7 +147,7 @@ namespace lachugin
   void threadFunction(const Circle* circles, size_t size, size_t tries, size_t threadNumber,
     int seed, double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount);
 
-  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::mt19937& generator,
+  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::default_random_engine generator,
     double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount);
 
   std::pair< double, double > calculateAreas(const Circle* circles,
@@ -165,7 +165,7 @@ namespace lachugin
     {
       size_t uCount = 0;
       size_t iCount = 0;
-      std::mt19937 generator(seed);
+      std::default_random_engine generator(seed);
 
       calculateCounts(circles, size, tries, generator,
         minX, maxX, minY, maxY, uCount, iCount);
@@ -243,7 +243,7 @@ namespace lachugin
   void threadFunction(const Circle* circles, size_t size, size_t tries, size_t threadNumber,
     int seed, double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount)
   {
-    std::mt19937 generator(seed + threadNumber);
+    std::default_random_engine generator(seed + threadNumber);
 
     calculateCounts(circles, size, tries, generator, minX, maxX, minY, maxY, uCount, iCount);
   }
