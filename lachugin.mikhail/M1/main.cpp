@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <new>
 
+
 namespace lachugin
 {
   struct Figure
