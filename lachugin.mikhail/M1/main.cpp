@@ -11,9 +11,10 @@
 
 namespace lachugin
 {
-  struct Circle
+  struct Figure
   {
-    int r;
+    int a;
+    int b;
     int x;
     int y;
   };
@@ -25,14 +26,14 @@ namespace lachugin
     size_t i_count = 0;
   };
 
-  Circle* newCircles(size_t size, size_t& cap, const Circle* old_circles)
+  Figure* newFigures(size_t size, size_t& cap, const Figure* old_figures)
   {
     const size_t new_cap = cap * 2;
-    Circle* const res = new Circle[new_cap];
+    Figure* const res = new Figure[new_cap];
 
     for (size_t i = 0; i < size; ++i)
     {
-      res[i] = old_circles[i];
+      res[i] = old_figures[i];
     }
 
     cap = new_cap;
@@ -40,17 +41,16 @@ namespace lachugin
     return res;
   }
 
-  void readCircles(Circle*& circles, size_t& cap, size_t& size)
+  void readFigures(Figure*& figures, size_t& cap, size_t& size)
   {
-    int r = 0;
-    int ign = 0;
+    int a = 0;
+    int b = 0;
     int x = 0;
     int y = 0;
 
     while (true)
     {
-      std::cin >> r;
-
+      std::cin >> a;
       if (std::cin.eof())
       {
         break;
@@ -61,38 +61,51 @@ namespace lachugin
         throw std::invalid_argument("wrong data");
       }
 
-      std::cin >> ign >> x >> y;
+      std::cin >> b >> x >> y;
 
       if (std::cin.eof() || std::cin.fail())
       {
         throw std::invalid_argument("wrong data");
       }
 
-      if (cap == size)
+      if (a <= 0 || b < 0)
       {
-        Circle* const circle_new = newCircles(size, cap, circles);
-        delete[] circles;
-        circles = circle_new;
+        throw std::invalid_argument("wrong figure parameters");
       }
 
-      circles[size].r = r;
-      circles[size].x = x;
-      circles[size].y = y;
+      if (cap == size)
+      {
+        Figure* const figure_new = newFigures(size, cap, figures);
+        delete[] figures;
+        figures = figure_new;
+      }
+
+      figures[size].a = a;
+      figures[size].b = b;
+      figures[size].x = x;
+      figures[size].y = y;
 
       size++;
     }
   }
 
-  bool isInsideCircle(const Circle& circle, double x, double y)
+  bool isInsideFigure(const Figure& figure, double x, double y)
   {
-    return ((x - circle.x) * (x - circle.x)) + ((y - circle.y) * (y - circle.y)) <= circle.r * circle.r;
+    const double horizontal_radius = figure.a;
+    const double vertical_radius = figure.b == 0 ? horizontal_radius : figure.b;
+
+    const double dx = x - figure.x;
+    const double dy = y - figure.y;
+
+    return (dx * dx) / (horizontal_radius * horizontal_radius)
+        + (dy * dy) / (vertical_radius * vertical_radius) <= 1.0;
   }
 
-  bool isInsideUnion(const Circle* circles, size_t size, double x, double y)
+  bool isInsideUnion(const Figure* figures, size_t size, double x, double y)
   {
     for (size_t i = 0; i < size; ++i)
     {
-      if (isInsideCircle(circles[i], x, y))
+      if (isInsideFigure(figures[i], x, y))
       {
         return true;
       }
@@ -101,11 +114,11 @@ namespace lachugin
     return false;
   }
 
-  bool isInsideIntersection(const Circle* circles, size_t size, double x, double y)
+  bool isInsideIntersection(const Figure* figures, size_t size, double x, double y)
   {
     for (size_t i = 0; i < size; ++i)
     {
-      if (!isInsideCircle(circles[i], x, y))
+      if (!isInsideFigure(figures[i], x, y))
       {
         return false;
       }
@@ -114,34 +127,39 @@ namespace lachugin
     return true;
   }
 
-  void findBounds(const Circle* circles, size_t size, double& min_x, double& max_x, double& min_y, double& max_y)
+  void findBounds(const Figure* figures, size_t size, double& min_x, double& max_x, double& min_y, double& max_y)
   {
-    min_x = circles[0].x - circles[0].r;
-    max_x = circles[0].x + circles[0].r;
+    const double first_horizontal_radius = figures[0].a;
+    const double first_vertical_radius = figures[0].b == 0 ? first_horizontal_radius : figures[0].b;
 
-    min_y = circles[0].y - circles[0].r;
-    max_y = circles[0].y + circles[0].r;
+    min_x = figures[0].x - first_horizontal_radius;
+    max_x = figures[0].x + first_horizontal_radius;
+    min_y = figures[0].y - first_vertical_radius;
+    max_y = figures[0].y + first_vertical_radius;
 
     for (size_t i = 1; i < size; ++i)
     {
-      if (circles[i].x - circles[i].r < min_x)
+      const double horizontal_radius = figures[i].a;
+      const double vertical_radius = figures[i].b == 0 ? horizontal_radius : figures[i].b;
+
+      if (figures[i].x - horizontal_radius < min_x)
       {
-        min_x = circles[i].x - circles[i].r;
+        min_x = figures[i].x - horizontal_radius;
       }
 
-      if (circles[i].x + circles[i].r > max_x)
+      if (figures[i].x + horizontal_radius > max_x)
       {
-        max_x = circles[i].x + circles[i].r;
+        max_x = figures[i].x + horizontal_radius;
       }
 
-      if (circles[i].y - circles[i].r < min_y)
+      if (figures[i].y - vertical_radius < min_y)
       {
-        min_y = circles[i].y - circles[i].r;
+        min_y = figures[i].y - vertical_radius;
       }
 
-      if (circles[i].y + circles[i].r > max_y)
+      if (figures[i].y + vertical_radius > max_y)
       {
-        max_y = circles[i].y + circles[i].r;
+        max_y = figures[i].y + vertical_radius;
       }
     }
   }
@@ -158,20 +176,20 @@ namespace lachugin
     return {x, y};
   }
 
-  void threadFunction(const Circle* circles, size_t size, size_t tries, size_t thread_number, int seed, double min_x,
+  void threadFunction(const Figure* figures, size_t size, size_t tries, size_t thread_number, int seed, double min_x,
       double max_x, double min_y, double max_y, size_t& u_count, size_t& i_count);
 
-  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::default_random_engine& generator,
+  void calculateCounts(const Figure* figures, size_t size, size_t tries, std::default_random_engine& generator,
       double min_x, double max_x, double min_y, double max_y, size_t& u_count, size_t& i_count);
 
-  std::pair< double, double > calculateAreas(const Circle* circles, size_t size, size_t tries, int threads, int seed)
+  std::pair< double, double > calculateAreas(const Figure* figures, size_t size, size_t tries, int threads, int seed)
   {
     double min_x = 0;
     double max_x = 0;
     double min_y = 0;
     double max_y = 0;
 
-    findBounds(circles, size, min_x, max_x, min_y, max_y);
+    findBounds(figures, size, min_x, max_x, min_y, max_y);
 
     const double area = (max_x - min_x) * (max_y - min_y);
 
@@ -181,8 +199,7 @@ namespace lachugin
       size_t i_count = 0;
 
       std::default_random_engine generator(seed);
-
-      calculateCounts(circles, size, tries, generator, min_x, max_x, min_y, max_y, u_count, i_count);
+      calculateCounts(figures, size, tries, generator, min_x, max_x, min_y, max_y, u_count, i_count);
 
       const double area_u = area * (static_cast< double >(u_count) / tries);
       const double area_i = area * (static_cast< double >(i_count) / tries);
@@ -193,7 +210,6 @@ namespace lachugin
     const size_t thread_count = static_cast< size_t >(threads);
     const size_t tries_per_thread = tries / thread_count;
     const size_t remainder = tries % thread_count;
-
     ThreadData* const data = new ThreadData[thread_count];
     size_t started = 0;
 
@@ -208,9 +224,8 @@ namespace lachugin
           current_tries += remainder;
         }
 
-        data[i].worker = std::thread(threadFunction, circles, size, current_tries, i, seed, min_x, max_x, min_y, max_y,
+        data[i].worker = std::thread(threadFunction, figures, size, current_tries, i, seed, min_x, max_x, min_y, max_y,
             std::ref(data[i].u_count), std::ref(data[i].i_count));
-
         started++;
       }
     }
@@ -244,31 +259,31 @@ namespace lachugin
     return {area_u, area_i};
   }
 
-  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::default_random_engine& generator,
+  void calculateCounts(const Figure* figures, size_t size, size_t tries, std::default_random_engine& generator,
       double min_x, double max_x, double min_y, double max_y, size_t& u_count, size_t& i_count)
   {
     for (size_t i = 0; i < tries; ++i)
     {
       const std::pair< double, double > point = generatePoint(generator, min_x, max_x, min_y, max_y);
 
-      if (isInsideUnion(circles, size, point.first, point.second))
+      if (isInsideUnion(figures, size, point.first, point.second))
       {
         u_count++;
       }
 
-      if (isInsideIntersection(circles, size, point.first, point.second))
+      if (isInsideIntersection(figures, size, point.first, point.second))
       {
         i_count++;
       }
     }
   }
 
-  void threadFunction(const Circle* circles, size_t size, size_t tries, size_t thread_number, int seed, double min_x,
+  void threadFunction(const Figure* figures, size_t size, size_t tries, size_t thread_number, int seed, double min_x,
       double max_x, double min_y, double max_y, size_t& u_count, size_t& i_count)
   {
     std::default_random_engine generator(seed + thread_number);
 
-    calculateCounts(circles, size, tries, generator, min_x, max_x, min_y, max_y, u_count, i_count);
+    calculateCounts(figures, size, tries, generator, min_x, max_x, min_y, max_y, u_count, i_count);
   }
 }
 
@@ -316,44 +331,43 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  lachugin::Circle* circles = nullptr;
+  lachugin::Figure* figures = nullptr;
   size_t size = 0;
   size_t cap = 2;
 
-  circles = new lachugin::Circle[cap];
+  figures = new lachugin::Figure[cap];
 
   try
   {
-    lachugin::readCircles(circles, cap, size);
+    lachugin::readFigures(figures, cap, size);
   }
   catch (const std::invalid_argument& err)
   {
     std::cerr << err.what() << "\n";
-    delete[] circles;
+    delete[] figures;
     return 1;
   }
   catch (const std::bad_alloc& err)
   {
     std::cerr << err.what() << "\n";
-    delete[] circles;
+    delete[] figures;
     return 1;
   }
 
   try
   {
-    const std::pair< double, double > result = lachugin::calculateAreas(circles, size, tries, threads, seed);
+    const std::pair< double, double > result = lachugin::calculateAreas(figures, size, tries, threads, seed);
 
     std::cout << std::setprecision(std::numeric_limits< double >::max_digits10);
-
     std::cout << result.first << "\n";
     std::cout << result.second << "\n";
   }
   catch (const std::exception& err)
   {
     std::cerr << err.what() << "\n";
-    delete[] circles;
+    delete[] figures;
     return 1;
   }
 
-  delete[] circles;
+  delete[] figures;
 }
