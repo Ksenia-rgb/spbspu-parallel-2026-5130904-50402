@@ -97,9 +97,10 @@ namespace lachugin
     const double dx = x - figure.x;
     const double dy = y - figure.y;
 
-    return (dx * dx) / (horizontal_radius * horizontal_radius)
-        + (dy * dy) / (vertical_radius * vertical_radius)
-        <= 1.0;
+    const double horizontal_part = (dx * dx) / (horizontal_radius * horizontal_radius);
+    const double vertical_part = (dy * dy) / (vertical_radius * vertical_radius);
+
+    return horizontal_part + vertical_part <= 1.0;
   }
 
   bool isInsideUnion(const Figure* figures, size_t size, double x, double y)
