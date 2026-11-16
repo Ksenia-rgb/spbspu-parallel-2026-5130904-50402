@@ -1,14 +1,13 @@
-#include <iostream>
-#include <random>
-#include <utility>
 #include <functional>
 #include <iomanip>
-#include <thread>
+#include <iostream>
 #include <limits>
-#include <string>
-#include <stdexcept>
 #include <new>
-
+#include <random>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <utility>
 
 namespace lachugin
 {
@@ -99,7 +98,8 @@ namespace lachugin
     const double dy = y - figure.y;
 
     return (dx * dx) / (horizontal_radius * horizontal_radius)
-        + (dy * dy) / (vertical_radius * vertical_radius) <= 1.0;
+        + (dy * dy) / (vertical_radius * vertical_radius)
+        <= 1.0;
   }
 
   bool isInsideUnion(const Figure* figures, size_t size, double x, double y)
