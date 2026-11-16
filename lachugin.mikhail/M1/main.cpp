@@ -208,9 +208,8 @@ namespace lachugin
           current_tries += remainder;
         }
 
-        data[i].worker = std::thread(
-        threadFunction, circles, size, current_tries, i, seed, min_x, max_x, min_y, max_y,
-        std::ref(data[i].u_count), std::ref(data[i].i_count));
+        data[i].worker = std::thread(threadFunction, circles, size, current_tries, i, seed, min_x, max_x,
+        min_y, max_y, std::ref(data[i].u_count), std::ref(data[i].i_count));
 
         started++;
       }
@@ -305,7 +304,9 @@ int main(int argc, char* argv[])
     threads = std::stoi(argv[1], &pos_threads);
     tries = std::stoi(argv[2], &pos_tries);
 
-    if (pos_threads != std::string(argv[1]).length() || threads < 0 || pos_tries != std::string(argv[2]).length()
+    if (pos_threads != std::string(argv[1]).length()
+    || threads < 0
+    || pos_tries != std::string(argv[2]).length()
     || tries <= 0)
     {
       throw std::invalid_argument("wrong parametr");
