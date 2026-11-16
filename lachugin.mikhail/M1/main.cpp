@@ -133,7 +133,7 @@ namespace lachugin
     }
   }
 
-  std::pair< double, double > generatePoint(std::mt19937& generator,
+  std::pair< double, double > generatePoint(std::default_random_engine generator,
     double minX, double maxX, double minY, double maxY)
   {
     std::uniform_real_distribution< double > distrX(minX, maxX);
@@ -222,7 +222,7 @@ namespace lachugin
   }
 
 
-  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::mt19937& generator,
+  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::default_random_engine generator,
     double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount)
   {
     for (size_t i = 0; i < tries; ++i)
