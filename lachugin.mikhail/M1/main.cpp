@@ -85,8 +85,8 @@ namespace lachugin
 
   bool isInsideCircle(const Circle& circle, double x, double y)
   {
-    return ((x - circle.x) * (x - circle.x)) +
-        ((y - circle.y) * (y - circle.y)) <= circle.r * circle.r;
+    return ((x - circle.x) * (x - circle.x))
+        + ((y - circle.y) * (y - circle.y)) <= circle.r * circle.r;
   }
 
   bool isInsideUnion(const Circle* circles, size_t size, double x, double y)
@@ -148,13 +148,13 @@ namespace lachugin
     }
   }
 
-  std::pair<double, double> generatePoint(std::default_random_engine& generator,
+  std::pair< double, double > generatePoint(std::default_random_engine& generator,
       double min_x, double max_x, double min_y, double max_y)
   {
-    std::uniform_real_distribution<double> distr_x(min_x, max_x);
+    std::uniform_real_distribution< double > distr_x(min_x, max_x);
     const double x = distr_x(generator);
 
-    std::uniform_real_distribution<double> distr_y(min_y, max_y);
+    std::uniform_real_distribution< double > distr_y(min_y, max_y);
     const double y = distr_y(generator);
 
     return {x, y};
@@ -168,7 +168,7 @@ namespace lachugin
       std::default_random_engine& generator, double min_x, double max_x,
       double min_y, double max_y, size_t& u_count, size_t& i_count);
 
-  std::pair<double, double> calculateAreas(const Circle* circles,
+  std::pair< double, double > calculateAreas(const Circle* circles,
       size_t size, size_t tries, int threads, int seed)
   {
     double min_x = 0;
@@ -190,13 +190,13 @@ namespace lachugin
       calculateCounts(circles, size, tries, generator,
           min_x, max_x, min_y, max_y, u_count, i_count);
 
-      const double area_u = area * (static_cast<double>(u_count) / tries);
-      const double area_i = area * (static_cast<double>(i_count) / tries);
+      const double area_u = area * (static_cast< double >(u_count) / tries);
+      const double area_i = area * (static_cast< double >(i_count) / tries);
 
       return {area_u, area_i};
     }
 
-    const size_t thread_count = static_cast<size_t>(threads);
+    const size_t thread_count = static_cast< size_t >(threads);
     const size_t tries_per_thread = tries / thread_count;
     const size_t remainder = tries % thread_count;
 
@@ -247,8 +247,8 @@ namespace lachugin
 
     delete[] data;
 
-    const double area_u = area * (static_cast<double>(total_u) / tries);
-    const double area_i = area * (static_cast<double>(total_i) / tries);
+    const double area_u = area * (static_cast< double >(total_u) / tries);
+    const double area_i = area * (static_cast< double >(total_i) / tries);
 
     return {area_u, area_i};
   }
@@ -259,7 +259,7 @@ namespace lachugin
   {
     for (size_t i = 0; i < tries; ++i)
     {
-      const std::pair<double, double> point =
+      const std::pair< double, double > point =
           generatePoint(generator, min_x, max_x, min_y, max_y);
 
       if (isInsideUnion(circles, size, point.first, point.second))
@@ -354,10 +354,10 @@ int main(int argc, char* argv[])
 
   try
   {
-    const std::pair<double, double> result =
+    const std::pair< double, double > result =
         lachugin::calculateAreas(circles, size, tries, threads, seed);
 
-    std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
+    std::cout << std::setprecision(std::numeric_limits< double >::max_digits10);
 
     std::cout << result.first << "\n";
     std::cout << result.second << "\n";
