@@ -5,6 +5,9 @@
 #include <iomanip>
 #include <thread>
 #include <limits>
+#include <string>
+#include <stdexcept>
+#include <new>
 
 namespace lachugin
 {
@@ -18,20 +21,21 @@ namespace lachugin
   struct ThreadData
   {
     std::thread worker;
-    size_t uCount = 0;
-    size_t iCount = 0;
+    size_t u_count = 0;
+    size_t i_count = 0;
   };
 
-  Circle* newCircles(size_t size, size_t& cap, const Circle* oldCircles)
+  Circle* newCircles(size_t size, size_t& cap, const Circle* old_circles)
   {
-    size_t newCap = cap * 2;
-    Circle* res = new Circle[newCap];
+    const size_t new_cap = cap * 2;
+    Circle* const res = new Circle[new_cap];
 
     for (size_t i = 0; i < size; ++i)
     {
-      res[i] = oldCircles[i];
+      res[i] = old_circles[i];
     }
-    cap = newCap;
+
+    cap = new_cap;
 
     return res;
   }
@@ -46,27 +50,29 @@ namespace lachugin
     while (true)
     {
       std::cin >> r;
+
       if (std::cin.eof())
       {
         break;
       }
+
       if (std::cin.fail())
       {
         throw std::invalid_argument("wrong data");
       }
+
       std::cin >> ign >> x >> y;
+
       if (std::cin.eof() || std::cin.fail())
       {
         throw std::invalid_argument("wrong data");
       }
 
-
       if (cap == size)
       {
-        Circle* circleNew = nullptr;
-        circleNew = newCircles(size, cap, circles);
+        Circle* const circle_new = newCircles(size, cap, circles);
         delete[] circles;
-        circles = circleNew;
+        circles = circle_new;
       }
 
       circles[size].r = r;
@@ -74,124 +80,146 @@ namespace lachugin
       circles[size].y = y;
 
       size++;
-
-
     }
   }
 
   bool isInsideCircle(const Circle& circle, double x, double y)
   {
-    return ((x-circle.x) * (x-circle.x)) + (y-circle.y) * (y-circle.y) <= circle.r * circle.r;
+    return ((x - circle.x) * (x - circle.x)) +
+        ((y - circle.y) * (y - circle.y)) <= circle.r * circle.r;
   }
 
   bool isInsideUnion(const Circle* circles, size_t size, double x, double y)
   {
-    for (size_t i = 0; i < size; ++i) {
-      if (isInsideCircle(circles[i], x, y)) {
+    for (size_t i = 0; i < size; ++i)
+    {
+      if (isInsideCircle(circles[i], x, y))
+      {
         return true;
       }
     }
+
     return false;
   }
 
-  bool isInsideIntersection(const Circle* circles, size_t size, double x, double y) {
-    for (size_t i = 0; i < size; ++i) {
-      if (!isInsideCircle(circles[i], x, y)) {
+  bool isInsideIntersection(const Circle* circles, size_t size, double x, double y)
+  {
+    for (size_t i = 0; i < size; ++i)
+    {
+      if (!isInsideCircle(circles[i], x, y))
+      {
         return false;
       }
     }
+
     return true;
   }
 
-  void findBounds(const Circle* circles, size_t size, double& minX, double& maxX,
-    double& minY, double& maxY)
+  void findBounds(const Circle* circles, size_t size, double& min_x, double& max_x,
+      double& min_y, double& max_y)
   {
-    minX = circles[0].x - circles[0].r;
-    maxX = circles[0].x + circles[0].r;
+    min_x = circles[0].x - circles[0].r;
+    max_x = circles[0].x + circles[0].r;
 
-    minY = circles[0].y - circles[0].r;
-    maxY = circles[0].y + circles[0].r;
+    min_y = circles[0].y - circles[0].r;
+    max_y = circles[0].y + circles[0].r;
+
     for (size_t i = 1; i < size; ++i)
     {
-      if (circles[i].x - circles[i].r < minX)
+      if (circles[i].x - circles[i].r < min_x)
       {
-        minX = circles[i].x - circles[i].r;
-      }
-      if (circles[i].x + circles[i].r > maxX)
-      {
-        maxX = circles[i].x + circles[i].r;
+        min_x = circles[i].x - circles[i].r;
       }
 
-      if (circles[i].y - circles[i].r < minY)
+      if (circles[i].x + circles[i].r > max_x)
       {
-        minY = circles[i].y - circles[i].r;
+        max_x = circles[i].x + circles[i].r;
       }
-      if (circles[i].y + circles[i].r > maxY)
+
+      if (circles[i].y - circles[i].r < min_y)
       {
-        maxY = circles[i].y + circles[i].r;
+        min_y = circles[i].y - circles[i].r;
+      }
+
+      if (circles[i].y + circles[i].r > max_y)
+      {
+        max_y = circles[i].y + circles[i].r;
       }
     }
   }
 
-  std::pair< double, double > generatePoint(std::default_random_engine& generator,
-    double minX, double maxX, double minY, double maxY)
+  std::pair<double, double> generatePoint(std::default_random_engine& generator,
+      double min_x, double max_x, double min_y, double max_y)
   {
-    std::uniform_real_distribution< double > distrX(minX, maxX);
-    double x = distrX(generator);
-    std::uniform_real_distribution< double > distrY(minY, maxY);
-    double y = distrY(generator);
+    std::uniform_real_distribution<double> distr_x(min_x, max_x);
+    const double x = distr_x(generator);
+
+    std::uniform_real_distribution<double> distr_y(min_y, max_y);
+    const double y = distr_y(generator);
 
     return {x, y};
   }
 
-  void threadFunction(const Circle* circles, size_t size, size_t tries, size_t threadNumber,
-    int seed, double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount);
+  void threadFunction(const Circle* circles, size_t size, size_t tries,
+      size_t thread_number, int seed, double min_x, double max_x,
+      double min_y, double max_y, size_t& u_count, size_t& i_count);
 
-  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::default_random_engine& generator,
-    double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount);
+  void calculateCounts(const Circle* circles, size_t size, size_t tries,
+      std::default_random_engine& generator, double min_x, double max_x,
+      double min_y, double max_y, size_t& u_count, size_t& i_count);
 
-  std::pair< double, double > calculateAreas(const Circle* circles,
-    size_t size, size_t tries, int threads, int seed)
+  std::pair<double, double> calculateAreas(const Circle* circles,
+      size_t size, size_t tries, int threads, int seed)
   {
-    double minX = 0;
-    double maxX = 0;
-    double minY = 0;
-    double maxY = 0;
+    double min_x = 0;
+    double max_x = 0;
+    double min_y = 0;
+    double max_y = 0;
 
-    findBounds(circles, size, minX, maxX, minY, maxY);
+    findBounds(circles, size, min_x, max_x, min_y, max_y);
 
-    double area = (maxX - minX) * (maxY - minY);
+    const double area = (max_x - min_x) * (max_y - min_y);
+
     if (threads == 0)
     {
-      size_t uCount = 0;
-      size_t iCount = 0;
+      size_t u_count = 0;
+      size_t i_count = 0;
+
       std::default_random_engine generator(seed);
 
       calculateCounts(circles, size, tries, generator,
-        minX, maxX, minY, maxY, uCount, iCount);
-      double areaU = area * (static_cast< double >(uCount) / tries);
-      double areaI = area * (static_cast< double >(iCount) / tries);
-      return {areaU, areaI};
+          min_x, max_x, min_y, max_y, u_count, i_count);
+
+      const double area_u = area * (static_cast<double>(u_count) / tries);
+      const double area_i = area * (static_cast<double>(i_count) / tries);
+
+      return {area_u, area_i};
     }
-    size_t threadCount = static_cast< size_t >(threads);
-    size_t triesPerThread = tries / threadCount;
-    size_t remainder = tries % threadCount;
-    ThreadData* data = new ThreadData[threadCount];
+
+    const size_t thread_count = static_cast<size_t>(threads);
+    const size_t tries_per_thread = tries / thread_count;
+    const size_t remainder = tries % thread_count;
+
+    ThreadData* const data = new ThreadData[thread_count];
     size_t started = 0;
 
     try
     {
-      for (size_t i = 0; i < threadCount; ++i)
+      for (size_t i = 0; i < thread_count; ++i)
       {
-        size_t currentTries = triesPerThread;
-        if (i == threadCount - 1)
+        size_t current_tries = tries_per_thread;
+
+        if (i == thread_count - 1)
         {
-            currentTries += remainder;
+          current_tries += remainder;
         }
+
         data[i].worker = std::thread(threadFunction,
-          circles, size, currentTries, i, seed,
-          minX, maxX, minY, maxY, std::ref(data[i].uCount),
-          std::ref(data[i].iCount));
+            circles, size, current_tries, i, seed,
+            min_x, max_x, min_y, max_y,
+            std::ref(data[i].u_count),
+            std::ref(data[i].i_count));
+
         started++;
       }
     }
@@ -205,50 +233,56 @@ namespace lachugin
       delete[] data;
       throw;
     }
-    size_t totalU = 0;
-    size_t totalI = 0;
-    for (size_t i = 0; i < threadCount; ++i)
+
+    size_t total_u = 0;
+    size_t total_i = 0;
+
+    for (size_t i = 0; i < thread_count; ++i)
     {
       data[i].worker.join();
-      totalU += data[i].uCount;
-      totalI += data[i].iCount;
+
+      total_u += data[i].u_count;
+      total_i += data[i].i_count;
     }
 
     delete[] data;
 
-    double areaU = area * (static_cast< double >(totalU) / tries);
-    double areaI = area * (static_cast< double >(totalI) / tries);
-    return {areaU, areaI};
+    const double area_u = area * (static_cast<double>(total_u) / tries);
+    const double area_i = area * (static_cast<double>(total_i) / tries);
+
+    return {area_u, area_i};
   }
 
-
-  void calculateCounts(const Circle* circles, size_t size, size_t tries, std::default_random_engine& generator,
-    double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount)
+  void calculateCounts(const Circle* circles, size_t size, size_t tries,
+      std::default_random_engine& generator, double min_x, double max_x,
+      double min_y, double max_y, size_t& u_count, size_t& i_count)
   {
     for (size_t i = 0; i < tries; ++i)
     {
-      std::pair< double, double > point;
-      point = generatePoint(generator, minX, maxX, minY, maxY);
+      const std::pair<double, double> point =
+          generatePoint(generator, min_x, max_x, min_y, max_y);
 
       if (isInsideUnion(circles, size, point.first, point.second))
       {
-        uCount++;
+        u_count++;
       }
-      if (isInsideIntersection(circles, size, point.first, point.second)) {
-        iCount++;
+
+      if (isInsideIntersection(circles, size, point.first, point.second))
+      {
+        i_count++;
       }
     }
   }
 
-  void threadFunction(const Circle* circles, size_t size, size_t tries, size_t threadNumber,
-    int seed, double minX, double maxX, double minY, double maxY, size_t& uCount, size_t& iCount)
+  void threadFunction(const Circle* circles, size_t size, size_t tries,
+      size_t thread_number, int seed, double min_x, double max_x,
+      double min_y, double max_y, size_t& u_count, size_t& i_count)
   {
-    std::default_random_engine generator(seed + threadNumber);
+    std::default_random_engine generator(seed + thread_number);
 
-    calculateCounts(circles, size, tries, generator, minX, maxX, minY, maxY, uCount, iCount);
+    calculateCounts(circles, size, tries, generator,
+        min_x, max_x, min_y, max_y, u_count, i_count);
   }
-
-
 }
 
 int main(int argc, char* argv[])
@@ -260,26 +294,31 @@ int main(int argc, char* argv[])
   }
 
   int seed = 0;
-  size_t posSeed = 0;
+  size_t pos_seed = 0;
+
   int threads = 0;
-  size_t posThreads = 0;
+  size_t pos_threads = 0;
+
   int tries = 0;
-  size_t posTries = 0;
+  size_t pos_tries = 0;
+
   try
   {
     if (argc == 4)
     {
-      seed = std::stoi(argv[3], &posSeed);
-      if (posSeed != std::string(argv[3]).length() || seed < 0)
+      seed = std::stoi(argv[3], &pos_seed);
+
+      if (pos_seed != std::string(argv[3]).length() || seed < 0)
       {
         throw std::invalid_argument("wrong seed");
       }
     }
 
-    threads = std::stoi(argv[1], &posThreads);
-    tries = std::stoi(argv[2], &posTries);
-    if (posThreads != std::string(argv[1]).length() || threads < 0
-      || posTries != std::string(argv[2]).length() || tries <= 0)
+    threads = std::stoi(argv[1], &pos_threads);
+    tries = std::stoi(argv[2], &pos_tries);
+
+    if (pos_threads != std::string(argv[1]).length() || threads < 0
+        || pos_tries != std::string(argv[2]).length() || tries <= 0)
     {
       throw std::invalid_argument("wrong parametr");
     }
@@ -290,10 +329,10 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-
   lachugin::Circle* circles = nullptr;
   size_t size = 0;
   size_t cap = 2;
+
   circles = new lachugin::Circle[cap];
 
   try
@@ -315,10 +354,10 @@ int main(int argc, char* argv[])
 
   try
   {
-    std::pair< double, double > result =
-      lachugin::calculateAreas(circles, size, tries, threads, seed);
+    const std::pair<double, double> result =
+        lachugin::calculateAreas(circles, size, tries, threads, seed);
 
-    std::cout << std::setprecision(std::numeric_limits< double >::max_digits10);
+    std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
 
     std::cout << result.first << "\n";
     std::cout << result.second << "\n";
@@ -330,8 +369,5 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-
   delete[] circles;
-
 }
-
