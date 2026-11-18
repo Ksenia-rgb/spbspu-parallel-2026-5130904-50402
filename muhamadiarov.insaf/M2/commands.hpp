@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <memory>
 
 namespace muhamadiarov
 {
@@ -16,10 +17,21 @@ namespace muhamadiarov
   struct Data
   {
     std::map< std::string, std::size_t > processes;
-    std::map< std::string, Shape > shapes;
+    std::map< std::string, std::unique_ptr< Shape > > shapes;
     std::map< std::string, Set_t > sets;
     std::map< std::string, InfoProcess > calculations;
   };
+
+  void cmdCircle(std::istream&, std::ostream&, Data&);
+  void cmdSet(std::istream&, std::ostream&, Data&);
+  void cmdShow(std::istream&, std::ostream&, Data&);
+  void cmdShowSet(std::istream&, std::ostream&, Data&);
+  void cmdFrame(std::istream&, std::ostream&, Data&);
+  void cmdFrameSet(std::istream&, std::ostream&, Data&);
+  void cmdSpawn(std::istream&, std::ostream&, Data&);
+  void cmdAreaOn(std::istream&, std::ostream&, Data&);
+  void cmdStatus(std::istream&, std::ostream&, Data&);
+  void cmdWait(std::istream&, std::ostream&, Data&);
 
 }
 
