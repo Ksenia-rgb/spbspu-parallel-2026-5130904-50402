@@ -1,9 +1,11 @@
 #ifndef COMMANDS_HPP
 #define COMMANDS_HPP
 
+#include "process.hpp"
 #include "../common/shapes.hpp"
-#include <map>
+#include <cstddef>
 #include <string>
+#include <map>
 #include <vector>
 
 namespace muhamadiarov
