@@ -4,7 +4,6 @@
 #include "../common/shapes.hpp"
 #include <cstddef>
 #include <string>
-#include <map>
 #include <sys/types.h>
 
 namespace muhamadiarov
@@ -54,7 +53,7 @@ namespace muhamadiarov
   std::size_t send(int& err, int rd, const void* buffer, std::size_t k);
   std::size_t take(int& err, int wr, void* buffer, std::size_t k);
   
-  void childLoop(int wr, int rd, Task task);
+  void childLoop(int wr, int rd);
 
 }
 
