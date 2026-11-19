@@ -33,6 +33,13 @@ namespace muhamadiarov
     std::size_t countShapes = 0; 
   };
 
+  struct TaskShape
+  {
+    double r = 0;
+    double x = 0;
+    double y = 0;
+  };
+
   struct InfoProcess
   {
     InfoProcess(const std::string& name, std::size_t seed, pid_t pid = -1, int writeFd = -1, int readFd = -1) = default;

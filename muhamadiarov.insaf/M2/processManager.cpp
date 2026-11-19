@@ -61,8 +61,66 @@ namespace muhamadiarov
   }
 
   void ProcessManager::areaOn(const std::string& calcName,
-              const Calculation& calc, 
-              const Set_t& set);
+                              const Calculation& calc, 
+                              const Set_t& set)
+  {
+    if (calcs_.count(calcName))
+    {
+      throw std::invalid_argument("dup calc");
+    }
+    
+    if (!hasProcess(calc.processName))
+    {
+      throw std::invalid_argument("no process");
+    }
+    
+    if (!data.sets.count(calc.setName))
+    {
+      throw std::invalid_argument("no set");
+    }
+    
+    if (calc.tries <= 0)
+    {
+      throw std::invalid_argument("no tries");
+    }
+    
+    if (calc.threads < 0)
+    {
+      throw std::invalid_argument("no threads");
+    }
+
+    InfoProcess& process = processes_.at(calc.processName);
+    Task task(calc.threads, calc.tries, proc.seed, set.size());
+    int err = 0;
+    if (send(err, process.writeFd, &task, sizeof(Task)) != sizeof(Task) || err != 0)
+    {
+      throw std::runtime_error("did not send task");
+    }
+
+    std::vector< TaskShape > raw;
+    raw.reserve(set.size());
+    for (const auto& sn : set)
+    {
+      const Shape& s = *(data.shapes).at(sn);
+      const double r = (s.getMaxX() - s.getMinX()) / 2.0;
+      const double x = (s.getMaxX() + s.getMinX()) / 2.0;
+      const double y = (s.getMaxY() + s.getMinY()) / 2.0;
+      raw.push_back(TaskShape{r, x, y});
+    }
+
+    if (!raw.empty())
+    {
+      const std::size_t bytes = sizeof(TaskShape) * raw.size();
+      if (send(err, proc.writeFd, raw.data(), bytes)) != bytes || err != 0)
+      {
+        throw std::runtime_error("did not send shapes");
+      }
+    }
+
+    Calculation c = calc;
+    c.state = StateProcess::ACTIVE;
+    calcs_.emplace(calcName, c);
+  }
 
   void status(const std::string calcName) const;
   void wait(const std::string calcName);
