@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <string>
 #include <map>
+#include <ostream>
 
 namespace muhamadiarov
 {
@@ -17,21 +18,25 @@ namespace muhamadiarov
     int threads = 0;
     int tries   = 0;
     StateProcess state = StateProcess::ACTIVE;
+    Result result;
   };
 
   class ProcessManager
   {
   public:
-    void spawn(const std::string& name, std::size_t seed) noexcept;
-    void areaOn(const std::string& procName,
-                const std::string& calcName,
-                const std::string& setName,
-                int threads,
-                int tries,
+    ProcessManager() = default;
+    ProcessManager(const ProcessManager&) = delete;
+    ProcessManager& operator=(const ProcessManager&) = delete;
+    ~ProcessManager();
+
+    void spawn(const std::string& name, std::size_t seed);
+    bool hasProcess(const std::string& processName) const noexcept;
+    void areaOn(const std::string& calcName,
+                const Calculation& calc, 
                 const Data& data);
-    void status(const std::string calcName) const;
+
+    void status(const std::string calcName, std::ostream& out) const;
     void wait(const std::string calcName);
-    const InfoProcess& getCalculation(const std::string& calcName) const noexcept;
 
   private:
     std::map< std::string, InfoProcess > processes_;

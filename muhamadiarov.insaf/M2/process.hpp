@@ -14,45 +14,40 @@ namespace muhamadiarov
   {
     STAND,
     ACTIVE,
-    DONE
+    DONE,
+    CANCELED
   };
 
-  struct ResultProcess
+  struct Result
   {
-    std::string processName;
     double time = 0.0;
     double area = 0.0;
   };
 
-  class InfoProcess
+  struct Task
   {
-  public:
-    InfoProcess();
-    InfoProcess(const InfoProcess&) = delete;
-    InfoProcess& operator=(const InfoProcess&) = delete;
-    InfoProcess(InfoProcess&& other) noexcept;
-    InfoProcess& operator=(InfoProcess&& other) noexcept;
-    InfoProcess(pid_t pid, int writeFd, int readFd);
-
-    std::size_t send(int& err, const void* buffer, std::size_t k) const noexcept;
-    std::size_t take(int& err, void* buffer, std::size_t k) const noexcept;
-    
-    ResultProcess result() const;
-    StateProcess state() const noexcept;
-    pid_t pid() const noexcept;
-    
-    void run() const;
-    void wait() const;
-    
-    ~InfoProcess();
-  
-  private:
-    ResultProcess result_;
-    pid_t pid_ = -1;
-    StateProcess state_ = StateProcess::STAND;
-    int writeFd_ = -1;
-    int readFd_ = -1;
+    Task(int thread, int tries, std::size_t seed, std::size_t countShapes);
+    int thread = 0;
+    int tries = 0;
+    std::size_t seed = 0;
+    std::size_t countShapes = 0; 
   };
+
+  struct InfoProcess
+  {
+    InfoProcess(const std::string& name, std::size_t seed, pid_t pid = -1, int writeFd = -1, int readFd = -1) = default;
+    std::string name;
+    pid_t pid = -1;
+    StateProcess state = StateProcess::STAND;
+    int writeFd = -1;
+    int readFd = -1;
+    std::size_t seed = 0;
+  };
+
+  std::size_t send(int& err, int rd, const void* buffer, std::size_t k);
+  std::size_t take(int& err, int wr, void* buffer, std::size_t k);
+  
+  void childLoop(int wr, int rd, Task task);
 
 }
 

@@ -16,10 +16,8 @@ namespace muhamadiarov
 
   struct Data
   {
-    std::map< std::string, std::size_t > processes;
     std::map< std::string, std::unique_ptr< Shape > > shapes;
     std::map< std::string, Set_t > sets;
-    std::map< std::string, InfoProcess > calculations;
   };
 
   void cmdCircle(std::istream&, std::ostream&, Data&);
