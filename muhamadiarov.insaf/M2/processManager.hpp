@@ -36,7 +36,7 @@ namespace muhamadiarov
                 const Data& data);
 
     void status(const std::string calcName, std::ostream& out) const;
-    void wait(const std::string calcName);
+    void wait(const std::string calcName, std::ostream& out);
 
   private:
     std::map< std::string, InfoProcess > processes_;

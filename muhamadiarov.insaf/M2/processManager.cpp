@@ -122,7 +122,67 @@ namespace muhamadiarov
     calcs_.emplace(calcName, c);
   }
 
-  void status(const std::string calcName) const;
-  void wait(const std::string calcName);
+  void ProcessManager::status(const std::string calcName, std::ostream& out) const
+  {
+    auto it = calcs_.find(calcName);
+    if (it == calcs_.end())
+    {
+      throw std::runtime_error("no calc");
+    }
+
+    const Calculation& c = it->second;
+    const InfoProcess& p = processes_.at(c.processName);
+
+    if (p.state == StateProcess::DONE)
+    {
+      char buf[128];
+      std::snprintf(buf, sizeof buf, "%s %.3f %.3f", 
+                    p.name.c_str(), c.result.time, c.result.area);
+      out << buf << '\n';
+    }
+    else if (p.state == StateProcess::CANCELED)
+    {
+      out << p.name << " <CANCELED>\n";
+    }
+    else
+    {
+      out << p.name << " <IN PROGRESS>\n";
+    }
+  }
+
+  void ProcessManager::wait(const std::string calcName)
+  {
+    auto it = calcs_.find(calcName);
+    if (it == calcs_.end())
+    {
+      throw std::invalid_argument("no calc");
+    }
+
+    const Calculation& c = it->second;
+    const InfoProcess& p = processes_.at(c.processName);
+    if (p.state == StateProcess::CANCELED)
+    {
+      throw std::runtime_error("error working the process");
+    }
+
+    if (p.state = StateProcess::ACTIVE)
+    {
+      Result r;
+      int err = 0;
+      if (take(err, p.readFd, &r, sizeof(Result)) != sizeof(Result))
+      {
+        p.state = StateProcess::CANCELED;
+        c.state = StateProcess::CANCELED;
+      }
+      else
+      {
+        c.result = r;
+        c.state = StateProcess::DONE;
+        p.state = StateProcess::DONE;
+      }
+    }
+
+    status(calcName, out);
+  }
 
 }
