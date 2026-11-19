@@ -8,6 +8,8 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <istream>
+#include <ostream>
 
 namespace muhamadiarov
 {
