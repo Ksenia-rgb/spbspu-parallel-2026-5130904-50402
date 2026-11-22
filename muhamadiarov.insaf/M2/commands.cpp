@@ -1,13 +1,16 @@
 #include "commands.hpp"
+#include "processManager.hpp"
 #include <istream>
 #include <ostream>
 
 namespace muhamadiarov
 {
-  
+
   namespace
   {
-  
+
+    ProcessManager pm;
+
     std::string readWord(std::istream& in)
     {
       std::string s;
@@ -58,9 +61,10 @@ namespace muhamadiarov
 
     int x = readInt(in);
     int y = readInt(in);
-    data.shapes[name] = std::make_unique< Circle >(r, Point{x, y});
+    data.shapes[name] = std::make_unique< Circle >(
+        static_cast< double >(r), Point{static_cast< double >(x), static_cast< double >(y)});
   }
-  
+
   void cmdSet(std::istream& in, std::ostream&, Data& data)
   {
     std::string name = readWord(in);
@@ -69,13 +73,13 @@ namespace muhamadiarov
       throw std::invalid_argument("dup set");
     }
 
+    std::size_t size = readSize(in);
     Set_t s;
     s.reserve(size);
-    std::size_t size = readSize(in);
     for (std::size_t i = 0; i < size; ++i)
     {
       std::string shapeName = readWord(in);
-      if (!data.shapes.count(shapeName))
+      if (!data.sets.count(shapeName))
       {
         throw std::invalid_argument("incorrect shape-name");
       }
@@ -95,7 +99,7 @@ namespace muhamadiarov
     }
 
     const Shape& s = *data.shapes.at(name);
-    const double r  = (s.getMaxX() - s.getMinX()) / 2.0;
+    const double r = (s.getMaxX() - s.getMinX()) / 2.0;
     const double x = (s.getMaxX() + s.getMinX()) / 2.0;
     const double y = (s.getMaxY() + s.getMinY()) / 2.0;
     out << r << " (" << x << ' ' << y << ")\n";
@@ -113,7 +117,7 @@ namespace muhamadiarov
     for (const auto& sn : it->second)
     {
       const Shape& s = *data.shapes.at(sn);
-      const double r  = (s.getMaxX() - s.getMinX()) / 2.0;
+      const double r = (s.getMaxX() - s.getMinX()) / 2.0;
       const double cx = (s.getMaxX() + s.getMinX()) / 2.0;
       const double cy = (s.getMaxY() + s.getMinY()) / 2.0;
       out << r << " (" << cx << ' ' << cy << ")\n";
@@ -130,8 +134,7 @@ namespace muhamadiarov
     }
 
     const Shape& s = *it->second;
-    out << '(' << s.getMinX() << ' ' << s.getMinY() << ") ("
-        << s.getMaxX() << ' ' << s.getMaxY() << ")\n";
+    out << '(' << s.getMinX() << ' ' << s.getMinY() << ") (" << s.getMaxX() << ' ' << s.getMaxY() << ")\n";
   }
 
   void cmdFrameSet(std::istream& in, std::ostream& out, Data& data)
@@ -183,9 +186,50 @@ namespace muhamadiarov
     out << '(' << minX << ' ' << minY << ") (" << maxX << ' ' << maxY << ")\n";
   }
 
-  void cmdSpawn(std::istream&, std::ostream&, Data&);
-  void cmdAreaOn(std::istream&, std::ostream&, Data&);
-  void cmdStatus(std::istream&, std::ostream&, Data&);
-  void cmdWait(std::istream&, std::ostream&, Data&);
+  void cmdSpawn(std::istream& in, std::ostream&, Data&)
+  {
+    std::string name = readWord(in);
+    std::size_t seed = readSize(in);
+    pm.spawn(name, seed);
+  }
+
+  void cmdAreaOn(std::istream& in, std::ostream&, Data& data)
+  {
+    std::string procName = readWord(in);
+    std::string calcName = readWord(in);
+    std::string setName = readWord(in);
+    int threads = readInt(in);
+    int tries = readInt(in);
+
+    if (!data.sets.count(setName))
+    {
+      throw std::invalid_argument("no set");
+    }
+    if (tries <= 0 || threads < 0)
+    {
+      throw std::invalid_argument("incorrect params");
+    }
+
+    Calculation c;
+    c.processName = procName;
+    c.setName = setName;
+    c.threads = threads;
+    c.tries = tries;
+    c.state = StateProcess::ACTIVE;
+
+    pm.areaOn(calcName, c, data);
+  }
+
+  void cmdStatus(std::istream& in, std::ostream& out, Data&)
+  {
+    std::string calcName = readWord(in);
+    pm.status(calcName, out);
+  }
+
+  void cmdWait(std::istream& in, std::ostream& out, Data&)
+  {
+    std::string calcName = readWord(in);
+    pm.wait(calcName, out);
+  }
 
 }

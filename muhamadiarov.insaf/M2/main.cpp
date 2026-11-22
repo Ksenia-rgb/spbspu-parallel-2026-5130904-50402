@@ -14,7 +14,7 @@ int main()
   {
     return 1;
   }
-  using cmd_t = void(*)(std::istream&, std::ostream&, muh::Data&);
+  using cmd_t = void (*)(std::istream &, std::ostream &, muh::Data &);
 
   muh::Data data;
   std::map< std::string, cmd_t > cmds;
@@ -37,13 +37,13 @@ int main()
       auto func = cmds.at(cmd);
       func(std::cin, std::cout, data);
     }
-    catch (const std::out_of_range&)
+    catch (const std::out_of_range &)
     {
       std::cout << "<UNKNOWN COMMAND>\n";
       std::cin.clear();
       std::cin.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
     }
-    catch (const std::exception&)
+    catch (const std::exception &)
     {
       std::cout << "<INVALID COMMAND>\n";
     }

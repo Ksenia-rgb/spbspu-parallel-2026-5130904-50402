@@ -28,15 +28,15 @@ namespace muhamadiarov
 
     int toChild[2];
     int toParent[2];
-    if(pipe(toChild) < 0 || pipe(toParent) < 0)
+    if (pipe(toChild) < 0 || pipe(toParent) < 0)
     {
       throw std::runtime_error("pipe failed");
     }
-    
+
     const pid_t pid = fork();
     if (pid < 0)
     {
-      close(toChild[0]); 
+      close(toChild[0]);
       close(toChild[1]);
       close(toParent[0]);
       close(toParent[1]);
@@ -47,50 +47,49 @@ namespace muhamadiarov
     {
       close(toChild[1]);
       close(toParent[0]);
-      childLoop(toChild[0], toParent[1], seed)
+      childLoop(toChild[0], toParent[1]);
     }
-    
+
     close(toChild[0]);
     close(toParent[1]);
-    processes_.emplace(name, InfoProcess(name, seed, pid, toChild[1], toParent[0]));
+    processes_.emplace(name, InfoProcess{name, pid, StateProcess::STAND, toChild[1], toParent[0], seed});
   }
 
-  bool ProcessManager::hasProcess(const std::string& processName)
+  bool ProcessManager::hasProcess(const std::string& processName) const noexcept
   {
     return processes_.count(processName) > 0;
   }
 
-  void ProcessManager::areaOn(const std::string& calcName,
-                              const Calculation& calc, 
-                              const Set_t& set)
+  void ProcessManager::areaOn(const std::string& calcName, const Calculation& calc, const Data& data)
   {
     if (calcs_.count(calcName))
     {
       throw std::invalid_argument("dup calc");
     }
-    
+
     if (!hasProcess(calc.processName))
     {
       throw std::invalid_argument("no process");
     }
-    
+
     if (!data.sets.count(calc.setName))
     {
       throw std::invalid_argument("no set");
     }
-    
+
     if (calc.tries <= 0)
     {
       throw std::invalid_argument("no tries");
     }
-    
+
     if (calc.threads < 0)
     {
       throw std::invalid_argument("no threads");
     }
 
+    const Set_t& set = data.sets.at(calc.setName);
     InfoProcess& process = processes_.at(calc.processName);
-    Task task(calc.threads, calc.tries, proc.seed, set.size());
+    Task task{calc.threads, calc.tries, process.seed, set.size()};
     int err = 0;
     if (send(err, process.writeFd, &task, sizeof(Task)) != sizeof(Task) || err != 0)
     {
@@ -111,7 +110,7 @@ namespace muhamadiarov
     if (!raw.empty())
     {
       const std::size_t bytes = sizeof(TaskShape) * raw.size();
-      if (send(err, proc.writeFd, raw.data(), bytes)) != bytes || err != 0)
+      if (send(err, process.writeFd, raw.data(), bytes) != bytes || err != 0)
       {
         throw std::runtime_error("did not send shapes");
       }
@@ -136,8 +135,7 @@ namespace muhamadiarov
     if (p.state == StateProcess::DONE)
     {
       char buf[128];
-      std::snprintf(buf, sizeof buf, "%s %.3f %.3f", 
-                    p.name.c_str(), c.result.time, c.result.area);
+      std::snprintf(buf, sizeof buf, "%s %.3f %.3f", p.name.c_str(), c.result.time, c.result.area);
       out << buf << '\n';
     }
     else if (p.state == StateProcess::CANCELED)
@@ -150,7 +148,7 @@ namespace muhamadiarov
     }
   }
 
-  void ProcessManager::wait(const std::string calcName)
+  void ProcessManager::wait(const std::string calcName, std::ostream& out)
   {
     auto it = calcs_.find(calcName);
     if (it == calcs_.end())
@@ -158,18 +156,18 @@ namespace muhamadiarov
       throw std::invalid_argument("no calc");
     }
 
-    const Calculation& c = it->second;
-    const InfoProcess& p = processes_.at(c.processName);
+    Calculation& c = it->second;
+    InfoProcess& p = processes_.at(c.processName);
     if (p.state == StateProcess::CANCELED)
     {
       throw std::runtime_error("error working the process");
     }
 
-    if (p.state = StateProcess::ACTIVE)
+    if (p.state == StateProcess::ACTIVE)
     {
       Result r;
       int err = 0;
-      if (take(err, p.readFd, &r, sizeof(Result)) != sizeof(Result))
+      if (take(err, p.readFd, &r, sizeof(Result)) != sizeof(Result) || err != 0)
       {
         p.state = StateProcess::CANCELED;
         c.state = StateProcess::CANCELED;

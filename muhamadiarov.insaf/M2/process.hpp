@@ -25,11 +25,10 @@ namespace muhamadiarov
 
   struct Task
   {
-    Task(int thread, int tries, std::size_t seed, std::size_t countShapes);
-    int thread = 0;
+    int threads = 0;
     int tries = 0;
     std::size_t seed = 0;
-    std::size_t countShapes = 0; 
+    std::size_t countShapes = 0;
   };
 
   struct TaskShape
@@ -41,7 +40,6 @@ namespace muhamadiarov
 
   struct InfoProcess
   {
-    InfoProcess(const std::string& name, std::size_t seed, pid_t pid = -1, int writeFd = -1, int readFd = -1) = default;
     std::string name;
     pid_t pid = -1;
     StateProcess state = StateProcess::STAND;
@@ -52,7 +50,7 @@ namespace muhamadiarov
 
   std::size_t send(int& err, int rd, const void* buffer, std::size_t k);
   std::size_t take(int& err, int wr, void* buffer, std::size_t k);
-  
+
   void childLoop(int wr, int rd);
 
 }

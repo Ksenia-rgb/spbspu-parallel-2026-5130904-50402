@@ -3,17 +3,18 @@
 #include "../common/shapes.hpp"
 #include <unistd.h>
 #include <chrono>
-#include <util>
+#include <utility>
 #include <cstddef>
 #include <memory>
 #include <vector>
+#include <csignal>
 
 namespace muhamadiarov
 {
 
-  std::size_t send(int& err, int wr, const void* buffer, std::size_t k) const noexcept
+  std::size_t send(int& err, int wr, const void* buffer, std::size_t k)
   {
-    char* const p = static_cast< char* >(buffer);
+    const char* const p = static_cast< const char* >(buffer);
     std::size_t r = 0;
     while (r < k)
     {
@@ -27,7 +28,7 @@ namespace muhamadiarov
     return r;
   }
 
-  std::size_t take(int& err, int rd, void* buffer, std::size_t k) const noexcept
+  std::size_t take(int& err, int rd, void* buffer, std::size_t k)
   {
     char* const p = static_cast< char* >(buffer);
     std::size_t r = 0;
@@ -48,7 +49,7 @@ namespace muhamadiarov
     signal(SIGPIPE, SIG_IGN);
     while (true)
     {
-      Task task;
+      Task task{};
       int err = 0;
       if (take(err, rd, &task, sizeof(Task)) != sizeof(Task) || err != 0)
       {
@@ -59,7 +60,7 @@ namespace muhamadiarov
       if (task.countShapes > 0)
       {
         const std::size_t bytes = sizeof(TaskShape) * task.countShapes;
-        if(take(err, rd, raw.data(), bytes) != bytes || err != 0)
+        if (take(err, rd, raw.data(), bytes) != bytes || err != 0)
         {
           break;
         }
@@ -76,7 +77,7 @@ namespace muhamadiarov
       const std::pair< double, double > areas = getAreas(shapes, task.threads, task.tries, task.seed);
       const auto end = std::chrono::steady_clock::now();
       const double ms = std::chrono::duration< double, std::milli >(end - start).count();
-      
+
       Result res;
       res.area = areas.first;
       res.time = ms;
@@ -86,7 +87,7 @@ namespace muhamadiarov
       }
 
       close(rd);
-      close(out);
+      close(wr);
       _exit(0);
     }
   }
