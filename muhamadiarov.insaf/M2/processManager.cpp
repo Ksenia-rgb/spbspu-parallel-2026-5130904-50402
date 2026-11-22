@@ -91,7 +91,7 @@ namespace muhamadiarov
     InfoProcess& process = processes_.at(calc.processName);
     Task task{calc.threads, calc.tries, process.seed, set.size()};
     int err = 0;
-    if (send(err, process.writeFd, &task, sizeof(Task)) != sizeof(Task) || err != 0)
+    if (send(err, process.writeFd, &task, sizeof(Task)) != sizeof(Task))
     {
       throw std::runtime_error("did not send task");
     }
@@ -110,7 +110,7 @@ namespace muhamadiarov
     if (!raw.empty())
     {
       const std::size_t bytes = sizeof(TaskShape) * raw.size();
-      if (send(err, process.writeFd, raw.data(), bytes) != bytes || err != 0)
+      if (send(err, process.writeFd, raw.data(), bytes) != bytes)
       {
         throw std::runtime_error("did not send shapes");
       }
@@ -119,6 +119,7 @@ namespace muhamadiarov
     Calculation c = calc;
     c.state = StateProcess::ACTIVE;
     calcs_.emplace(calcName, c);
+    process.state = StateProcess::ACTIVE;
   }
 
   void ProcessManager::status(const std::string calcName, std::ostream& out) const
@@ -167,7 +168,7 @@ namespace muhamadiarov
     {
       Result r;
       int err = 0;
-      if (take(err, p.readFd, &r, sizeof(Result)) != sizeof(Result) || err != 0)
+      if (take(err, p.readFd, &r, sizeof(Result)) != sizeof(Result))
       {
         p.state = StateProcess::CANCELED;
         c.state = StateProcess::CANCELED;

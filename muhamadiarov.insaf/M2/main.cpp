@@ -43,9 +43,11 @@ int main()
       std::cin.clear();
       std::cin.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
     }
-    catch (const std::exception &)
+    catch (const std::exception &e)
     {
       std::cout << "<INVALID COMMAND>\n";
+      std::cin.clear();
+      std::cin.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
     }
   }
 

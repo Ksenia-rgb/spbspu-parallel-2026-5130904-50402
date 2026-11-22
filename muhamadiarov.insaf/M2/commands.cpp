@@ -68,7 +68,7 @@ namespace muhamadiarov
   void cmdSet(std::istream& in, std::ostream&, Data& data)
   {
     std::string name = readWord(in);
-    if (data.shapes.count(name))
+    if (data.sets.count(name))
     {
       throw std::invalid_argument("dup set");
     }
@@ -79,7 +79,7 @@ namespace muhamadiarov
     for (std::size_t i = 0; i < size; ++i)
     {
       std::string shapeName = readWord(in);
-      if (!data.sets.count(shapeName))
+      if (!data.shapes.count(shapeName))
       {
         throw std::invalid_argument("incorrect shape-name");
       }

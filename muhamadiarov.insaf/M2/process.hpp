@@ -51,7 +51,7 @@ namespace muhamadiarov
   std::size_t send(int& err, int rd, const void* buffer, std::size_t k);
   std::size_t take(int& err, int wr, void* buffer, std::size_t k);
 
-  void childLoop(int wr, int rd);
+  void childLoop(int rd, int wr);
 
 }
 
