@@ -26,9 +26,9 @@ namespace muhamadiarov
       throw std::invalid_argument("process already exists");
     }
 
-    int toChild[2];
-    int toParent[2];
-    if (pipe(toChild) < 0 || pipe(toParent) < 0)
+    int to_child[2];
+    int to_parent[2];
+    if (pipe(to_child) < 0 || pipe(to_parent) < 0)
     {
       throw std::runtime_error("pipe failed");
     }
@@ -36,43 +36,43 @@ namespace muhamadiarov
     const pid_t pid = fork();
     if (pid < 0)
     {
-      close(toChild[0]);
-      close(toChild[1]);
-      close(toParent[0]);
-      close(toParent[1]);
+      close(to_child[0]);
+      close(to_child[1]);
+      close(to_parent[0]);
+      close(to_parent[1]);
       throw std::runtime_error("fork failed");
     }
 
     if (pid == 0)
     {
-      close(toChild[1]);
-      close(toParent[0]);
-      childLoop(toChild[0], toParent[1]);
+      close(to_child[1]);
+      close(to_parent[0]);
+      childLoop(to_child[0], to_parent[1]);
     }
 
-    close(toChild[0]);
-    close(toParent[1]);
-    processes_.emplace(name, InfoProcess{name, pid, StateProcess::STAND, toChild[1], toParent[0], seed});
+    close(to_child[0]);
+    close(to_parent[1]);
+    processes_.emplace(name, InfoProcess{name, pid, StateProcess::STAND, to_child[1], to_parent[0], seed});
   }
 
-  bool ProcessManager::hasProcess(const std::string& processName) const noexcept
+  bool ProcessManager::hasProcess(const std::string& process_name) const noexcept
   {
-    return processes_.count(processName) > 0;
+    return processes_.count(process_name) > 0;
   }
 
-  void ProcessManager::areaOn(const std::string& calcName, const Calculation& calc, const Data& data)
+  void ProcessManager::areaOn(const std::string& calc_name, const Calculation& calc, const Data& data)
   {
-    if (calcs_.count(calcName))
+    if (calcs_.count(calc_name))
     {
       throw std::invalid_argument("dup calc");
     }
 
-    if (!hasProcess(calc.processName))
+    if (!hasProcess(calc.process_name))
     {
       throw std::invalid_argument("no process");
     }
 
-    if (!data.sets.count(calc.setName))
+    if (!data.sets.count(calc.set_name))
     {
       throw std::invalid_argument("no set");
     }
@@ -87,11 +87,11 @@ namespace muhamadiarov
       throw std::invalid_argument("no threads");
     }
 
-    const Set_t& set = data.sets.at(calc.setName);
-    InfoProcess& process = processes_.at(calc.processName);
+    const Set_t& set = data.sets.at(calc.set_name);
+    InfoProcess& process = processes_.at(calc.process_name);
     Task task{calc.threads, calc.tries, process.seed, set.size()};
     int err = 0;
-    if (send(err, process.writeFd, &task, sizeof(Task)) != sizeof(Task))
+    if (send(err, process.write_fd, &task, sizeof(Task)) != sizeof(Task))
     {
       throw std::runtime_error("did not send task");
     }
@@ -110,7 +110,7 @@ namespace muhamadiarov
     if (!raw.empty())
     {
       const std::size_t bytes = sizeof(TaskShape) * raw.size();
-      if (send(err, process.writeFd, raw.data(), bytes) != bytes)
+      if (send(err, process.write_fd, raw.data(), bytes) != bytes)
       {
         throw std::runtime_error("did not send shapes");
       }
@@ -118,28 +118,28 @@ namespace muhamadiarov
 
     Calculation c = calc;
     c.state = StateProcess::ACTIVE;
-    calcs_.emplace(calcName, c);
+    calcs_.emplace(calc_name, c);
     process.state = StateProcess::ACTIVE;
   }
 
-  void ProcessManager::status(const std::string calcName, std::ostream& out) const
+  void ProcessManager::status(const std::string calc_name, std::ostream& out) const
   {
-    auto it = calcs_.find(calcName);
+    auto it = calcs_.find(calc_name);
     if (it == calcs_.end())
     {
       throw std::runtime_error("no calc");
     }
 
     const Calculation& c = it->second;
-    const InfoProcess& p = processes_.at(c.processName);
+    const InfoProcess& p = processes_.at(c.process_name);
 
-    if (p.state == StateProcess::DONE)
+    if (c.state == StateProcess::DONE)
     {
       char buf[128];
       std::snprintf(buf, sizeof buf, "%s %.3f %.3f", p.name.c_str(), c.result.time, c.result.area);
       out << buf << '\n';
     }
-    else if (p.state == StateProcess::CANCELED)
+    else if (c.state == StateProcess::CANCELED)
     {
       out << p.name << " <CANCELED>\n";
     }
@@ -149,16 +149,16 @@ namespace muhamadiarov
     }
   }
 
-  void ProcessManager::wait(const std::string calcName, std::ostream& out)
+  void ProcessManager::wait(const std::string calc_name, std::ostream& out)
   {
-    auto it = calcs_.find(calcName);
+    auto it = calcs_.find(calc_name);
     if (it == calcs_.end())
     {
       throw std::invalid_argument("no calc");
     }
 
     Calculation& c = it->second;
-    InfoProcess& p = processes_.at(c.processName);
+    InfoProcess& p = processes_.at(c.process_name);
     if (p.state == StateProcess::CANCELED)
     {
       throw std::runtime_error("error working the process");
@@ -168,7 +168,7 @@ namespace muhamadiarov
     {
       Result r;
       int err = 0;
-      if (take(err, p.readFd, &r, sizeof(Result)) != sizeof(Result))
+      if (take(err, p.read_fd, &r, sizeof(Result)) != sizeof(Result))
       {
         p.state = StateProcess::CANCELED;
         c.state = StateProcess::CANCELED;
@@ -181,7 +181,7 @@ namespace muhamadiarov
       }
     }
 
-    status(calcName, out);
+    status(calc_name, out);
   }
 
 }

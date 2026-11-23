@@ -2,6 +2,9 @@
 #include "processManager.hpp"
 #include <istream>
 #include <ostream>
+#include <string>
+#include <sstream>
+#include <vector>
 
 namespace muhamadiarov
 {
@@ -11,80 +14,135 @@ namespace muhamadiarov
 
     ProcessManager pm;
 
-    std::string readWord(std::istream& in)
+    std::vector< std::string > getArgs(std::istream& in)
     {
-      std::string s;
-      if (!(in >> s))
+      std::vector< std::string > result;
+      std::string line;
+      if (std::getline(in, line))
       {
-        throw std::invalid_argument("word");
+        std::istringstream iss(line);
+        std::string word;
+        while (iss >> word)
+        {
+          result.push_back(word);
+        }
       }
 
-      return s;
+      return result;
     }
 
-    int readInt(std::istream& in)
+    bool isValidName(const std::string& name)
     {
-      int v = 0;
-      if (!(in >> v))
+      return !name.empty() && ((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z'));
+    }
+
+    bool isValidNumber(const std::string& number)
+    {
+      for (std::size_t i = 0; i < number.size(); ++i)
       {
-        throw std::invalid_argument("number");
+        if (number[i] < '0' || number[i] > '9')
+        {
+          return false;
+        }
       }
 
-      return v;
+      return number.empty() ? false : true;
     }
 
-    std::size_t readSize(std::istream& in)
+    std::size_t getSize(const std::string& str)
     {
-      std::size_t v = 0;
-      if (!(in >> v))
+      if (isValidNumber(str) && str[0] != '-')
       {
-        throw std::invalid_argument("size");
+        std::size_t pos = 0;
+        unsigned long long val = std::stoll(str, &pos);
+        if (val > SIZE_MAX)
+        {
+          throw std::invalid_argument("the quantity exceeds the permissible values");
+        }
+
+        return static_cast< std::size_t >(val);
       }
-      return v;
+
+      throw std::invalid_argument("incorrect argument");
     }
 
+    int getDouble(const std::string& str)
+    {
+      if (isValidNumber(str))
+      {
+        return std::stod(str);
+      }
+
+      throw std::invalid_argument("incorrect argument");
+    }
+
+    std::string getName(const std::string& str)
+    {
+      if (isValidName(str))
+      {
+        return str;
+      }
+
+      throw std::invalid_argument("incorrect argument");
+    }
   }
 
   void cmdCircle(std::istream& in, std::ostream&, Data& data)
   {
-    std::string name = readWord(in);
+    const std::vector< std::string > args = getArgs(in);
+    if (args.size() != 4)
+    {
+      throw std::invalid_argument("there are no correct count of arguments");
+    }
+
+    const std::string name = getName(args[0]);
     if (data.shapes.count(name))
     {
       throw std::invalid_argument("dup");
     }
 
-    int r = readInt(in);
-    if (r <= 0)
+    const int r = getDouble(args[1]);
+    if (r <= 0.0)
     {
       throw std::invalid_argument("incorrect radius");
     }
 
-    int x = readInt(in);
-    int y = readInt(in);
-    data.shapes[name] = std::make_unique< Circle >(
-        static_cast< double >(r), Point{static_cast< double >(x), static_cast< double >(y)});
+    const double x = getDouble(args[2]);
+    const double y = getDouble(args[3]);
+    data.shapes[name] = std::make_unique< Circle >(r, Point{x, y});
   }
 
   void cmdSet(std::istream& in, std::ostream&, Data& data)
   {
-    std::string name = readWord(in);
+    const std::vector< std::string > args = getArgs(in);
+    if (args.size() < 3)
+    {
+      throw std::invalid_argument("there are no correct count of arguments");
+    }
+
+    const std::string name = getName(args[0]);
     if (data.sets.count(name))
     {
       throw std::invalid_argument("dup set");
     }
 
-    std::size_t size = readSize(in);
+    const std::size_t size = getSize(args[1]);
+    if (size != args.size() - 2)
+    {
+      throw std::invalid_argument("incorrect count of shapes");
+    }
+
     Set_t s;
     s.reserve(size);
-    for (std::size_t i = 0; i < size; ++i)
+    for (std::size_t i = 2; i < args.size(); ++i)
     {
-      std::string shapeName = readWord(in);
-      if (!data.shapes.count(shapeName))
+      const std::string shape_name = getName(args[i]);
+      if (!data.shapes.count(shape_name))
       {
         throw std::invalid_argument("incorrect shape-name");
       }
 
-      s.push_back(shapeName);
+      s.push_back(shape_name);
     }
 
     data.sets[name] = std::move(s);
@@ -92,7 +150,13 @@ namespace muhamadiarov
 
   void cmdShow(std::istream& in, std::ostream& out, Data& data)
   {
-    std::string name = readWord(in);
+    const std::vector< std::string > args = getArgs(in);
+    if (args.size() != 1)
+    {
+      throw std::invalid_argument("there are no correct count of arguments");
+    }
+
+    const std::string name = getName(args[0]);
     if (!data.shapes.count(name))
     {
       throw std::invalid_argument("not find this shape");
@@ -107,7 +171,13 @@ namespace muhamadiarov
 
   void cmdShowSet(std::istream& in, std::ostream& out, Data& data)
   {
-    std::string name = readWord(in);
+    const std::vector< std::string > args = getArgs(in);
+    if (args.size() != 1)
+    {
+      throw std::invalid_argument("there are no correct count of arguments");
+    }
+
+    const std::string name = getName(args[0]);
     auto it = data.sets.find(name);
     if (it == data.sets.end())
     {
@@ -126,7 +196,13 @@ namespace muhamadiarov
 
   void cmdFrame(std::istream& in, std::ostream& out, Data& data)
   {
-    std::string name = readWord(in);
+    const std::vector< std::string > args = getArgs(in);
+    if (args.size() != 1)
+    {
+      throw std::invalid_argument("there are no correct count of arguments");
+    }
+
+    const std::string name = getName(args[0]);
     auto it = data.shapes.find(name);
     if (it == data.shapes.end())
     {
@@ -139,97 +215,124 @@ namespace muhamadiarov
 
   void cmdFrameSet(std::istream& in, std::ostream& out, Data& data)
   {
-    std::string name = readWord(in);
+    const std::vector< std::string > args = getArgs(in);
+    if (args.size() != 1)
+    {
+      throw std::invalid_argument("there are no correct count of arguments");
+    }
+
+    const std::string name = getName(args[0]);
     auto it = data.sets.find(name);
     if (it == data.sets.end())
     {
       throw std::invalid_argument("no set");
     }
 
-    double minX = 0, maxX = 0, minY = 0, maxY = 0;
+    double min_x = 0, max_x = 0, min_y = 0, max_y = 0;
     bool first = true;
     for (const auto& sn : it->second)
     {
       const Shape& s = *data.shapes.at(sn);
       if (first)
       {
-        minX = s.getMinX();
-        maxX = s.getMaxX();
-        minY = s.getMinY();
-        maxY = s.getMaxY();
+        min_x = s.getMinX();
+        max_x = s.getMaxX();
+        min_y = s.getMinY();
+        max_y = s.getMaxY();
         first = false;
       }
       else
       {
-        if (s.getMinX() < minX)
+        if (s.getMinX() < min_x)
         {
-          minX = s.getMinX();
+          min_x = s.getMinX();
         }
 
-        if (s.getMaxX() > maxX)
+        if (s.getMaxX() > max_x)
         {
-          maxX = s.getMaxX();
+          max_x = s.getMaxX();
         }
 
-        if (s.getMinY() < minY)
+        if (s.getMinY() < min_y)
         {
-          minY = s.getMinY();
+          min_y = s.getMinY();
         }
 
-        if (s.getMaxY() > maxY)
+        if (s.getMaxY() > max_y)
         {
-          maxY = s.getMaxY();
+          max_y = s.getMaxY();
         }
       }
     }
 
-    out << '(' << minX << ' ' << minY << ") (" << maxX << ' ' << maxY << ")\n";
+    out << '(' << min_x << ' ' << min_y << ") (" << max_x << ' ' << max_y << ")\n";
   }
 
   void cmdSpawn(std::istream& in, std::ostream&, Data&)
   {
-    std::string name = readWord(in);
-    std::size_t seed = readSize(in);
+    const std::vector< std::string > args = getArgs(in);
+    if (args.size() != 2)
+    {
+      throw std::invalid_argument("there are no correct count of arguments");
+    }
+
+    const std::string name = getName(args[0]);
+    const std::size_t seed = getSize(args[1]);
     pm.spawn(name, seed);
   }
 
   void cmdAreaOn(std::istream& in, std::ostream&, Data& data)
   {
-    std::string procName = readWord(in);
-    std::string calcName = readWord(in);
-    std::string setName = readWord(in);
-    int threads = readInt(in);
-    int tries = readInt(in);
+    const std::vector< std::string > args = getArgs(in);
+    if (args.size() != 5)
+    {
+      throw std::invalid_argument("there are no correct count of arguments");
+    }
 
-    if (!data.sets.count(setName))
+    const std::string proc_name = getName(args[0]);
+    const std::string calc_name = getName(args[1]);
+
+    const std::string set_name = getName(args[2]);
+    if (!data.sets.count(set_name))
     {
       throw std::invalid_argument("no set");
     }
-    if (tries <= 0 || threads < 0)
-    {
-      throw std::invalid_argument("incorrect params");
-    }
+
+    const std::size_t threads = getSize(args[3]);
+    const std::size_t tries = getSize(args[4]);
 
     Calculation c;
-    c.processName = procName;
-    c.setName = setName;
+    c.process_name = proc_name;
+    c.set_name = set_name;
     c.threads = threads;
     c.tries = tries;
     c.state = StateProcess::ACTIVE;
 
-    pm.areaOn(calcName, c, data);
+    pm.areaOn(calc_name, c, data);
   }
 
   void cmdStatus(std::istream& in, std::ostream& out, Data&)
   {
-    std::string calcName = readWord(in);
-    pm.status(calcName, out);
+    const std::vector< std::string > args = getArgs(in);
+    if (args.size() != 1)
+    {
+      throw std::invalid_argument("there are no correct count of arguments");
+    }
+
+    const std::string calc_name = getName(args[0]);
+    pm.status(calc_name, out);
   }
 
   void cmdWait(std::istream& in, std::ostream& out, Data&)
   {
-    std::string calcName = readWord(in);
-    pm.wait(calcName, out);
+    const std::vector< std::string > args = getArgs(in);
+    if (args.size() != 1)
+    {
+      throw std::invalid_argument("there are no correct count of arguments");
+    }
+
+    const std::string calc_name = getName(args[0]);
+    pm.wait(calc_name, out);
   }
 
 }

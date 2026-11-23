@@ -56,10 +56,10 @@ namespace muhamadiarov
         break;
       }
 
-      std::vector< TaskShape > raw(task.countShapes);
-      if (task.countShapes > 0)
+      std::vector< TaskShape > raw(task.count_shapes);
+      if (task.count_shapes > 0)
       {
-        const std::size_t bytes = sizeof(TaskShape) * task.countShapes;
+        const std::size_t bytes = sizeof(TaskShape) * task.count_shapes;
         if (take(err, rd, raw.data(), bytes) != bytes)
         {
           break;

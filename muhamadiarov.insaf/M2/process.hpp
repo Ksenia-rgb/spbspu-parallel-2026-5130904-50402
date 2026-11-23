@@ -28,7 +28,7 @@ namespace muhamadiarov
     int threads = 0;
     int tries = 0;
     std::size_t seed = 0;
-    std::size_t countShapes = 0;
+    std::size_t count_shapes = 0;
   };
 
   struct TaskShape
@@ -43,8 +43,8 @@ namespace muhamadiarov
     std::string name;
     pid_t pid = -1;
     StateProcess state = StateProcess::STAND;
-    int writeFd = -1;
-    int readFd = -1;
+    int write_fd = -1;
+    int read_fd = -1;
     std::size_t seed = 0;
   };
 
