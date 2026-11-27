@@ -6,6 +6,13 @@
 namespace muhamadiarov
 {
 
+  namespace
+  {
+
+    constexpr std::size_t buffer_size = 128;
+
+  }
+
   ProcessManager::~ProcessManager()
   {
     for (auto& kv : processes_)
@@ -122,7 +129,7 @@ namespace muhamadiarov
     process.state = StateProcess::ACTIVE;
   }
 
-  void ProcessManager::status(const std::string calc_name, std::ostream& out) const
+  void ProcessManager::status(const std::string& calc_name, std::ostream& out) const
   {
     auto it = calcs_.find(calc_name);
     if (it == calcs_.end())
@@ -135,7 +142,7 @@ namespace muhamadiarov
 
     if (c.state == StateProcess::DONE)
     {
-      char buf[128];
+      char buf[buffer_size];
       std::snprintf(buf, sizeof buf, "%s %.3f %.3f", p.name.c_str(), c.result.time, c.result.area);
       out << buf << '\n';
     }
@@ -149,7 +156,7 @@ namespace muhamadiarov
     }
   }
 
-  void ProcessManager::wait(const std::string calc_name, std::ostream& out)
+  void ProcessManager::wait(const std::string& calc_name, std::ostream& out)
   {
     auto it = calcs_.find(calc_name);
     if (it == calcs_.end())
@@ -164,20 +171,18 @@ namespace muhamadiarov
       throw std::runtime_error("error working the process");
     }
 
-    if (p.state == StateProcess::ACTIVE)
+    if (c.state == StateProcess::ACTIVE)
     {
       Result r;
       int err = 0;
       if (take(err, p.read_fd, &r, sizeof(Result)) != sizeof(Result))
       {
-        p.state = StateProcess::CANCELED;
         c.state = StateProcess::CANCELED;
       }
       else
       {
         c.result = r;
         c.state = StateProcess::DONE;
-        p.state = StateProcess::DONE;
       }
     }
 

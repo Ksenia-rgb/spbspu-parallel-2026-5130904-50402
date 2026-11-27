@@ -33,8 +33,8 @@ namespace muhamadiarov
     bool hasProcess(const std::string& process_name) const noexcept;
     void areaOn(const std::string& calc_name, const Calculation& calc, const Data& data);
 
-    void status(const std::string calc_name, std::ostream& out) const;
-    void wait(const std::string calc_name, std::ostream& out);
+    void status(const std::string& calc_name, std::ostream& out) const;
+    void wait(const std::string& calc_name, std::ostream& out);
 
   private:
     std::map< std::string, InfoProcess > processes_;

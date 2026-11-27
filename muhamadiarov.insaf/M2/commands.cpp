@@ -14,6 +14,8 @@ namespace muhamadiarov
 
     ProcessManager pm;
 
+    constexpr std::size_t args_count = 5;
+
     std::vector< std::string > getArgs(std::istream& in)
     {
       std::vector< std::string > result;
@@ -40,6 +42,11 @@ namespace muhamadiarov
     {
       for (std::size_t i = 0; i < number.size(); ++i)
       {
+        if (i == 0 && number[0] == '-')
+        {
+          continue;
+        }
+
         if (number[i] < '0' || number[i] > '9')
         {
           return false;
@@ -54,7 +61,7 @@ namespace muhamadiarov
       if (isValidNumber(str) && str[0] != '-')
       {
         std::size_t pos = 0;
-        unsigned long long val = std::stoll(str, &pos);
+        const unsigned long long val = std::stoll(str, &pos);
         if (val > SIZE_MAX)
         {
           throw std::invalid_argument("the quantity exceeds the permissible values");
@@ -284,7 +291,7 @@ namespace muhamadiarov
   void cmdAreaOn(std::istream& in, std::ostream&, Data& data)
   {
     const std::vector< std::string > args = getArgs(in);
-    if (args.size() != 5)
+    if (args.size() != args_count)
     {
       throw std::invalid_argument("there are no correct count of arguments");
     }
