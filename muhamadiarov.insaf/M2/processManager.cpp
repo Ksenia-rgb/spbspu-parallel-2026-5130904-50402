@@ -1,0 +1,192 @@
+#include "processManager.hpp"
+#include <stdexcept>
+#include <unistd.h>
+#include <sys/wait.h>
+
+namespace muhamadiarov
+{
+
+  namespace
+  {
+
+    constexpr std::size_t buffer_size = 128;
+
+  }
+
+  ProcessManager::~ProcessManager()
+  {
+    for (auto& kv : processes_)
+    {
+      if (kv.second.pid > 0)
+      {
+        kill(kv.second.pid, SIGTERM);
+        int st = 0;
+        waitpid(kv.second.pid, &st, 0);
+      }
+    }
+  }
+
+  void ProcessManager::spawn(const std::string& name, std::size_t seed)
+  {
+    if (processes_.count(name))
+    {
+      throw std::invalid_argument("process already exists");
+    }
+
+    int to_child[2];
+    int to_parent[2];
+    if (pipe(to_child) < 0 || pipe(to_parent) < 0)
+    {
+      throw std::runtime_error("pipe failed");
+    }
+
+    const pid_t pid = fork();
+    if (pid < 0)
+    {
+      close(to_child[0]);
+      close(to_child[1]);
+      close(to_parent[0]);
+      close(to_parent[1]);
+      throw std::runtime_error("fork failed");
+    }
+
+    if (pid == 0)
+    {
+      close(to_child[1]);
+      close(to_parent[0]);
+      childLoop(to_child[0], to_parent[1]);
+    }
+
+    close(to_child[0]);
+    close(to_parent[1]);
+    processes_.emplace(name, InfoProcess{name, pid, StateProcess::STAND, to_child[1], to_parent[0], seed});
+  }
+
+  bool ProcessManager::hasProcess(const std::string& process_name) const noexcept
+  {
+    return processes_.count(process_name) > 0;
+  }
+
+  void ProcessManager::areaOn(const std::string& calc_name, const Calculation& calc, const Data& data)
+  {
+    if (calcs_.count(calc_name))
+    {
+      throw std::invalid_argument("dup calc");
+    }
+
+    if (!hasProcess(calc.process_name))
+    {
+      throw std::invalid_argument("no process");
+    }
+
+    if (!data.sets.count(calc.set_name))
+    {
+      throw std::invalid_argument("no set");
+    }
+
+    if (calc.tries <= 0)
+    {
+      throw std::invalid_argument("no tries");
+    }
+
+    if (calc.threads < 0)
+    {
+      throw std::invalid_argument("no threads");
+    }
+
+    const Set_t& set = data.sets.at(calc.set_name);
+    InfoProcess& process = processes_.at(calc.process_name);
+    Task task{calc.threads, calc.tries, process.seed, set.size()};
+    int err = 0;
+    if (send(err, process.write_fd, &task, sizeof(Task)) != sizeof(Task))
+    {
+      throw std::runtime_error("did not send task");
+    }
+
+    std::vector< TaskShape > raw;
+    raw.reserve(set.size());
+    for (const auto& sn : set)
+    {
+      const Shape& s = *(data.shapes).at(sn);
+      const double r = (s.getMaxX() - s.getMinX()) / 2.0;
+      const double x = (s.getMaxX() + s.getMinX()) / 2.0;
+      const double y = (s.getMaxY() + s.getMinY()) / 2.0;
+      raw.push_back(TaskShape{r, x, y});
+    }
+
+    if (!raw.empty())
+    {
+      const std::size_t bytes = sizeof(TaskShape) * raw.size();
+      if (send(err, process.write_fd, raw.data(), bytes) != bytes)
+      {
+        throw std::runtime_error("did not send shapes");
+      }
+    }
+
+    Calculation c = calc;
+    c.state = StateProcess::ACTIVE;
+    calcs_.emplace(calc_name, c);
+    process.state = StateProcess::ACTIVE;
+  }
+
+  void ProcessManager::status(const std::string& calc_name, std::ostream& out) const
+  {
+    auto it = calcs_.find(calc_name);
+    if (it == calcs_.end())
+    {
+      throw std::runtime_error("no calc");
+    }
+
+    const Calculation& c = it->second;
+    const InfoProcess& p = processes_.at(c.process_name);
+
+    if (c.state == StateProcess::DONE)
+    {
+      char buf[buffer_size];
+      std::snprintf(buf, sizeof buf, "%s %.3f %.3f", p.name.c_str(), c.result.time, c.result.area);
+      out << buf << '\n';
+    }
+    else if (c.state == StateProcess::CANCELED)
+    {
+      out << p.name << " <CANCELED>\n";
+    }
+    else
+    {
+      out << p.name << " <IN PROGRESS>\n";
+    }
+  }
+
+  void ProcessManager::wait(const std::string& calc_name, std::ostream& out)
+  {
+    auto it = calcs_.find(calc_name);
+    if (it == calcs_.end())
+    {
+      throw std::invalid_argument("no calc");
+    }
+
+    Calculation& c = it->second;
+    const InfoProcess& p = processes_.at(c.process_name);
+    if (p.state == StateProcess::CANCELED)
+    {
+      throw std::runtime_error("error working the process");
+    }
+
+    if (c.state == StateProcess::ACTIVE)
+    {
+      Result r;
+      int err = 0;
+      if (take(err, p.read_fd, &r, sizeof(Result)) != sizeof(Result))
+      {
+        c.state = StateProcess::CANCELED;
+      }
+      else
+      {
+        c.result = r;
+        c.state = StateProcess::DONE;
+      }
+    }
+
+    status(calc_name, out);
+  }
+
+}
