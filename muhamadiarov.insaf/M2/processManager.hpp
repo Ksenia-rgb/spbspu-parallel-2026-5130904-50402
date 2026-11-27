@@ -1,5 +1,5 @@
-#ifndef PROCESSMANAGER_HPP
-#define PROCESSMANAGER_HPP
+#ifndef PROCESS_MANAGER_HPP
+#define PROCESS_MANAGER_HPP
 
 #include "process.hpp"
 #include "commands.hpp"

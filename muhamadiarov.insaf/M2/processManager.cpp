@@ -165,7 +165,7 @@ namespace muhamadiarov
     }
 
     Calculation& c = it->second;
-    InfoProcess& p = processes_.at(c.process_name);
+    const InfoProcess& p = processes_.at(c.process_name);
     if (p.state == StateProcess::CANCELED)
     {
       throw std::runtime_error("error working the process");

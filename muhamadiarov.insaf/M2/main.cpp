@@ -32,22 +32,21 @@ int main()
   std::string cmd;
   while (std::cin >> cmd)
   {
-    try
-    {
-      auto func = cmds.at(cmd);
-      func(std::cin, std::cout, data);
-    }
-    catch (const std::out_of_range &)
+    auto it = cmds.find(cmd);
+    if (it == cmds.end())
     {
       std::cout << "<UNKNOWN COMMAND>\n";
-      std::cin.clear();
       std::cin.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
+      continue;
     }
-    catch (const std::exception &e)
+
+    try
+    {
+      it->second(std::cin, std::cout, data);
+    }
+    catch (const std::exception &)
     {
       std::cout << "<INVALID COMMAND>\n";
-      std::cin.clear();
-      std::cin.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
     }
   }
 

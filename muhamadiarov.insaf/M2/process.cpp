@@ -12,6 +12,13 @@
 namespace muhamadiarov
 {
 
+  namespace
+  {
+
+    constexpr int max_tries = 5'000'000;
+
+  }
+
   std::size_t send(int& err, int wr, const void* buffer, std::size_t k)
   {
     const char* const p = static_cast< const char* >(buffer);
@@ -73,8 +80,9 @@ namespace muhamadiarov
         shapes.push_back(std::make_unique< Circle >(ts.r, Point{ts.x, ts.y}));
       }
 
+      const int effective_tries = std::min(task.tries, max_tries);
       const auto start = std::chrono::steady_clock::now();
-      const std::pair< double, double > areas = getAreas(shapes, task.threads, task.tries, task.seed);
+      const std::pair< double, double > areas = getAreas(shapes, task.threads, effective_tries, task.seed);
       const auto end = std::chrono::steady_clock::now();
       const double ms = std::chrono::duration< double, std::milli >(end - start).count();
 
